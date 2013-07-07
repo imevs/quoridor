@@ -70,13 +70,11 @@ Quoridor.prototype = {
 
     initPlayers: function (players) {
         var me = this;
-
         me.currentTurn = me.players[0];
-
-        me.updatePlayerPosition(me.currentTurn.pos);
-        me.switchPlayer();
-        me.updatePlayerPosition(me.currentTurn.pos);
-        me.switchPlayer();
+        $.each(me.players, function() {
+            me.updatePlayerPosition(me.currentTurn.pos);
+            me.switchPlayer();
+        });
     },
 
     movePlayer: function (newPosition) {
@@ -167,18 +165,16 @@ Quoridor.prototype = {
         }
     },
 
-    updateInformation: function () {
-        var me = this;
-        me.information.currentTurn.text(me.currentTurn.name);
-        me.information.fencesRemaining[0].text(me.players[0].fencesRemaining);
-        me.information.fencesRemaining[1].text(me.players[1].fencesRemaining);
+    updateInformation: function() {
+        this.information.updateInformation(this.currentTurn.name, this.players);
     },
 
     switchPlayer: function () {
-        var me = this;
-        var getCurrentPlayerIndex = $.inArray(me.currentTurn, me.players);
-        var nextPlayerIndex = getCurrentPlayerIndex + 1;
-        nextPlayerIndex = nextPlayerIndex < me.players.length ? nextPlayerIndex : 0;
+        var me = this,
+            currentPlayerIndex = $.inArray(me.currentTurn, me.players),
+            c = currentPlayerIndex + 1,
+            nextPlayerIndex = c < me.players.length ? c : 0;
+
         me.currentTurn = me.players[nextPlayerIndex];
 
         me.updateInformation();
