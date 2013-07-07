@@ -176,11 +176,11 @@ Quoridor.prototype = {
 
     switchPlayer: function () {
         var me = this;
-        if (me.currentTurn == me.players[0]) {
-            me.currentTurn = me.players[1];
-        } else {
-            me.currentTurn = me.players[0];
-        }
+        var getCurrentPlayerIndex = $.inArray(me.currentTurn, me.players);
+        var nextPlayerIndex = getCurrentPlayerIndex + 1;
+        nextPlayerIndex = nextPlayerIndex < me.players.length ? nextPlayerIndex : 0;
+        me.currentTurn = me.players[nextPlayerIndex];
+
         me.updateInformation();
     }
 };
