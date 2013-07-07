@@ -1,7 +1,8 @@
-function Player(name, position, id, fences) {
+function Player(name) {
+    Player.number = Player.number || 1;
     var me = this;
     me.name = name;
-    me.pos = position;
-    me.id = id;
-    me.fencesRemaining = fences;
+    me.id = 'player_' + Player.number++;
+    me.pos = null;
+    me.fencesRemaining = null;
 }

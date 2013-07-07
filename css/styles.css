@@ -30,17 +30,24 @@
 .fence.horizontal.right {
     padding-left: 0;
 }
-#player_1, #player_2 {
+.player {
     height: 80%;
     width: 80%;
     margin: 10%;
     border-radius: 2em;
 }
+
 #player_1 {
     background-color: #fff;
 }
 #player_2 {
     background-color: #000;
+}
+#player_3 {
+    background-color: red;
+}
+#player_4 {
+    background-color: green;
 }
 #info{
     float:left;

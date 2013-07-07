@@ -1,7 +1,8 @@
 var Quoridor = function () {
     this.boardDimension = 9;
-    this.startingFences = 10;
+    this.fencesCount = 20;
     this.players = [];
+    this.playersPositions = [4, 76, 36, 44];
     this.currentTurn = null;
 };
 
@@ -11,6 +12,7 @@ Quoridor.prototype = {
         var me = this, $board = $(board), j;
         me.players = players;
         me.information = info;
+        me.information.init(me.players.length);
 
         for (var i = 0; i < me.boardDimension; i++) {
 
@@ -70,9 +72,11 @@ Quoridor.prototype = {
 
     initPlayers: function (players) {
         var me = this;
+        var fences = me.fencesCount / me.players.length;
         me.currentTurn = me.players[0];
-        $.each(me.players, function() {
-            me.updatePlayerPosition(me.currentTurn.pos);
+        $.each(me.players, function(i, v) {
+            v.fencesRemaining = fences;
+            me.updatePlayerPosition(me.playersPositions[i]);
             me.switchPlayer();
         });
     },
@@ -134,7 +138,7 @@ Quoridor.prototype = {
     updatePlayerPosition: function (position) {
         var me = this;
         me.currentTurn.pos = position;
-        var playerDiv = $('<div id="' + me.currentTurn.id + '" />');
+        var playerDiv = $('<div class="player" id="' + me.currentTurn.id + '" />');
         $('#' + me.currentTurn.id).remove();
         $('#square_' + position).append(playerDiv);
     },
