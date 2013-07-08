@@ -11,11 +11,11 @@ before_script:
 after_success:
 - wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
 - heroku plugins:install https://github.com/ddollar/heroku-anvil
-- heroku build -r extjs-cascadedcombobox-widget  -b https://github.com/heroku/heroku-buildpack-nodejs.git
+- heroku build -r quoridor-online  -b https://github.com/heroku/heroku-buildpack-nodejs.git
 env:
   global:
-    secure: ! 'RAoPkQmODEevmI4CNfUGeZeb8uJxe9veK2Ju8XGjdm63kUvovF7nhGdIiWLS
+    secure: ! 'TovnHvsMhcMQ77oaF8lUoMJ6ZD23vzRjDFOunBe30wPxANbov48215pFhMt8
 
-      nNgKoYbof3Rz8QSfGZayj4XmnFU/f3CLSmvn9OqxcKcH9CddS8O1wpzaSu22
+      +iSskX5hGG+tt4OLscQyn3cKiLI8IeUvjU6OfDRdxus3urQAvCgajZv7Fomj
 
-      64S+ZbGpoZURXGIL2EAD9efMAp1AouhsBmWMtHc8ESi458dml7w='
+      AVR1KV2z+dBg3liYkZ5Xibt5kJXl/Gx7bqEPI4se9urzAnd4zA4='
