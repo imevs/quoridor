@@ -8,21 +8,32 @@ var Quoridor = function () {
 
 Quoridor.prototype = {
     constructor: Quoridor,
+
     init: function (board, info, players) {
-        var me = this, $board = $(board), j;
+        var me = this;
         me.players = players;
         me.information = info;
         me.information.init(me.players.length);
+        me.createBoard(board);
+        me.initPlayers(players);
+        me.bindSquareEventHandlers();
+        me.bindFenceEventHandlers();
+        me.updateInformation();
+        $(board).after(me.information.getPanel());
+    },
 
-        for (var i = 0; i < me.boardDimension; i++) {
+    createBoard: function (board) {
+        var i, j, me = this, $board = $(board);
+        var firstIndex = 0, lastIndex = me.boardDimension - 1;
+        for (i = 0; i < me.boardDimension; i++) {
 
             if (i != 0) {
                 for (j = 0; j < me.boardDimension; j++) {
                     var horizontalFence = $('<div class="fence horizontal" />');
-                    if (j == 0) {
+                    if (j == firstIndex) {
                         horizontalFence.addClass('left');
                     }
-                    if (j == 8) {
+                    if (j == lastIndex) {
                         horizontalFence.addClass('right');
                     }
                     $board.append(horizontalFence);
@@ -30,7 +41,10 @@ Quoridor.prototype = {
             }
             for (j = 0; j < me.boardDimension; j++) {
                 var squareNumber = (i * me.boardDimension) + j;
-                var square = $('<div id="square_' + squareNumber + '" class="square" />');
+                var square = $('<div/>', {
+                    id: 'square_' + squareNumber,
+                    'class': 'square'
+                });
                 if (j != 0) {
                     var fence = $('<div class="fence" />');
                     $board.append(fence);
@@ -38,11 +52,6 @@ Quoridor.prototype = {
                 $board.append(square);
             }
         }
-        me.initPlayers(players);
-        me.bindSquareEventHandlers();
-        me.bindFenceEventHandlers();
-        me.updateInformation();
-        $board.after(me.information.getPanel());
     },
 
     bindFenceEventHandlers: function () {
