@@ -166,3 +166,24 @@ var PlayerView = GameObject.extend({
     }
 
 });
+
+var BoardView = Backbone.RaphaelView.extend({
+    el: 'holder',
+
+    initialize: function() {
+        _([9, 9]).iter(function(i, j) {
+            var model = new FieldModel({x: i, y: j});
+            var view = new FieldView({model: model});
+        });
+
+        _([9, 8]).iter(function(i, j) {
+            var model = new FieldModel({x: i, y: j});
+            var view = new FenceHView({model: model});
+        });
+
+        _([8, 9]).iter(function(i, j) {
+            var model = new FieldModel({x: i, y: j});
+            var view = new FenceVView({model: model});
+        });
+    }
+});
