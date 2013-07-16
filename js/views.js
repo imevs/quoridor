@@ -1,5 +1,3 @@
-var FieldModel = Backbone.Model.extend();
-
 var GameObject = Backbone.RaphaelView.extend({}, {
     squareWidth: 50,
     squareHeight: 30,
@@ -47,35 +45,24 @@ var FieldView = GameObject.extend({
 
 });
 
-var FenceHView = GameObject.extend({
-
-    initialize: function(){
-        var cls = this.constructor;
-        var model = this.model;
-        this.listenTo(model, "change", this.render);
-
-        var i = model.get("x"), j = model.get("y");
-
-        var w = cls.squareWidth,
-            h = cls.squareDistance,
-            dh = cls.squareHeight,
-            dw = cls.squareDistance;
-        var x = (w + dw) * i + 10;
-        var y = (h + dh) * j + 10 + dh;
-        var obj = cls.getPaper().rect(x, y, w, h);
-        obj.attr("fill", "blue");
-
-        this.setElement(obj);
-    },
-
+var FenceView = GameObject.extend({
     events: {
-        "click": "sayType"
+        "click": 'onClick',
+        "mouseover": "selectCurrent",
+        "mouseout": "unSelectCurrent"
     },
-
-    sayType: function(evt){
+    selectCurrent: function() {
+        this.model.set('prevcolor', this.model.get('color'));
+        this.model.set('color', 'black');
+    },
+    unSelectCurrent: function() {
+        this.model.set('color', this.model.get('prevcolor'));
+    },
+    onClick: function(evt){
         this.model.set('color', 'green');
+        this.model.set('prevcolor', 'green');
+        this.model.trigger('selected', this.model);
     },
-
     render: function(){
         var circle = this.el;
         var model = this.model;
@@ -87,14 +74,37 @@ var FenceHView = GameObject.extend({
 
 });
 
-var FenceVView = GameObject.extend({
+var FenceHView = FenceView.extend({
 
     initialize: function(){
         var cls = this.constructor;
         var model = this.model;
         this.listenTo(model, "change", this.render);
 
-        var i = model.get("x"), j = model.get("y");
+        var i = model.get("x"), j = model.get("y"), color = model.get("color");
+
+        var w = cls.squareWidth,
+            h = cls.squareDistance,
+            dh = cls.squareHeight,
+            dw = cls.squareDistance;
+        var x = (w + dw) * i + 10;
+        var y = (h + dh) * j + 10 + dh;
+        var obj = cls.getPaper().rect(x, y, w, h);
+        obj.attr("fill", color);
+
+        this.setElement(obj);
+    }
+});
+
+var FenceVView = FenceView.extend({
+
+    initialize: function(){
+        var cls = this.constructor;
+        var model = this.model;
+        this.listenTo(model, "change", this.render);
+
+        var i = model.get("x"), j = model.get("y"),
+            color = model.get("color");
 
         var w = cls.squareDistance,
             h = cls.squareHeight,
@@ -103,28 +113,10 @@ var FenceVView = GameObject.extend({
         var x = (w + dw) * i + 10 + dw;
         var y = (h + dh) * j + 10;
         var obj = cls.getPaper().rect(x, y, w, h);
-        obj.attr("fill", "blue");
+        obj.attr("fill", color);
 
         this.setElement(obj);
-    },
-
-    events: {
-        "click": "sayType"
-    },
-
-    sayType: function(evt){
-        this.model.set('color', 'green');
-    },
-
-    render: function(){
-        var circle = this.el;
-        var model = this.model;
-
-        circle.attr({
-            fill: model.get("color")
-        });
     }
-
 });
 
 var PlayerView = GameObject.extend({
@@ -134,7 +126,9 @@ var PlayerView = GameObject.extend({
         var model = this.model;
         this.listenTo(model, "change", this.render);
 
-        var i = model.get("x"), j = model.get("y"), color = model.get("c");
+        var i = model.get("x"),
+            j = model.get("y"),
+            color = model.get("color");
 
         var w = cls.squareWidth,
             h = cls.squareHeight,
@@ -170,20 +164,28 @@ var PlayerView = GameObject.extend({
 var BoardView = Backbone.RaphaelView.extend({
     el: 'holder',
 
+    verticalFences: new VerticalFencesCollection(),
+    horizontalFences: new HorizontalFencesCollection(),
+    fields: new Backbone.Collection(),
+
     initialize: function() {
+
+        var model, view, me = this;
         _([9, 9]).iter(function(i, j) {
-            var model = new FieldModel({x: i, y: j});
-            var view = new FieldView({model: model});
+            model = new FieldModel({x: i, y: j});
+            view = new FieldView({model: model});
         });
 
         _([9, 8]).iter(function(i, j) {
-            var model = new FieldModel({x: i, y: j});
-            var view = new FenceHView({model: model});
+            model = new FieldModel({x: i, y: j, color: 'blue'});
+            view = new FenceHView({model: model});
+            me.horizontalFences.add(model);
         });
 
         _([8, 9]).iter(function(i, j) {
-            var model = new FieldModel({x: i, y: j});
-            var view = new FenceVView({model: model});
+            model = new FieldModel({x: i, y: j, color: 'blue'});
+            view = new FenceVView({model: model});
+            me.verticalFences.add(model);
         });
     }
 });
