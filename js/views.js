@@ -181,8 +181,17 @@ var PlayerView = GameObject.extend({
         });
     },
 
+    isValidPosition: function (x, y) {
+        var prevX = this.model.get('x'),
+            prevY = this.model.get('y');
+        return Math.abs(prevX - x) == 1 && prevY == y
+            || Math.abs(prevY - y) == 1 && prevX == x;
+    },
+
     moveTo: function(x, y) {
-        this.model.set({x: x, y: y});
+        if (this.isValidPosition(x, y)) {
+            this.model.set({x: x, y: y});
+        }
     }
 
 });
@@ -216,10 +225,10 @@ var BoardView = Backbone.RaphaelView.extend({
             me.verticalFences.add(model);
         });
 
-        var model1 = new FieldModel({x: 4, y: 0, c: 'black'});
+        var model1 = new FieldModel({x: 4, y: 0, color: 'black'});
         var view1 = new PlayerView({model: model1});
 
-        var model2 = new FieldModel({x: 4, y: 8, c: 'white'});
+        var model2 = new FieldModel({x: 4, y: 8, color: 'white'});
         var view2 = new PlayerView({model: model2});
 
         this.fields.on('moveplayer', function(x, y) {
