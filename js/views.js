@@ -27,11 +27,20 @@ var FieldView = GameObject.extend({
     },
 
     events: {
-        "click": "sayType"
+        "click": "movePlayer"
+//        "mouseover": "selectCurrent",
+//        "mouseout": "unSelectCurrent"
     },
 
-    sayType: function(evt){
-        this.model.set('color', 'green');
+    movePlayer: function(evt){
+        this.model.trigger('moveplayer', this.model.get("x"), this.model.get("y"));
+    },
+    selectCurrent: function() {
+        this.model.set('prevcolor', this.model.get('color'));
+        this.model.set('color', 'black');
+    },
+    unSelectCurrent: function() {
+        this.model.set('color', this.model.get('prevcolor'));
     },
 
     render: function(){
@@ -126,20 +135,31 @@ var PlayerView = GameObject.extend({
         var model = this.model;
         this.listenTo(model, "change", this.render);
 
-        var i = model.get("x"),
-            j = model.get("y"),
-            color = model.get("color");
-
-        var w = cls.squareWidth,
+        var color = model.get("color"),
+            w = cls.squareWidth,
             h = cls.squareHeight,
-            d = cls.squareDistance;
-        var x = (w + d) * i + 10 + w / 2;
-        var y = (h + d) * j + 10 + h / 2;
+            x = this.getPosX(model.get("x")),
+            y = this.getPosY(model.get("y"));
+
         var obj = cls.getPaper().ellipse(x, y,
             (w - 10) / 2, (h - 10) / 2 );
         obj.attr("fill", color);
 
         this.setElement(obj);
+    },
+
+    getPosX: function(x) {
+        var cls = this.constructor,
+            w = cls.squareWidth,
+            d = cls.squareDistance;
+        return (w + d) * x + 10 + w / 2;
+    },
+
+    getPosY: function(y) {
+        var cls = this.constructor,
+            h = cls.squareHeight,
+            d = cls.squareDistance;
+        return (h + d) * y + 10 + h / 2;
     },
 
     events: {
@@ -155,8 +175,14 @@ var PlayerView = GameObject.extend({
         var model = this.model;
 
         circle.attr({
-            fill: model.get("color")
+            fill: model.get("color"),
+            cx: this.getPosX(model.get("x")),
+            cy: this.getPosY(model.get("y"))
         });
+    },
+
+    moveTo: function(x, y) {
+        this.model.set({x: x, y: y});
     }
 
 });
@@ -167,6 +193,7 @@ var BoardView = Backbone.RaphaelView.extend({
     verticalFences: new VerticalFencesCollection(),
     horizontalFences: new HorizontalFencesCollection(),
     fields: new Backbone.Collection(),
+    players: new PlayersCollection(),
 
     initialize: function() {
 
@@ -174,6 +201,7 @@ var BoardView = Backbone.RaphaelView.extend({
         _([9, 9]).iter(function(i, j) {
             model = new FieldModel({x: i, y: j});
             view = new FieldView({model: model});
+            me.fields.add(model);
         });
 
         _([9, 8]).iter(function(i, j) {
@@ -187,5 +215,18 @@ var BoardView = Backbone.RaphaelView.extend({
             view = new FenceVView({model: model});
             me.verticalFences.add(model);
         });
+
+        var model1 = new FieldModel({x: 4, y: 0, c: 'black'});
+        var view1 = new PlayerView({model: model1});
+
+        var model2 = new FieldModel({x: 4, y: 8, c: 'white'});
+        var view2 = new PlayerView({model: model2});
+
+        this.fields.on('moveplayer', function(x, y) {
+            view1.moveTo(x, y);
+        });
+
+        this.players.add(model1);
+        this.players.add(model2);
     }
 });
