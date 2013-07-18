@@ -15,6 +15,23 @@ var FieldModel = Backbone.Model.extend({
     }
 });
 
+var PlayerModel = Backbone.Model.extend({
+
+    isValidPosition: function (x, y) {
+        var prevX = this.get('x'),
+            prevY = this.get('y');
+        return Math.abs(prevX - x) == 1 && prevY == y
+            || Math.abs(prevY - y) == 1 && prevX == x;
+    },
+
+    moveTo: function (x, y) {
+        if (this.isValidPosition(x, y)) {
+            this.set({x: x, y: y});
+        }
+    }
+
+});
+
 var FieldsCollection = Backbone.Collection.extend({
     initialize: function() {
         this.on('valid_position', this.selectField);
@@ -60,5 +77,15 @@ var VerticalFencesCollection = FencesCollection.extend({
 });
 
 var PlayersCollection = Backbone.Collection.extend({
+    currentPlayer: 0,
 
+    getCurrentPlayer: function() {
+        return this.at(this.currentPlayer);
+    },
+
+    switchPlayer: function() {
+        var c = this.currentPlayer + 1;
+        this.currentPlayer = c < this.length ? c : 0;
+        this.trigger('switchplayer', this.currentPlayer);
+    }
 });

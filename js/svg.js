@@ -1,3 +1,3 @@
-window.onload = function () {
+$(function() {
     var board = new BoardView({});
-};
+});

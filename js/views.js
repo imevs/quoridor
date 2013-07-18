@@ -178,21 +178,24 @@ var PlayerView = GameObject.extend({
             cx  : this.getPosX(model.get('x')),
             cy  : this.getPosY(model.get('y'))
         });
-    },
-
-    isValidPosition: function (x, y) {
-        var prevX = this.model.get('x'),
-            prevY = this.model.get('y');
-        return Math.abs(prevX - x) == 1 && prevY == y
-            || Math.abs(prevY - y) == 1 && prevX == x;
-    },
-
-    moveTo: function (x, y) {
-        if (this.isValidPosition(x, y)) {
-            this.model.set({x: x, y: y});
-        }
     }
+});
 
+var Info = Backbone.View.extend({
+
+    template:
+        '<div>Текущий игрок: <%=currentplayer%></div>' +
+        '<div>Количество фишек первого игрока <%=fences1%></div>' +
+        '<div>Количество фишек второго игрока <%=fences1%></div>',
+
+    initialize: function() {
+        this.listenTo(this.model, "change", this.render);
+        this.render();
+    },
+
+    render: function() {
+        this.$el.html(_.template(this.template, this.model.attributes));
+    }
 });
 
 var BoardView = Backbone.RaphaelView.extend({
@@ -224,23 +227,39 @@ var BoardView = Backbone.RaphaelView.extend({
             me.verticalFences.add(model);
         });
 
-        var model1 = new FieldModel({x: 4, y: 0, color: 'black'});
+        var model1 = new PlayerModel({x: 4, y: 0, color: 'black'});
         var view1 = new PlayerView({model: model1});
 
-        var model2 = new FieldModel({x: 4, y: 8, color: 'white'});
+        var model2 = new PlayerModel({x: 4, y: 8, color: 'white'});
         var view2 = new PlayerView({model: model2});
-
-        this.fields.on('moveplayer', function (x, y) {
-            view1.moveTo(x, y);
-        });
-
-        this.fields.on('selectfield', function (x, y) {
-            if (view1.isValidPosition(x, y)) {
-                this.trigger('valid_position', x, y);
-            }
-        });
 
         this.players.add(model1);
         this.players.add(model2);
+
+        var infoModel = new Backbone.Model({
+            playersCount : 2,
+            currentplayer: 1,
+            fences1      : 5,
+            fences2      : 3
+        });
+        var info = new Info({
+            el: $("#game-info"),
+            model: infoModel
+        });
+
+        this.fields.on('moveplayer', function (x, y) {
+            var current = me.players.getCurrentPlayer();
+            current.moveTo(x, y);
+            me.players.switchPlayer();
+        });
+        this.fields.on('selectfield', function (x, y) {
+            var current = me.players.getCurrentPlayer();
+            if (current.isValidPosition(x, y)) {
+                this.trigger('valid_position', x, y);
+            }
+        });
+        this.players.on('switchplayer', function(currentplayer) {
+            infoModel.set('currentplayer', currentplayer + 1);
+        });
     }
 });
