@@ -15,6 +15,32 @@ var FieldModel = Backbone.Model.extend({
     }
 });
 
+var FenceModel = FieldModel.extend();
+
+var FenceHModel = FenceModel.extend({
+    defaults: {
+        type: 'H'
+    },
+    getAdjacentFencePosition: function() {
+        return {
+            x: this.get('x') - 1,
+            y: this.get('y')
+        };
+    }
+});
+
+var FenceVModel = FenceModel.extend({
+    defaults: {
+        type: 'V'
+    },
+    getAdjacentFencePosition: function() {
+        return {
+            x: this.get('x'),
+            y: this.get('y') - 1
+        };
+    }
+});
+
 var PlayerModel = Backbone.Model.extend({
 
     isValidPosition: function (x, y) {
@@ -50,7 +76,12 @@ var FencesCollection = Backbone.Collection.extend({
         item.on('selected', _.bind(this.onSelectItem, this));
     },
     onSelectItem: function(item) {
-        var sibling = this.getAdjacentFence(item);
+        var siblingPosition = item.getAdjacentFencePosition();
+        var sibling = this.findWhere({
+            x: siblingPosition.x,
+            y: siblingPosition.y,
+            type: item.get('type')
+        });
         sibling && sibling.set('color', 'green');
     },
     getAdjacentFence: function(current) {
@@ -58,34 +89,38 @@ var FencesCollection = Backbone.Collection.extend({
     }
 });
 
-var HorizontalFencesCollection = FencesCollection.extend({
-    getAdjacentFence: function(current) {
-        return this.findWhere({
-            x: current.get('x') - 1,
-            y: current.get('y')
-        });
-    }
-});
-
-var VerticalFencesCollection = FencesCollection.extend({
-    getAdjacentFence: function(current) {
-        return this.findWhere({
-            x: current.get('x'),
-            y: current.get('y') - 1
-        });
-    }
-});
-
 var PlayersCollection = Backbone.Collection.extend({
-    currentPlayer: 0,
+    currentPlayer   : 0,
+    fencesCount     : 20,
+    playersPositions: [
+        {x: 4, y: 0, color: 'black'},
+        {x: 4, y: 8, color: 'white'},
+        {x: 0, y: 4, color: 'yellow'},
+        {x: 8, y: 4, color: 'blue'}
+    ],
 
-    getCurrentPlayer: function() {
+    getCurrentPlayer: function () {
         return this.at(this.currentPlayer);
     },
 
-    switchPlayer: function() {
+    switchPlayer: function () {
         var c = this.currentPlayer + 1;
         this.currentPlayer = c < this.length ? c : 0;
         this.trigger('switchplayer', this.currentPlayer);
+    },
+
+    createPlayers: function (playersCount) {
+        var me = this;
+        _(playersCount).times(function (player) {
+            var position = me.playersPositions[player];
+            var fences = me.fencesCount / me.length;
+            var model = new PlayerModel({
+                x: position.x,
+                y: position.y,
+                color: position.color,
+                fencesRemaining: fences
+            });
+            me.add(model);
+        });
     }
 });

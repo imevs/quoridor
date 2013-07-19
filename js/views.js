@@ -201,55 +201,55 @@ var Info = Backbone.View.extend({
 var BoardView = Backbone.RaphaelView.extend({
     el: 'holder',
 
-    verticalFences  : new VerticalFencesCollection(),
-    horizontalFences: new HorizontalFencesCollection(),
+    fences          : new FencesCollection(),
     fields          : new FieldsCollection(),
     players         : new PlayersCollection(),
+    infoModel       : null,
+    boardSize       : 9,
+    playersCount    : 4,
 
-    initialize: function () {
+    initModels   : function () {
+        var me = this, boardSize = this.boardSize;
 
-        var model, view, me = this;
-        _([9, 9]).iter(function (i, j) {
-            model = new FieldModel({x: i, y: j, color: '#f00'});
-            view = new FieldView({model: model});
-            me.fields.add(model);
+        _([boardSize, boardSize]).iter(function (i, j) {
+            me.fields.add(new FieldModel({x: i, y: j, color: '#f00'}));
         });
-
-        _([9, 8]).iter(function (i, j) {
-            model = new FieldModel({x: i, y: j, color: 'blue'});
-            view = new FenceHView({model: model});
-            me.horizontalFences.add(model);
+        _([boardSize, boardSize - 1]).iter(function (i, j) {
+            me.fences.add(new FenceHModel({x: i, y: j, color: 'blue'}));
         });
-
-        _([8, 9]).iter(function (i, j) {
-            model = new FieldModel({x: i, y: j, color: 'blue'});
-            view = new FenceVView({model: model});
-            me.verticalFences.add(model);
+        _([boardSize - 1, boardSize]).iter(function (i, j) {
+            me.fences.add(new FenceVModel({x: i, y: j, color: 'blue'}));
         });
-
-        var model1 = new PlayerModel({x: 4, y: 0, color: 'black'});
-        var view1 = new PlayerView({model: model1});
-
-        var model2 = new PlayerModel({x: 4, y: 8, color: 'white'});
-        var view2 = new PlayerView({model: model2});
-
-        this.players.add(model1);
-        this.players.add(model2);
-
-        var infoModel = new Backbone.Model({
+        this.players.createPlayers(this.playersCount);
+        this.infoModel = new Backbone.Model({
             playersCount : 2,
             currentplayer: 1,
             fences1      : 5,
             fences2      : 3
         });
-        var info = new Info({
-            el: $("#game-info"),
-            model: infoModel
+    },
+    initViews : function () {
+        var me = this;
+        me.fields.each(function (model) {
+            new FieldView({model: model});
         });
+        me.fences.each(function (model) {
+            model instanceof FenceHModel
+                ? new FenceHView({model: model}) : new FenceVView({model: model});
+        });
+        this.players.each(function (model) {
+            new PlayerView({model: model})
+        });
+        var info = new Info({
+            el   : $("#game-info"),
+            model: this.infoModel
+        });
+    },
+    initEvents: function () {
+        var me = this;
 
         this.fields.on('moveplayer', function (x, y) {
-            var current = me.players.getCurrentPlayer();
-            current.moveTo(x, y);
+            me.players.getCurrentPlayer().moveTo(x, y);
             me.players.switchPlayer();
         });
         this.fields.on('selectfield', function (x, y) {
@@ -258,8 +258,13 @@ var BoardView = Backbone.RaphaelView.extend({
                 this.trigger('valid_position', x, y);
             }
         });
-        this.players.on('switchplayer', function(currentplayer) {
-            infoModel.set('currentplayer', currentplayer + 1);
+        this.players.on('switchplayer', function (currentplayer) {
+            me.infoModel.set('currentplayer', currentplayer + 1);
         });
+    },
+    initialize: function () {
+        this.initModels();
+        this.initViews();
+        this.initEvents();
     }
 });
