@@ -54,6 +54,12 @@ var PlayerModel = Backbone.Model.extend({
         if (this.isValidPosition(x, y)) {
             this.set({x: x, y: y});
         }
+    },
+    placeFence: function() {
+        this.set('fencesRemaining', this.get('fencesRemaining') - 1);
+    },
+    hasFences: function() {
+        return this.get('fencesRemaining') > 0;
     }
 
 });
@@ -113,7 +119,7 @@ var PlayersCollection = Backbone.Collection.extend({
         var me = this;
         _(playersCount).times(function (player) {
             var position = me.playersPositions[player];
-            var fences = me.fencesCount / me.length;
+            var fences = Math.round(me.fencesCount / playersCount);
             var model = new PlayerModel({
                 x: position.x,
                 y: position.y,

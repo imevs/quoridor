@@ -186,7 +186,9 @@ var Info = Backbone.View.extend({
     template:
         '<div>Текущий игрок: <%=currentplayer%></div>' +
         '<div>Количество фишек первого игрока <%=fences1%></div>' +
-        '<div>Количество фишек второго игрока <%=fences1%></div>',
+        '<div>Количество фишек второго игрока <%=fences2%></div>' +
+        '<div>Количество фишек третьего игрока <%=fences3%></div>' +
+        '<div>Количество фишек четвертого игрока <%=fences4%></div>',
 
     initialize: function() {
         this.listenTo(this.model, "change", this.render);
@@ -220,12 +222,13 @@ var BoardView = Backbone.RaphaelView.extend({
         _([boardSize - 1, boardSize]).iter(function (i, j) {
             me.fences.add(new FenceVModel({x: i, y: j, color: 'blue'}));
         });
-        this.players.createPlayers(this.playersCount);
         this.infoModel = new Backbone.Model({
             playersCount : 2,
             currentplayer: 1,
             fences1      : 5,
-            fences2      : 3
+            fences2      : 5,
+            fences3      : 5,
+            fences4      : 3
         });
     },
     initViews : function () {
@@ -258,13 +261,28 @@ var BoardView = Backbone.RaphaelView.extend({
                 this.trigger('valid_position', x, y);
             }
         });
+        this.players.on('change', function(player) {
+            me.infoModel.set('fences' + (me.players.currentPlayer + 1),
+                player.get('fencesRemaining'));
+        });
+        this.players.on('add', function(player) {
+            me.infoModel.set('fences' + me.players.length,
+                player.get('fencesRemaining'));
+        });
         this.players.on('switchplayer', function (currentplayer) {
             me.infoModel.set('currentplayer', currentplayer + 1);
+        });
+        this.fences.on('selected', function(fence) {
+            if (me.players.getCurrentPlayer().hasFences()) {
+                me.players.getCurrentPlayer().placeFence();
+                me.players.switchPlayer();
+            }
         });
     },
     initialize: function () {
         this.initModels();
-        this.initViews();
         this.initEvents();
+        this.players.createPlayers(this.playersCount);
+        this.initViews();
     }
 });
