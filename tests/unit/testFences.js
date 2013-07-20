@@ -1,5 +1,5 @@
 TestCase("Test fences", {
-    testFences2Players: function() {
+    _testFences2Players: function() {
         /** DOC += <div id="board"></div> */
         var quoridor = new Quoridor();
         var players = [new Player("Player 1"), new Player("Player 2")];
@@ -7,7 +7,7 @@ TestCase("Test fences", {
         this.quoridor = quoridor;
         assertEquals(players[0].fencesRemaining, 10);
     },
-    testFences4Players: function() {
+    _testFences4Players: function() {
         /** DOC += <div id="board"></div> */
         var quoridor = new Quoridor();
         var players = [

@@ -7,8 +7,8 @@
 = TODO
 
 * logic
-* canvas
 * tests
 * design
-* 4 players mode
 * sync game state between browsers
+* минификация скриптов
+* автоладинг скриптов
