@@ -10,7 +10,7 @@ var BoardView = GameObject.extend({
             x = 10 - d / 2,
             y = 10 - d / 2;
 
-        var obj = cls.getPaper().rect(x, 10 - d/2, w + 1, h + 1);
+        var obj = cls.getPaper().rect(x, y, w + 1, h + 1);
         obj.attr('fill', '#c75');
 
         this.setElement(obj);

@@ -29,18 +29,29 @@ var FencesCollection = Backbone.Collection.extend({
         this.on('add', this.onAdd);
     },
     onAdd: function(item) {
-        item.on('selected', _.bind(this.onSelectItem, this));
+        item.on({
+            'selected'       : function(item) {
+                this.triggerEventOnFenceAndSibling(item, 'markasselected');
+            },
+            'highlight_current_and_sibling'  : function(item) {
+                this.triggerEventOnFenceAndSibling(item, 'highlight');
+            },
+            'reset_current_and_sibling': function(item) {
+                this.triggerEventOnFenceAndSibling(item, 'dehighlight');
+            }
+        }, this);
     },
-    onSelectItem: function(item) {
+    triggerEventOnFenceAndSibling      : function (item, event) {
         var siblingPosition = item.getAdjacentFencePosition();
         var sibling = this.findWhere({
-            x: siblingPosition.x,
-            y: siblingPosition.y,
+            x   : siblingPosition.x,
+            y   : siblingPosition.y,
             type: item.get('type')
         });
-        sibling && sibling.trigger('markasselected');
-    },
-    getAdjacentFence: function(current) {
-        return null;
+        if (sibling) {
+            sibling.trigger(event);
+            item.trigger(event);
+        }
     }
+
 });

@@ -1,30 +1,37 @@
 var FenceView = GameObject.extend({
-    events         : {
+    events                    : {
         'click'    : 'onClick',
-        'mouseover': 'selectCurrent',
-        'mouseout' : 'unSelectCurrent'
+        'mouseover': 'highlightCurrentAndSibling',
+        'mouseout' : 'resetCurrentAndSibling'
     },
-    initialize: function () {
-        this.listenTo(this.model, 'change', this.render);
-        this.listenTo(this.model, 'markasselected', this.markAsSelected);
+    onClick                   : function (evt) {
+        this.model.trigger('selected', this.model);
+    },
+    highlightCurrentAndSibling: function () {
+        this.model.trigger('highlight_current_and_sibling', this.model);
+    },
+    resetCurrentAndSibling    : function () {
+        this.model.trigger('reset_current_and_sibling', this.model);
+    },
+    initialize                : function () {
+        this.model.on({
+            'change'        : this.render,
+            'markasselected': this.markAsSelected,
+            'highlight'     : this.selectCurrent,
+            'dehighlight'   : this.unSelectCurrent
+        }, this);
 
-        var obj = this.createElement();
+        var obj = this.createElement && this.createElement();
         this.setElement(obj);
     },
-    createElement: function() {},
-    markAsSelected    : function () {
+    markAsSelected            : function () {
         this.model.set('color', 'black');
         this.model.set('prevcolor', 'black');
         this.el.toFront();
     },
-    onClick        : function (evt) {
-        this.markAsSelected();
-        this.model.trigger('selected', this.model);
-    },
-    render         : function () {
+    render                    : function () {
         var circle = this.el;
         var model = this.model;
-
         circle.attr({
             fill: model.get('color')
         });
