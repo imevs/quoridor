@@ -25,6 +25,7 @@ var FenceView = GameObject.extend({
         this.setElement(obj);
     },
     markAsSelected            : function () {
+        this.model.set('state', 'busy');
         this.model.set('color', 'black');
         this.model.set('prevcolor', 'black');
         this.el.toFront();
@@ -56,6 +57,11 @@ var FenceHView = FenceView.extend({
         var obj = cls.getPaper().rect(x, y, w + dw + 1, h);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
+/*
+        var value = this.model.get('x') + '-' + this.model.get('y');
+        var text = cls.getPaper().text(x + 30, y + 5, value);
+        text.attr('fill', 'white');
+*/
         return obj;
     }
 });
@@ -78,6 +84,11 @@ var FenceVView = FenceView.extend({
         var obj = cls.getPaper().rect(x, y, w, h + dh + 1);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
+/*
+        var value = this.model.get('x') + '-' + this.model.get('y');
+        var text = cls.getPaper().text(x + 5, y + 20, value);
+        text.attr('fill', 'white');
+*/
         return obj;
     }
 });

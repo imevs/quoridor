@@ -10,10 +10,16 @@ var BoardView = GameObject.extend({
             x = 10 - d / 2,
             y = 10 - d / 2;
 
-        var obj = cls.getPaper().rect(x, y, w + 1, h + 1);
-        obj.attr('fill', '#c75');
+        var p = cls.getPaper();
+        var borderLeft = p.rect(x, y, 7, h + 1);
+        var borderRight = p.rect(x + w - 5, y, 7, h + 1);
+        var borderTop = p.rect(x, y, w + 2, 7);
+        var borderBottom = p.rect(x, y + h - 5, w + 2, 7);
 
-        this.setElement(obj);
+        borderLeft.attr('fill', '#c75');
+        borderRight.attr('fill', '#c75');
+        borderTop.attr('fill', '#c75');
+        borderBottom.attr('fill', '#c75');
 
         me.fields.each(function (model) {
             model.set('color', '#742');

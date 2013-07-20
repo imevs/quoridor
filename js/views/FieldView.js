@@ -17,6 +17,11 @@ var FieldView = GameObject.extend({
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
 
+/*
+        var value = this.model.get('x') + '-' + this.model.get('y');
+        var text = cls.getPaper().text(x + 25, y + 15, value);
+        text.attr('fill', 'white');
+*/
         this.setElement(obj);
     },
 

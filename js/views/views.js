@@ -4,6 +4,7 @@ var GameObject = Backbone.RaphaelView.extend({
             prevcolor: this.model.get('color'),
             color: 'black'
         });
+        this.el.toFront();
     },
     unSelectCurrent: function() {
         if (this.model.get('prevcolor')) {
@@ -11,6 +12,7 @@ var GameObject = Backbone.RaphaelView.extend({
                 prevcolor: '',
                 color: this.model.get('prevcolor')
             });
+            this.el.toBack();
         }
     }
 }, {
