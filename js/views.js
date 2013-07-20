@@ -183,20 +183,15 @@ var PlayerView = GameObject.extend({
 
 var Info = Backbone.View.extend({
 
-    template:
-        '<div>Текущий игрок: <%=currentplayer%></div>' +
-        '<div>Количество фишек первого игрока <%=fences1%></div>' +
-        '<div>Количество фишек второго игрока <%=fences2%></div>' +
-        '<div>Количество фишек третьего игрока <%=fences3%></div>' +
-        '<div>Количество фишек четвертого игрока <%=fences4%></div>',
+    templateId: '#info-tmpl',
 
     initialize: function() {
+        this.template = $(this.templateId).html();
         this.listenTo(this.model, "change", this.render);
-        this.render();
     },
 
     render: function() {
-        this.$el.html(_.template(this.template, this.model.attributes));
+        this.$el.html(_.template(this.template, this.model.attributes,  {variable: 'data'}));
     }
 });
 
@@ -206,7 +201,7 @@ var BoardView = Backbone.RaphaelView.extend({
     fences          : new FencesCollection(),
     fields          : new FieldsCollection(),
     players         : new PlayersCollection(),
-    infoModel       : null,
+    infoModel       : new Backbone.Model(),
     boardSize       : 9,
     playersCount    : 4,
 
@@ -222,14 +217,7 @@ var BoardView = Backbone.RaphaelView.extend({
         _([boardSize - 1, boardSize]).iter(function (i, j) {
             me.fences.add(new FenceVModel({x: i, y: j, color: 'blue'}));
         });
-        this.infoModel = new Backbone.Model({
-            playersCount : 2,
-            currentplayer: 1,
-            fences1      : 5,
-            fences2      : 5,
-            fences3      : 5,
-            fences4      : 3
-        });
+        this.players.createPlayers(this.playersCount);
     },
     initViews : function () {
         var me = this;
@@ -261,16 +249,11 @@ var BoardView = Backbone.RaphaelView.extend({
                 this.trigger('valid_position', x, y);
             }
         });
-        this.players.on('change', function(player) {
-            me.infoModel.set('fences' + (me.players.currentPlayer + 1),
-                player.get('fencesRemaining'));
-        });
-        this.players.on('add', function(player) {
-            me.infoModel.set('fences' + me.players.length,
-                player.get('fencesRemaining'));
-        });
-        this.players.on('switchplayer', function (currentplayer) {
-            me.infoModel.set('currentplayer', currentplayer + 1);
+        this.players.on('change switchplayer', function() {
+            me.infoModel.set({
+                currentplayer: this.currentPlayer + 1,
+                fences: this.pluck('fencesRemaining')
+            });
         });
         this.fences.on('selected', function(fence) {
             if (me.players.getCurrentPlayer().hasFences()) {
@@ -279,10 +262,13 @@ var BoardView = Backbone.RaphaelView.extend({
             }
         });
     },
+    run: function() {
+        this.players.switchPlayer(1);
+    },
     initialize: function () {
-        this.initModels();
         this.initEvents();
-        this.players.createPlayers(this.playersCount);
+        this.initModels();
         this.initViews();
+        this.run();
     }
 });

@@ -109,8 +109,8 @@ var PlayersCollection = Backbone.Collection.extend({
         return this.at(this.currentPlayer);
     },
 
-    switchPlayer: function () {
-        var c = this.currentPlayer + 1;
+    switchPlayer: function (player) {
+        var c = _.isUndefined(player) ? this.currentPlayer + 1 : player - 1;
         this.currentPlayer = c < this.length ? c : 0;
         this.trigger('switchplayer', this.currentPlayer);
     },
