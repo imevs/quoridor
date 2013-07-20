@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <script src="libs/raphael.js" type="text/javascript" charset="utf-8"></script>
+    <script src="libs/jquery-1.10.2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="libs/underscore.js" type="text/javascript" charset="utf-8"></script>
+    <script src="libs/backbone.js" type="text/javascript" charset="utf-8"></script>
+    <script src="libs/backbone.raphael.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/models.js"></script>
+    <script src="js/views.js"></script>
+    <script src="js/svg.js"></script>
+
+    <script type="text/html" id="info-tmpl">
+        <div>Текущий игрок: <%= data.currentplayer %></div>
+        <% _(data.fences).each(function(fence, index) {%>
+        <div>Количество фишек <%=index + 1 %>-го игрока <%=fence%></div>
+        <%}); %>
+    </script>
+</head>
+<body>
+<div id="game-info"></div>
+<div id="holder"></div>
+</body>
+</html>
