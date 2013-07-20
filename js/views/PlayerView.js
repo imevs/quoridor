@@ -4,6 +4,8 @@ var PlayerView = GameObject.extend({
         var cls = this.constructor;
         var model = this.model;
         this.listenTo(model, 'change', this.render);
+        this.listenTo(model, 'resetstate', this.resetState);
+        this.listenTo(model, 'setcurrent', this.markAsCurrent);
 
         var color = model.get('color'),
             w = cls.squareWidth,
@@ -16,6 +18,18 @@ var PlayerView = GameObject.extend({
         obj.attr('fill', color);
 
         this.setElement(obj);
+    },
+
+    markAsCurrent: function() {
+        this.el.attr({
+            'stroke-width': 3
+        });
+    },
+
+    resetState: function() {
+        this.el.attr({
+            'stroke-width': 1
+        });
     },
 
     getPosX: function (x) {

@@ -5,6 +5,7 @@ var FieldView = GameObject.extend({
         var model = this.model;
 
         this.listenTo(model, 'change', this.render);
+        this.listenTo(model, 'selectfield', this.selectCurrent);
         var w = cls.squareWidth,
             h = cls.squareHeight,
             d = cls.squareDistance,
@@ -14,26 +15,25 @@ var FieldView = GameObject.extend({
         var y = (h + d) * j + 10;
         var obj = cls.getPaper().rect(x, y, w, h);
         obj.attr('fill', color);
+        obj.attr('stroke-width', 0);
 
         this.setElement(obj);
     },
 
     events: {
-        'click'    : 'movePlayer',
-        'mouseover': 'onSelectField',
-        'mouseout' : 'unSelectCurrent'
+        'click'      : 'movePlayer',
+        'mouseover'  : 'onSelectFieldBefore',
+        'mouseout'   : 'unSelectCurrent'
     },
 
     movePlayer     : function (evt) {
-        this.model.trigger('moveplayer', this.model.get('x'), this.model.get('y'));
+        this.model.trigger('moveplayer',
+            this.model.get('x'), this.model.get('y'));
     },
-    onSelectField: function() {
-        this.model.trigger('selectfield', this.model.get('x'), this.model.get('y'));
+    onSelectFieldBefore: function() {
+        this.model.trigger('beforeselectfield',
+            this.model.get('x'), this.model.get('y'));
     },
-    unSelectCurrent: function () {
-        this.model.unSelect();
-    },
-
     render: function () {
         var circle = this.el;
         var model = this.model;

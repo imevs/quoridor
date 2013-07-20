@@ -38,7 +38,7 @@ var FencesCollection = Backbone.Collection.extend({
             y: siblingPosition.y,
             type: item.get('type')
         });
-        sibling && sibling.set('color', 'green');
+        sibling && sibling.trigger('markasselected');
     },
     getAdjacentFence: function(current) {
         return null;

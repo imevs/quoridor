@@ -1,4 +1,19 @@
-var GameObject = Backbone.RaphaelView.extend({}, {
+var GameObject = Backbone.RaphaelView.extend({
+    selectCurrent  : function () {
+        this.model.set({
+            prevcolor: this.model.get('color'),
+            color: 'black'
+        });
+    },
+    unSelectCurrent: function() {
+        if (this.model.get('prevcolor')) {
+            this.model.set({
+                prevcolor: '',
+                color: this.model.get('prevcolor')
+            });
+        }
+    }
+}, {
     squareWidth   : 50,
     squareHeight  : 30,
     squareDistance: 10,

@@ -10,13 +10,13 @@ var BoardModel = Backbone.Model.extend({
         var me = this, boardSize = this.boardSize;
 
         _([boardSize, boardSize]).iter(function (i, j) {
-            me.fields.add(new FieldModel({x: i, y: j, color: '#f00'}));
+            me.fields.add(new FieldModel({x: i, y: j}));
         });
         _([boardSize, boardSize - 1]).iter(function (i, j) {
-            me.fences.add(new FenceHModel({x: i, y: j, color: 'blue'}));
+            me.fences.add(new FenceHModel({x: i, y: j}));
         });
         _([boardSize - 1, boardSize]).iter(function (i, j) {
-            me.fences.add(new FenceVModel({x: i, y: j, color: 'blue'}));
+            me.fences.add(new FenceVModel({x: i, y: j}));
         });
         this.players.createPlayers(this.playersCount);
     },
@@ -27,13 +27,13 @@ var BoardModel = Backbone.Model.extend({
             me.players.getCurrentPlayer().moveTo(x, y);
             me.players.switchPlayer();
         });
-        this.fields.on('selectfield', function (x, y) {
+        this.fields.on('beforeselectfield', function (x, y) {
             var current = me.players.getCurrentPlayer();
             if (current.isValidPosition(x, y)) {
                 this.trigger('valid_position', x, y);
             }
         });
-        this.players.on('change switchplayer', function() {
+        this.players.on('change setcurrent', function() {
             me.infoModel.set({
                 currentplayer: this.currentPlayer + 1,
                 fences: this.pluck('fencesRemaining')

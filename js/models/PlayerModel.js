@@ -25,7 +25,7 @@ var PlayersCollection = Backbone.Collection.extend({
     currentPlayer   : 0,
     fencesCount     : 20,
     playersPositions: [
-        {x: 4, y: 0, color: 'black'},
+        {x: 4, y: 0, color: 'red'},
         {x: 4, y: 8, color: 'white'},
         {x: 0, y: 4, color: 'yellow'},
         {x: 8, y: 4, color: 'blue'}
@@ -38,7 +38,10 @@ var PlayersCollection = Backbone.Collection.extend({
     switchPlayer: function (player) {
         var c = _.isUndefined(player) ? this.currentPlayer + 1 : player - 1;
         this.currentPlayer = c < this.length ? c : 0;
-        this.trigger('switchplayer', this.currentPlayer);
+        this.each(function(player) {
+            player.trigger('resetstate');
+        });
+        this.getCurrentPlayer().trigger('setcurrent', this.currentPlayer);
     },
 
     createPlayers: function (playersCount) {
