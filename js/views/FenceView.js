@@ -39,9 +39,9 @@ var FenceHView = FenceView.extend({
             h = cls.squareDistance,
             dh = cls.squareHeight,
             dw = cls.squareDistance;
-        var x = (w + dw) * i + 10;
+        var x = (w + dw) * i + 10 - (dw/2);
         var y = (h + dh) * j + 10 + dh;
-        var obj = cls.getPaper().rect(x, y, w, h);
+        var obj = cls.getPaper().rect(x, y, w + dw, h);
         obj.attr('fill', color);
 
         this.setElement(obj);
@@ -63,8 +63,8 @@ var FenceVView = FenceView.extend({
             dh = cls.squareDistance,
             dw = cls.squareWidth;
         var x = (w + dw) * i + 10 + dw;
-        var y = (h + dh) * j + 10;
-        var obj = cls.getPaper().rect(x, y, w, h);
+        var y = (h + dh) * j + 10 - dh / 2;
+        var obj = cls.getPaper().rect(x, y, w, h + dh);
         obj.attr('fill', color);
 
         this.setElement(obj);

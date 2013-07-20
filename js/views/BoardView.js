@@ -1,8 +1,20 @@
-var BoardView = Backbone.RaphaelView.extend({
+var BoardView = GameObject.extend({
     el: 'holder',
 
     initialize: function () {
-        var me = this.model;
+        var me = this.model,
+            cls = this.constructor,
+            d = cls.squareDistance,
+            w = me.boardSize * (d + cls.squareWidth),
+            h = me.boardSize * (d + cls.squareHeight),
+            x = 10 - d / 2,
+            y = 10 - d / 2;
+
+        var obj = cls.getPaper().rect(x, 10 - d/2, w, h);
+        obj.attr('fill', 'blue');
+
+        this.setElement(obj);
+
         me.fields.each(function (model) {
             new FieldView({model: model});
         });
