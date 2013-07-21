@@ -1,11 +1,18 @@
 var BoardModel = Backbone.Model.extend({
-    fences          : new FencesCollection(),
-    fields          : new FieldsCollection(),
-    players         : new PlayersCollection(),
-    infoModel       : new Backbone.Model(),
     boardSize       : 9,
     playersCount    : 4,
 
+    resetModels: function() {
+        this.fences.reset();
+        this.fields.reset();
+        this.players.reset();
+    },
+    createModels: function() {
+        this.fences = new FencesCollection();
+        this.fields = new FieldsCollection();
+        this.players = new PlayersCollection();
+        this.infoModel = new Backbone.Model();
+    },
     initModels   : function () {
         var me = this, boardSize = this.boardSize;
 
@@ -42,6 +49,11 @@ var BoardModel = Backbone.Model.extend({
                 fences: this.pluck('fencesRemaining')
             });
         });
+        this.players.on('win', function(player) {
+            if (window.confirm(player + ' выиграл. Начать сначала?')) {
+                me.trigger('rerun');
+            }
+        });
         this.fences.on('selected', function(fence) {
             if (me.players.getCurrentPlayer().hasFences()) {
                 me.players.getCurrentPlayer().placeFence();
@@ -53,6 +65,7 @@ var BoardModel = Backbone.Model.extend({
         this.players.switchPlayer(1);
     },
     initialize: function () {
+        this.createModels();
         this.initEvents();
         this.initModels();
     }

@@ -2,6 +2,7 @@ var BoardView = GameObject.extend({
     el: 'holder',
 
     initialize: function () {
+        this.model.on('rerun', this.reRun, this);
         var me = this.model,
             cls = this.constructor,
             d = cls.squareDistance,
@@ -37,5 +38,13 @@ var BoardView = GameObject.extend({
             el   : $("#game-info"),
             model: me.infoModel
         });
+    },
+    reRun: function() {
+        window.location.reload();
+/*
+        this.model.destroy();
+        this.model = new BoardModel();
+        this.model.run();
+*/
     }
 });
