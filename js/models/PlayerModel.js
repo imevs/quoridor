@@ -57,5 +57,18 @@ var PlayersCollection = Backbone.Collection.extend({
             });
             me.add(model);
         });
+    },
+
+    /**
+     * Is place free
+     * @param x
+     * @param y
+     * @returns {boolean}
+     */
+    isValidPosition: function (x, y) {
+        return !this.findWhere({
+            x: x, y: y
+        });
     }
+
 });

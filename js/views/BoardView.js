@@ -13,7 +13,7 @@ var BoardView = GameObject.extend({
         var p = cls.getPaper();
         var borderLeft = p.rect(x, y, 7, h + 1);
         var borderRight = p.rect(x + w - 5, y, 7, h + 1);
-        var borderTop = p.rect(x, y, w + 2, 7);
+        var borderTop = p.rect(x, y - 2, w + 2, 7);
         var borderBottom = p.rect(x, y + h - 5, w + 2, 7);
 
         borderLeft.attr('fill', '#c75');
