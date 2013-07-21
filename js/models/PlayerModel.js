@@ -23,10 +23,10 @@ var PlayersCollection = Backbone.Collection.extend({
     currentPlayer   : 0,
     fencesCount     : 20,
     playersPositions: [
-        {x: 4, y: 0, color: 'red'},
-        {x: 4, y: 8, color: 'white'},
-        {x: 0, y: 4, color: 'yellow'},
-        {x: 8, y: 4, color: 'blue'}
+        {x: 4, y: 0, color: 'red', isWin: function(x,y) { return y == 8; } },
+        {x: 4, y: 8, color: 'white', isWin: function(x,y) { return y == 0; } },
+        {x: 0, y: 4, color: 'yellow', isWin: function(x,y) { return x == 8; } },
+        {x: 8, y: 4, color: 'blue', isWin: function(x,y) { return x == 0; } }
     ],
 
     getCurrentPlayer: function () {
@@ -34,6 +34,8 @@ var PlayersCollection = Backbone.Collection.extend({
     },
 
     switchPlayer: function (player) {
+        this.checkWin(this.currentPlayer);
+
         var c = _.isUndefined(player) ? this.currentPlayer + 1 : player - 1;
         this.currentPlayer = c < this.length ? c : 0;
         this.each(function(player) {
@@ -42,6 +44,16 @@ var PlayersCollection = Backbone.Collection.extend({
         this.getCurrentPlayer().trigger('setcurrent', this.currentPlayer);
     },
 
+    checkWin: function(playerIndex) {
+        var player = this.at(this.currentPlayer),
+            x = player.get('x'),
+            y = player.get('y');
+        if (this.playersPositions[playerIndex].isWin(x, y) ) {
+            this.trigger('win', playerIndex);
+            return true;
+        }
+        return false;
+    },
     createPlayers: function (playersCount) {
         var me = this;
         _(playersCount).times(function (player) {
@@ -58,15 +70,39 @@ var PlayersCollection = Backbone.Collection.extend({
     },
 
     isValidPosition: function(player, x, y) {
-        return this.isFieldNotBusy(x, y) &&
-            (player.isNearestPosition(x, y) ||
-                this.isFieldNearOtherPlayer(player, x, y));
+        return this.isFieldNotBusy(x, y) && player.isNearestPosition(x, y) ||
+                this.isFieldBehindOtherPlayer(player, x, y);
     },
 
     isFieldNotBusy: function (x, y) {
-        return !this.findWhere({
-            x: x, y: y
+        return !this.isFieldBusy(x, y);
+    },
+
+    isFieldBusy: function (x, y) {
+        return this.findWhere({x: x, y: y});
+    },
+    isBetween: function(n1, n2, n3) {
+        var min = Math.min(n1, n2);
+        var max = Math.max(n1, n2);
+        return min < n3 && n3 < max;
+    },
+
+    isFieldBehindOtherPlayer: function(player, x, y) {
+        var me = this;
+        var playerX = player.get('x'),
+            playerY = player.get('y');
+        var distanceBetweenPositions =
+            playerX == x ? Math.abs(playerY - y) :
+           (playerY == y ? Math.abs(playerX - x) : 0);
+
+        if (!distanceBetweenPositions) return false;
+
+        var busyFieldsBetweenPosition = this.filter(function(item) {
+            return playerY == y && y == item.get('y') && me.isBetween(playerX, x, item.get('x')) ||
+                   playerX == x && x == item.get('x') && me.isBetween(playerY, y, item.get('y'));
         });
+
+        return busyFieldsBetweenPosition.length == (distanceBetweenPositions - 1);
     },
 
     isFieldNearOtherPlayer: function(player, x, y) {
