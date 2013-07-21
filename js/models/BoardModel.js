@@ -20,23 +20,19 @@ var BoardModel = Backbone.Model.extend({
         });
         this.players.createPlayers(this.playersCount);
     },
-    isValidPlayerPosition: function (current, x, y) {
-        return current.isValidPosition(x, y)
-            && this.players.isValidPosition(x, y);
-    },
     initEvents: function () {
         var me = this;
 
         this.fields.on('moveplayer', function (x, y) {
             var current = me.players.getCurrentPlayer();
-            if (me.isValidPlayerPosition(current, x, y)) {
+            if (me.players.isValidPosition(current, x, y)) {
                 current.moveTo(x, y);
                 me.players.switchPlayer();
             }
         });
         this.fields.on('beforeselectfield', function (x, y) {
             var current = me.players.getCurrentPlayer();
-            if (me.isValidPlayerPosition(current, x, y)) {
+            if (me.players.isValidPosition(current, x, y)) {
                 this.trigger('valid_position', x, y);
             }
         });

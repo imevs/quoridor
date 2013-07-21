@@ -1,6 +1,6 @@
 var PlayerModel = Backbone.Model.extend({
 
-    isValidPosition: function (x, y) {
+    isNearestPosition: function (x, y) {
         var prevX = this.get('x'),
             prevY = this.get('y');
         return Math.abs(prevX - x) == 1 && prevY == y
@@ -8,9 +8,7 @@ var PlayerModel = Backbone.Model.extend({
     },
 
     moveTo: function (x, y) {
-        if (this.isValidPosition(x, y)) {
-            this.set({x: x, y: y});
-        }
+        this.set({x: x, y: y});
     },
     placeFence: function() {
         this.set('fencesRemaining', this.get('fencesRemaining') - 1);
@@ -59,15 +57,26 @@ var PlayersCollection = Backbone.Collection.extend({
         });
     },
 
-    /**
-     * Is place free
-     * @param x
-     * @param y
-     * @returns {boolean}
-     */
-    isValidPosition: function (x, y) {
+    isValidPosition: function(player, x, y) {
+        return this.isFieldNotBusy(x, y) &&
+            (player.isNearestPosition(x, y) ||
+                this.isFieldNearOtherPlayer(player, x, y));
+    },
+
+    isFieldNotBusy: function (x, y) {
         return !this.findWhere({
             x: x, y: y
+        });
+    },
+
+    isFieldNearOtherPlayer: function(player, x, y) {
+        var playerX = player.get('x'),
+            playerY = player.get('y');
+
+        var isDiagonalSibling = Math.abs(playerX - x) == 1 && Math.abs(playerY - y) == 1;
+
+        return isDiagonalSibling && this.find(function(item) {
+            return item.isNearestPosition(x, y);
         });
     }
 
