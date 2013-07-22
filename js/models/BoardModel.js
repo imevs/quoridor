@@ -27,6 +27,40 @@ var BoardModel = Backbone.Model.extend({
         });
         this.players.createPlayers(this.playersCount);
     },
+    isBetween: function(n1, n2, n3) {
+        var min = Math.min(n1, n2);
+        var max = Math.max(n1, n2);
+        return min <= n3 && n3 < max;
+    },
+    existsFenceBetweenPositions: function(player, x, y) {
+        var me = this;
+        var playerX = player.get('x'),
+            playerY = player.get('y');
+
+        var busyFencesOnLine;
+        if (playerX == x) {
+            busyFencesOnLine = this.fences.where({
+                x: x,
+                type: 'H',
+                state: 'busy'
+            });
+            return _(busyFencesOnLine).find(function(fence) {
+                return me.isBetween(playerY, y, fence.get('y'));
+            });
+        }
+        if (playerY == y ) {
+            busyFencesOnLine = this.fences.where({
+                y: y,
+                type: 'V',
+                state: 'busy'
+            });
+            return _(busyFencesOnLine).find(function(fence) {
+                return me.isBetween(playerX, x, fence.get('x'));
+            });
+        }
+
+        return false;
+    },
     initEvents: function () {
         var me = this;
 
@@ -39,7 +73,8 @@ var BoardModel = Backbone.Model.extend({
         });
         this.fields.on('beforeselectfield', function (x, y) {
             var current = me.players.getCurrentPlayer();
-            if (me.players.isValidPosition(current, x, y)) {
+            if (me.players.isValidPosition(current, x, y) &&
+               !me.existsFenceBetweenPositions(current, x, y)) {
                 this.trigger('valid_position', x, y);
             }
         });

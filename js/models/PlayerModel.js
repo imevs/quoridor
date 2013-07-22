@@ -45,9 +45,9 @@ var PlayersCollection = Backbone.Collection.extend({
     },
 
     checkWin: function(playerIndex) {
-        var player = this.at(this.currentPlayer),
-            x = player.get('x'),
-            y = player.get('y');
+        var pos = this.at(this.currentPlayer).pick('x', 'y'),
+            x = pos.x,
+            y = pos.y;
         if (this.playersPositions[playerIndex].isWin(x, y) ) {
             this.trigger('win', playerIndex);
             return true;
@@ -70,8 +70,9 @@ var PlayersCollection = Backbone.Collection.extend({
     },
 
     isValidPosition: function(player, x, y) {
-        return this.isFieldNotBusy(x, y) && player.isNearestPosition(x, y) ||
-                this.isFieldBehindOtherPlayer(player, x, y);
+        return this.isFieldNotBusy(x, y) &&
+            (player.isNearestPosition(x, y) ||
+                this.isFieldBehindOtherPlayer(player, x, y));
     },
 
     isFieldNotBusy: function (x, y) {
@@ -95,7 +96,7 @@ var PlayersCollection = Backbone.Collection.extend({
             playerX == x ? Math.abs(playerY - y) :
            (playerY == y ? Math.abs(playerX - x) : 0);
 
-        if (!distanceBetweenPositions) return false;
+        if (distanceBetweenPositions <= 1) return false;
 
         var busyFieldsBetweenPosition = this.filter(function(item) {
             return playerY == y && y == item.get('y') && me.isBetween(playerX, x, item.get('x')) ||
