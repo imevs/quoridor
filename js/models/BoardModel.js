@@ -32,6 +32,54 @@ var BoardModel = Backbone.Model.extend({
         var max = Math.max(n1, n2);
         return min <= n3 && n3 < max;
     },
+    isOtherPlayerAndFenceBehindHim: function(player, x, y) {
+        var sibling1, sibling2,
+            playerX = player.get('x'), playerY = player.get('y');
+
+        var isDiagonalSibling = Math.abs(playerX - x) == 1 && Math.abs(playerY - y) == 1;
+
+        if (!isDiagonalSibling) return false;
+
+        /**
+         *   f
+         * x s x
+         *   p
+         *
+         *  s - sibling
+         *  f - sibling
+         *  x - possible position
+         *  p - player
+         */
+        sibling1 = this.players.findWhere({
+            x: playerX, y: playerY - (playerY - y)
+        });
+        sibling2 = this.fences.findWhere({
+            x: playerX, y: playerY - (playerY - y)
+        });
+
+        if (sibling1 && sibling2) return true;
+
+        /**
+         *    x
+         *  f s p
+         *    x
+         *
+         *  s - sibling
+         *  f - sibling
+         *  x - possible position
+         *  p - player
+         */
+        sibling1 = this.players.findWhere({
+            x: playerX - (playerX - x), y: playerY
+        });
+        sibling2 = this.fences.findWhere({
+            x: playerX - (playerX - x), y: playerY
+        });
+
+        if (sibling1 && sibling2) return true;
+
+        return false;
+    },
     existsFenceBetweenPositions: function(player, x, y) {
         var me = this;
         var playerX = player.get('x'),
@@ -48,7 +96,7 @@ var BoardModel = Backbone.Model.extend({
                 return me.isBetween(playerY, y, fence.get('y'));
             });
         }
-        if (playerY == y ) {
+        if (playerY == y) {
             busyFencesOnLine = this.fences.where({
                 y: y,
                 type: 'V',
@@ -61,20 +109,25 @@ var BoardModel = Backbone.Model.extend({
 
         return false;
     },
+    isValidPlayerPosition: function(current, x, y) {
+        var me = this;
+        return (me.players.isValidPosition(current, x, y) &&
+            (!me.existsFenceBetweenPositions(current, x, y) ||
+                me.isOtherPlayerAndFenceBehindHim(current, x, y)));
+    },
     initEvents: function () {
         var me = this;
 
         this.fields.on('moveplayer', function (x, y) {
             var current = me.players.getCurrentPlayer();
-            if (me.players.isValidPosition(current, x, y)) {
+            if (me.isValidPlayerPosition(current, x, y)) {
                 current.moveTo(x, y);
                 me.players.switchPlayer();
             }
         });
         this.fields.on('beforeselectfield', function (x, y) {
             var current = me.players.getCurrentPlayer();
-            if (me.players.isValidPosition(current, x, y) &&
-               !me.existsFenceBetweenPositions(current, x, y)) {
+            if (me.isValidPlayerPosition(current, x, y)) {
                 this.trigger('valid_position', x, y);
             }
         });

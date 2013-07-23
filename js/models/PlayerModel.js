@@ -109,15 +109,13 @@ var PlayersCollection = Backbone.Collection.extend({
     },
 
     isFieldNearOtherPlayer: function(player, x, y) {
-        var me = this;
-        var playerX = player.get('x'),
+        var sibling1, sibling2,
+            playerX = player.get('x'),
             playerY = player.get('y');
 
         var isDiagonalSibling = Math.abs(playerX - x) == 1 && Math.abs(playerY - y) == 1;
 
         if (!isDiagonalSibling) return false;
-
-        var sibling1, sibling2;
 
         /**
          *   s2
