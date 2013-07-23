@@ -24,9 +24,9 @@ var PlayersCollection = Backbone.Collection.extend({
     fencesCount     : 20,
     playersPositions: [
         {x: 4, y: 0, color: 'red', isWin: function(x,y) { return y == 8; } },
+        {x: 8, y: 4, color: 'blue', isWin: function(x,y) { return x == 0; } },
         {x: 4, y: 8, color: 'white', isWin: function(x,y) { return y == 0; } },
-        {x: 0, y: 4, color: 'yellow', isWin: function(x,y) { return x == 8; } },
-        {x: 8, y: 4, color: 'blue', isWin: function(x,y) { return x == 0; } }
+        {x: 0, y: 4, color: 'yellow', isWin: function(x,y) { return x == 8; } }
     ],
 
     getCurrentPlayer: function () {
@@ -70,9 +70,11 @@ var PlayersCollection = Backbone.Collection.extend({
     },
 
     isValidPosition: function(player, x, y) {
-        return this.isFieldNotBusy(x, y) &&
-            (player.isNearestPosition(x, y) ||
-                this.isFieldBehindOtherPlayer(player, x, y));
+        return this.isFieldNotBusy(x, y) && (
+            player.isNearestPosition(x, y) ||
+            this.isFieldBehindOtherPlayer(player, x, y) ||
+            this.isFieldNearOtherPlayer(player, x, y)
+        );
     },
 
     isFieldNotBusy: function (x, y) {
@@ -96,7 +98,7 @@ var PlayersCollection = Backbone.Collection.extend({
             playerX == x ? Math.abs(playerY - y) :
            (playerY == y ? Math.abs(playerX - x) : 0);
 
-        if (distanceBetweenPositions <= 1) return false;
+        if (distanceBetweenPositions != 2) return false;
 
         var busyFieldsBetweenPosition = this.filter(function(item) {
             return playerY == y && y == item.get('y') && me.isBetween(playerX, x, item.get('x')) ||
@@ -107,14 +109,53 @@ var PlayersCollection = Backbone.Collection.extend({
     },
 
     isFieldNearOtherPlayer: function(player, x, y) {
+        var me = this;
         var playerX = player.get('x'),
             playerY = player.get('y');
 
         var isDiagonalSibling = Math.abs(playerX - x) == 1 && Math.abs(playerY - y) == 1;
 
-        return isDiagonalSibling && this.find(function(item) {
-            return item.isNearestPosition(x, y);
+        if (!isDiagonalSibling) return false;
+
+        var sibling1, sibling2;
+
+        /**
+         *   s2
+         * x s1 x
+         *   p
+         *
+         *  s1,s2 - siblings
+         *  x - possible position
+         *  p - player
+         */
+        sibling1 = this.findWhere({
+            x: playerX, y: playerY - (playerY - y)
         });
+        sibling2 = this.findWhere({
+            x: playerX, y: playerY - (playerY - y) * 2
+        });
+
+        if (sibling1 && sibling2) return true;
+
+        /**
+         *     x
+         *  s2 s1 p
+         *     x
+         *
+         *  s1,s2 - siblings
+         *  x - possible position
+         *  p - player
+         */
+        sibling1 = this.findWhere({
+            x: playerX - (playerX - x), y: playerY
+        });
+        sibling2 = this.findWhere({
+            x: playerX - (playerX - x) * 2, y: playerY
+        });
+
+        if (sibling1 && sibling2) return true;
+
+        return false;
     }
 
 });
