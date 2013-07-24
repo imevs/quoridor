@@ -22,11 +22,15 @@ var PlayerModel = Backbone.Model.extend({
 var PlayersCollection = Backbone.Collection.extend({
     currentPlayer   : 0,
     fencesCount     : 20,
-    playersPositions: [
+    playersPositions4: [
         {x: 4, y: 0, color: 'red', isWin: function(x,y) { return y == 8; } },
         {x: 8, y: 4, color: 'blue', isWin: function(x,y) { return x == 0; } },
         {x: 4, y: 8, color: 'white', isWin: function(x,y) { return y == 0; } },
         {x: 0, y: 4, color: 'yellow', isWin: function(x,y) { return x == 8; } }
+    ],
+    playersPositions2: [
+        {x: 4, y: 0, color: 'red', isWin: function(x,y) { return y == 8; } },
+        {x: 4, y: 8, color: 'white', isWin: function(x,y) { return y == 0; } }
     ],
 
     getCurrentPlayer: function () {
@@ -56,6 +60,7 @@ var PlayersCollection = Backbone.Collection.extend({
     },
     createPlayers: function (playersCount) {
         var me = this;
+        me.playersPositions = playersCount == 4 ? me.playersPositions4 : me.playersPositions2;
         _(playersCount).times(function (player) {
             var position = me.playersPositions[player];
             var fences = Math.round(me.fencesCount / playersCount);

@@ -1,6 +1,8 @@
 var BoardModel = Backbone.Model.extend({
-    boardSize       : 9,
-    playersCount    : 4,
+    defaults: {
+        boardSize       : 9,
+        playersCount    : 4
+    },
 
     resetModels: function() {
         this.fences.reset();
@@ -14,7 +16,7 @@ var BoardModel = Backbone.Model.extend({
         this.infoModel = new Backbone.Model();
     },
     initModels   : function () {
-        var me = this, boardSize = this.boardSize;
+        var me = this, boardSize = this.get('boardSize');
 
         _([boardSize, boardSize]).iter(function (i, j) {
             me.fields.add(new FieldModel({x: i, y: j}));
@@ -25,7 +27,7 @@ var BoardModel = Backbone.Model.extend({
         _([boardSize - 1, boardSize]).iter(function (i, j) {
             me.fences.add(new FenceVModel({x: i, y: j}));
         });
-        this.players.createPlayers(this.playersCount);
+        this.players.createPlayers(this.get('playersCount'));
     },
     isBetween: function(n1, n2, n3) {
         var min = Math.min(n1, n2);
