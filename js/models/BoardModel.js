@@ -112,10 +112,13 @@ var BoardModel = Backbone.Model.extend({
         return false;
     },
     isValidPlayerPosition: function(current, x, y) {
-        var me = this;
-        return (me.players.isValidPosition(current, x, y) &&
-            (!me.existsFenceBetweenPositions(current, x, y) ||
-                me.isOtherPlayerAndFenceBehindHim(current, x, y)));
+        return this.isBetween(0, this.get('boardSize'), x)
+            && this.isBetween(0, this.get('boardSize'), y)
+            && this.players.isValidPosition(current, x, y)
+            && (
+                    !this.existsFenceBetweenPositions(current, x, y) ||
+                    this.isOtherPlayerAndFenceBehindHim(current, x, y)
+            );
     },
     initEvents: function () {
         var me = this;
