@@ -82,7 +82,7 @@ var BoardModel = Backbone.Model.extend({
 
         return false;
     },
-    existsFenceBetweenPositions: function(player, x, y) {
+    noFenceBetweenPositions: function(player, x, y) {
         var me = this;
         var playerX = player.get('x'),
             playerY = player.get('y');
@@ -94,7 +94,7 @@ var BoardModel = Backbone.Model.extend({
                 type: 'H',
                 state: 'busy'
             });
-            return _(busyFencesOnLine).find(function(fence) {
+            return !_(busyFencesOnLine).find(function(fence) {
                 return me.isBetween(playerY, y, fence.get('y'));
             });
         }
@@ -104,20 +104,25 @@ var BoardModel = Backbone.Model.extend({
                 type: 'V',
                 state: 'busy'
             });
-            return _(busyFencesOnLine).find(function(fence) {
+            return !_(busyFencesOnLine).find(function(fence) {
                 return me.isBetween(playerX, x, fence.get('x'));
             });
         }
 
-        return false;
+        return true;
     },
     isValidPlayerPosition: function(current, x, y) {
         return this.isBetween(0, this.get('boardSize'), x)
             && this.isBetween(0, this.get('boardSize'), y)
-            && this.players.isValidPosition(current, x, y)
+            && this.players.isFieldNotBusy(x, y)
             && (
-                    !this.existsFenceBetweenPositions(current, x, y) ||
-                    this.isOtherPlayerAndFenceBehindHim(current, x, y)
+                this.noFenceBetweenPositions(current, x, y) ||
+                this.isOtherPlayerAndFenceBehindHim(current, x, y)
+            )
+            && (
+                current.isNearestPosition(x, y) ||
+                this.players.isFieldBehindOtherPlayer(current, x, y) ||
+                this.players.isFieldNearOtherPlayer(current, x, y)
             );
     },
     initEvents: function () {

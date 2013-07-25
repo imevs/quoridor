@@ -74,14 +74,6 @@ var PlayersCollection = Backbone.Collection.extend({
         });
     },
 
-    isValidPosition: function(player, x, y) {
-        return this.isFieldNotBusy(x, y) && (
-            player.isNearestPosition(x, y) ||
-            this.isFieldBehindOtherPlayer(player, x, y) ||
-            this.isFieldNearOtherPlayer(player, x, y)
-        );
-    },
-
     isFieldNotBusy: function (x, y) {
         return !this.isFieldBusy(x, y);
     },

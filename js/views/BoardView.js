@@ -6,8 +6,8 @@ var BoardView = GameObject.extend({
         var me = this.model,
             cls = this.constructor,
             d = cls.squareDistance,
-            w = me.boardSize * (d + cls.squareWidth),
-            h = me.boardSize * (d + cls.squareHeight),
+            w = me.get('boardSize') * (d + cls.squareWidth),
+            h = me.get('boardSize') * (d + cls.squareHeight),
             x = 10 - d / 2,
             y = 10 - d / 2;
 
