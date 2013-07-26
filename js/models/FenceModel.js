@@ -29,21 +29,27 @@ var FencesCollection = Backbone.Collection.extend({
         this.on('add', this.onAdd);
     },
     onAdd                        : function (item) {
+        var me = this;
         item.on({
-            'selected'                     : function (item) {
-                this.triggerEventOnFenceAndSibling(item, 'markasselected');
+            'selected'                     : function () {
+                if (me.triggerEventOnFenceAndSibling(this, 'markasselected')) {
+                    me.trigger('placefence');
+                }
             },
-            'highlight_current_and_sibling': function (item) {
-                this.triggerEventOnFenceAndSibling(item, 'highlight');
+            'markasselected': function() {
+                this.set('state', 'busy');
             },
-            'reset_current_and_sibling'    : function (item) {
-                this.triggerEventOnFenceAndSibling(item, 'dehighlight');
+            'highlight_current_and_sibling': function () {
+                me.triggerEventOnFenceAndSibling(this, 'highlight');
+            },
+            'reset_current_and_sibling'    : function () {
+                me.triggerEventOnFenceAndSibling(this, 'dehighlight');
             }
-        }, this);
+        });
     },
     triggerEventOnFenceAndSibling: function (item, event) {
-        if (this.isBusy(item)) return;
-        if (!this.isFencePlaceable(item)) return;
+        if (this.isBusy(item)) return false;
+        if (!this.isFencePlaceable(item)) return false;
 
         var siblingPosition = item.getAdjacentFencePosition();
         var sibling = this.findWhere({
@@ -52,13 +58,14 @@ var FencesCollection = Backbone.Collection.extend({
             type: item.get('type')
         });
 
-        if (!sibling) return;
-        if (this.isBusy(sibling)) return;
+        if (!sibling) return false;
+        if (this.isBusy(sibling)) return false;
 
-        if (!this.hasPassForPlayer(sibling, item)) return;
+        if (!this.hasPassForPlayer(sibling, item)) return false;
 
         sibling.trigger(event);
         item.trigger(event);
+        return true;
     },
     isBusy                       : function (item) {
         return item.get('state') == 'busy';

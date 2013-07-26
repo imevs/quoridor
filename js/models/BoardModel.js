@@ -152,7 +152,7 @@ var BoardModel = Backbone.Model.extend({
                 me.trigger('rerun');
             }
         });
-        this.fences.on('selected', function(fence) {
+        this.fences.on('placefence', function() {
             if (me.players.getCurrentPlayer().hasFences()) {
                 me.players.getCurrentPlayer().placeFence();
                 me.players.switchPlayer();

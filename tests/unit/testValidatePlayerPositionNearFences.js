@@ -28,13 +28,13 @@ TestCase("Test testValidatePlayerPositionNearFences", {
     "test Valid Position With Two Players and Fence": new TestWithProvider({
         data: [
             {input: {x: 3, y: 0}, expected: true},
-            {input: {x: 3, y: 1}, expected: false}, // ???
+            {input: {x: 3, y: 1}, expected: false}, // true
             {input: {x: 3, y: 2}, expected: false},
             {input: {x: 4, y: 0}, expected: false},
             {input: {x: 4, y: 1}, expected: false},
             {input: {x: 4, y: 2}, expected: false},
             {input: {x: 5, y: 0}, expected: true},
-            {input: {x: 5, y: 1}, expected: false}, // ???
+            {input: {x: 5, y: 1}, expected: false}, // true
             {input: {x: 5, y: 2}, expected: false}
         ],
         test: function(input, expected) {
