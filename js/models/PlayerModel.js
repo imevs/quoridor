@@ -22,15 +22,11 @@ var PlayerModel = Backbone.Model.extend({
 var PlayersCollection = Backbone.Collection.extend({
     currentPlayer   : 0,
     fencesCount     : 20,
-    playersPositions4: [
+    playersPositions: [
         {x: 4, y: 0, color: 'red', isWin: function(x,y) { return y == 8; } },
         {x: 8, y: 4, color: 'blue', isWin: function(x,y) { return x == 0; } },
         {x: 4, y: 8, color: 'white', isWin: function(x,y) { return y == 0; } },
         {x: 0, y: 4, color: 'yellow', isWin: function(x,y) { return x == 8; } }
-    ],
-    playersPositions2: [
-        {x: 4, y: 0, color: 'red', isWin: function(x,y) { return y == 8; } },
-        {x: 4, y: 8, color: 'white', isWin: function(x,y) { return y == 0; } }
     ],
 
     getCurrentPlayer: function () {
@@ -60,17 +56,31 @@ var PlayersCollection = Backbone.Collection.extend({
     },
     createPlayers: function (playersCount) {
         var me = this;
-        me.playersPositions = playersCount == 4 ? me.playersPositions4 : me.playersPositions2;
+        if (playersCount == 2) {
+            me.playersPositions = _(me.playersPositions).reject(function(v, i) {
+                return _([1,3]).contains(i);
+            });
+        }
         _(playersCount).times(function (player) {
             var position = me.playersPositions[player];
-            var fences = Math.round(me.fencesCount / playersCount);
             var model = new PlayerModel({
-                x: position.x,
-                y: position.y,
-                color: position.color,
-                fencesRemaining: fences
+                color: position.color
             });
             me.add(model);
+        });
+        me.initPlayerPositions();
+    },
+
+    initPlayerPositions: function() {
+        var me = this;
+        this.each(function(player, i) {
+            var position = me.playersPositions[i];
+            var fences = Math.round(me.fencesCount / me.length);
+            player.set({
+                x: position.x,
+                y: position.y,
+                fencesRemaining: fences
+            });
         });
     },
 

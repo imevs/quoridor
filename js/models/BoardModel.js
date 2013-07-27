@@ -7,7 +7,7 @@ var BoardModel = Backbone.Model.extend({
     resetModels: function() {
         this.fences.reset();
         this.fields.reset();
-        this.players.reset();
+        this.players.initPlayerPositions();
     },
     createModels: function() {
         this.fences = new FencesCollection();
@@ -149,7 +149,7 @@ var BoardModel = Backbone.Model.extend({
         });
         this.players.on('win', function(player) {
             if (window.confirm(player + ' выиграл. Начать сначала?')) {
-                me.trigger('rerun');
+                me.resetModels();
             }
         });
         this.fences.on('placefence', function() {
