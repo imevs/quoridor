@@ -32,7 +32,7 @@ var FencesCollection = Backbone.Collection.extend({
         var me = this;
         item.on({
             'selected'                     : function () {
-                if (me.triggerEventOnFenceAndSibling(this, 'markasselected')) {
+                if (me.validateAndTriggerEventOnFenceAndSibling(this, 'markasselected')) {
                     me.trigger('placefence');
                 }
             },
@@ -40,14 +40,14 @@ var FencesCollection = Backbone.Collection.extend({
                 this.set('state', 'busy');
             },
             'highlight_current_and_sibling': function () {
-                me.triggerEventOnFenceAndSibling(this, 'highlight');
+                me.validateAndTriggerEventOnFenceAndSibling(this, 'highlight');
             },
             'reset_current_and_sibling'    : function () {
-                me.triggerEventOnFenceAndSibling(this, 'dehighlight');
+                me.validateAndTriggerEventOnFenceAndSibling(this, 'dehighlight');
             }
         });
     },
-    triggerEventOnFenceAndSibling: function (item, event) {
+    validateAndTriggerEventOnFenceAndSibling: function (item, event) {
         if (this.isBusy(item)) return false;
         if (!this.isFencePlaceable(item)) return false;
 
@@ -63,8 +63,10 @@ var FencesCollection = Backbone.Collection.extend({
 
         if (!this.hasPassForPlayer(sibling, item)) return false;
 
-        sibling.trigger(event);
-        item.trigger(event);
+        if (event) {
+            sibling.trigger(event);
+            item.trigger(event);
+        }
         return true;
     },
     isBusy                       : function (item) {
