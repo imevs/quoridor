@@ -1,4 +1,7 @@
 var FenceView = GameObject.extend({
+    defaults: {
+        color: '#c75'
+    },
     events                    : {
         'click'    : 'onClick',
         'mouseover': 'highlightCurrentAndSibling',
@@ -14,28 +17,39 @@ var FenceView = GameObject.extend({
         this.model.trigger('reset_current_and_sibling', this.model);
     },
     initialize                : function () {
+        this.model.set('color', this.defaults.color);
         this.model.on({
-            'change'        : this.render,
-            'markasselected': this.markAsSelected,
-            'highlight'     : this.selectCurrent,
-            'dehighlight'   : this.unSelectCurrent
+            'change:state'  : this.render
         }, this);
 
         var obj = this.createElement && this.createElement();
         this.setElement(obj);
     },
-    markAsSelected            : function () {
-        this.model.set('state', 'busy');
-        this.model.set('color', 'black');
-        this.model.set('prevcolor', 'black');
-        this.el.toFront();
-    },
     render                    : function () {
         var circle = this.el;
         var model = this.model;
-        circle.attr({
-            fill: model.get('color')
-        });
+
+        if (model.get('state') == 'busy') {
+            model.set('color', 'black');
+            model.set('prevcolor', 'black');
+            circle.toFront();
+        }
+        if (model.get('state') == '') {
+            model.set('color', this.defaults.color);
+            model.set('prevcolor', '');
+            circle.toBack();
+        }
+        if (model.get('state') == 'highlight') {
+            model.set('color', 'black');
+            model.set('prevcolor', model.get('color'));
+            circle.toFront();
+        }
+        circle.attr({fill: model.get('color')});
+    }
+}, {
+    createFenceView: function(model) {
+        model instanceof FenceHModel
+            ? new FenceHView({model: model}) : new FenceVView({model: model});
     }
 });
 

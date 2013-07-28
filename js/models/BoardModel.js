@@ -5,9 +5,11 @@ var BoardModel = Backbone.Model.extend({
     },
 
     resetModels: function() {
-        this.fences.reset();
-        this.fields.reset();
+        this.fences.each(function(fence) {
+            fence.set('state', '');
+        });
         this.players.initPlayerPositions();
+        this.run();
     },
     createModels: function() {
         this.fences = new FencesCollection();
@@ -56,7 +58,7 @@ var BoardModel = Backbone.Model.extend({
             x: playerX, y: playerY - (playerY - y)
         });
         sibling2 = this.fences.findWhere({
-            x: playerX, y: playerY - (playerY - y)
+            x: playerX, y: playerY - (playerY - y), state: 'busy', type: 'H'
         });
 
         if (sibling1 && sibling2) return true;
@@ -75,7 +77,7 @@ var BoardModel = Backbone.Model.extend({
             x: playerX - (playerX - x), y: playerY
         });
         sibling2 = this.fences.findWhere({
-            x: playerX - (playerX - x), y: playerY
+            x: playerX - (playerX - x), y: playerY, state: 'busy', type: 'V'
         });
 
         if (sibling1 && sibling2) return true;
@@ -115,14 +117,12 @@ var BoardModel = Backbone.Model.extend({
         return this.isBetween(0, this.get('boardSize'), x)
             && this.isBetween(0, this.get('boardSize'), y)
             && this.players.isFieldNotBusy(x, y)
-            && (
-                this.noFenceBetweenPositions(current, x, y) ||
-                this.isOtherPlayerAndFenceBehindHim(current, x, y)
-            )
+            && this.noFenceBetweenPositions(current, x, y)
             && (
                 current.isNearestPosition(x, y) ||
                 this.players.isFieldBehindOtherPlayer(current, x, y) ||
-                this.players.isFieldNearOtherPlayer(current, x, y)
+                this.players.isFieldNearOtherPlayer(current, x, y) ||
+                this.isOtherPlayerAndFenceBehindHim(current, x, y)
             );
     },
     initEvents: function () {

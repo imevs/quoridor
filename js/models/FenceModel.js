@@ -1,4 +1,20 @@
-var FenceModel = FieldModel.extend();
+var FenceModel = FieldModel.extend({
+
+    initialize: function() {
+        this.on({
+            'markasselected': function() {
+                this.set('state', 'busy');
+            },
+            'highlight': function() {
+                this.set('state', 'highlight');
+            },
+            'dehighlight': function() {
+                this.set('state', '');
+            }
+        });
+    }
+
+});
 
 var FenceHModel = FenceModel.extend({
     defaults                : {
@@ -35,9 +51,6 @@ var FencesCollection = Backbone.Collection.extend({
                 if (me.validateAndTriggerEventOnFenceAndSibling(this, 'markasselected')) {
                     me.trigger('placefence');
                 }
-            },
-            'markasselected': function() {
-                this.set('state', 'busy');
             },
             'highlight_current_and_sibling': function () {
                 me.validateAndTriggerEventOnFenceAndSibling(this, 'highlight');

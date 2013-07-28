@@ -23,13 +23,10 @@ var BoardView = GameObject.extend({
         borderBottom.attr('fill', '#c75');
 
         me.fields.each(function (model) {
-            model.set('color', '#742');
             new FieldView({model: model});
         });
         me.fences.each(function (model) {
-            model.set('color', '#c75');
-            model instanceof FenceHModel
-                ? new FenceHView({model: model}) : new FenceVView({model: model});
+            FenceView.createFenceView(model);
         });
         me.players.each(function (model) {
             new PlayerView({model: model})
@@ -38,13 +35,5 @@ var BoardView = GameObject.extend({
             el   : $("#game-info"),
             model: me.infoModel
         });
-    },
-    reRun: function() {
-        window.location.reload();
-/*
-        this.model.destroy();
-        this.model = new BoardModel();
-        this.model.run();
-*/
     }
 });

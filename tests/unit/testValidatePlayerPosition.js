@@ -104,7 +104,7 @@ TestCase("Test Validate Player Position", {
             {input: {x: 6, y: 5}, expected: false},
             {input: {x: 7, y: 3}, expected: false},
             {input: {x: 7, y: 4}, expected: false},
-            {input: {x: 7, y: 5}, expected: false},
+            {input: {x: 7, y: 5}, expected: false}
         ],
         test: function(input, expected) {
             var player1 = this.board.players.at(0).set({x: 4, y: 4});
