@@ -42,23 +42,6 @@ var FenceVModel = FenceModel.extend({
 
 var FencesCollection = Backbone.Collection.extend({
     model                        : FenceModel,
-    initialize                   : function () {
-        this.on('add', this.onAdd);
-    },
-    onAdd                        : function (item) {
-        var me = this;
-        item.on({
-            'selected'                     : function (model) {
-                me.trigger('selected', model);
-            },
-            'highlight_current_and_sibling': function (model) {
-                me.trigger('highlight_current_and_sibling', model);
-            },
-            'reset_current_and_sibling'    : function (model) {
-                me.trigger('reset_current_and_sibling', model);
-            }
-        });
-    },
     validateAndTriggerEventOnFenceAndSibling: function (item, event) {
         if (this.isBusy(item)) return false;
         if (!this.isFencePlaceable(item)) return false;
