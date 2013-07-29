@@ -41,22 +41,21 @@ var FenceVModel = FenceModel.extend({
 });
 
 var FencesCollection = Backbone.Collection.extend({
+    model                        : FenceModel,
     initialize                   : function () {
         this.on('add', this.onAdd);
     },
     onAdd                        : function (item) {
         var me = this;
         item.on({
-            'selected'                     : function () {
-                if (me.validateAndTriggerEventOnFenceAndSibling(this, 'markasselected')) {
-                    me.trigger('placefence');
-                }
+            'selected'                     : function (model) {
+                me.trigger('selected', model);
             },
-            'highlight_current_and_sibling': function () {
-                me.validateAndTriggerEventOnFenceAndSibling(this, 'highlight');
+            'highlight_current_and_sibling': function (model) {
+                me.trigger('highlight_current_and_sibling', model);
             },
-            'reset_current_and_sibling'    : function () {
-                me.validateAndTriggerEventOnFenceAndSibling(this, 'dehighlight');
+            'reset_current_and_sibling'    : function (model) {
+                me.trigger('reset_current_and_sibling', model);
             }
         });
     },

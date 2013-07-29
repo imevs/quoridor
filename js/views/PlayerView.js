@@ -21,15 +21,11 @@ var PlayerView = GameObject.extend({
     },
 
     markAsCurrent: function() {
-        this.el.attr({
-            'stroke-width': 3
-        });
+        this.el.attr({'stroke-width': 3});
     },
 
     resetState: function() {
-        this.el.attr({
-            'stroke-width': 1
-        });
+        this.el.attr({'stroke-width': 1});
     },
 
     getPosX: function (x) {
@@ -46,22 +42,11 @@ var PlayerView = GameObject.extend({
         return (h + d) * y + 10 + h / 2;
     },
 
-    events: {
-        'click': 'sayType'
-    },
-
-    sayType: function (evt) {
-        this.model.set('color', 'green');
-    },
-
     render: function () {
-        var circle = this.el;
-        var model = this.model;
-
-        circle.attr({
-            fill: model.get('color'),
-            cx  : this.getPosX(model.get('x')),
-            cy  : this.getPosY(model.get('y'))
+        this.el.attr({
+            fill: this.model.get('color'),
+            cx  : this.getPosX(this.model.get('x')),
+            cy  : this.getPosY(this.model.get('y'))
         });
     }
 });

@@ -152,10 +152,21 @@ var BoardModel = Backbone.Model.extend({
                 me.resetModels();
             }
         });
-        this.fences.on('placefence', function() {
-            if (me.players.getCurrentPlayer().hasFences()) {
-                me.players.getCurrentPlayer().placeFence();
-                me.players.switchPlayer();
+        this.fences.on({
+            'selected'                     : function (model) {
+                var hasFences = me.players.getCurrentPlayer().hasFences();
+                if (hasFences && me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markasselected')) {
+                    me.players.getCurrentPlayer().placeFence();
+                    me.players.switchPlayer();
+                }
+            },
+            'highlight_current_and_sibling': function (model) {
+                var hasFences = me.players.getCurrentPlayer().hasFences();
+                hasFences && me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'highlight');
+            },
+            'reset_current_and_sibling'    : function (model) {
+                var hasFences = me.players.getCurrentPlayer().hasFences();
+                hasFences && me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'dehighlight');
             }
         });
     },

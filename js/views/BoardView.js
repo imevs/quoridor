@@ -1,8 +1,17 @@
+var GameObject = Backbone.RaphaelView.extend({
+    // object methods
+}, {
+    squareWidth   : 50,
+    squareHeight  : 30,
+    squareDistance: 10,
+    getPaper      : function () {
+        return GameObject.paper || (GameObject.paper = Raphael('holder', 600, 600));
+    }
+});
+
 var BoardView = GameObject.extend({
     el: 'holder',
-
     initialize: function () {
-        this.model.on('rerun', this.reRun, this);
         var me = this.model,
             cls = this.constructor,
             d = cls.squareDistance,
@@ -31,7 +40,7 @@ var BoardView = GameObject.extend({
         me.players.each(function (model) {
             new PlayerView({model: model})
         });
-        var info = new Info({
+        var info = new InfoView({
             el   : $("#game-info"),
             model: me.infoModel
         });
