@@ -1,0 +1,117 @@
+{
+    "name"   : "dev build",
+    "root"   : "../",
+    "output" : "dev.lmd.js",
+    "modules": {
+        "underscore"       : {
+            "path"   : "libs/underscore.js",
+            "exports": "_"
+        },
+        "jQuery"           : {
+            "path"   : "libs/jquery-1.10.2.js",
+            "exports": "$"
+        },
+        "Backbone"         : {
+            "path"   : "libs/backbone.js",
+            "require": ["underscore", "jQuery"],
+            "exports": "Backbone"
+        },
+        "raphael"          : {
+            "path"   : "libs/raphael.js",
+            "require": "jQuery"
+        },
+
+        "backbone.raphael" : "libs/backbone.raphael.js",
+        "utils"            : "js/utils.js",
+
+        "FieldModel"       : {
+            "path"   : "js/models/FieldModel.js",
+            "exports": "window.FieldModel = FieldModel"
+        },
+        "FenceModel"       : {
+            "path"   : "js/models/FenceModel.js",
+            "exports": "window.FenceModel = FenceModel"
+        },
+        "FenceHModel"      : {
+            "path"   : "js/models/FenceModel.js",
+            "exports": "window.FenceHModel = FenceHModel"
+        },
+        "FenceVModel"      : {
+            "path"   : "js/models/FenceModel.js",
+            "exports": "window.FenceVModel = FenceVModel"
+        },
+        "FieldsCollection" : {
+            "path"   : "js/models/FieldModel.js",
+            "exports": "window.FieldsCollection = FieldsCollection"
+        },
+        "FencesCollection" : {
+            "require": "FieldModel",
+            "path"   : "js/models/FenceModel.js",
+            "exports": "window.FencesCollection = FencesCollection"
+        },
+        "PlayerModel"      : {
+            "path"   : "js/models/PlayerModel.js",
+            "exports": "window.PlayerModel = PlayerModel"
+        },
+        "PlayersCollection": {
+            "path"   : "js/models/PlayerModel.js",
+            "exports": "window.PlayersCollection = PlayersCollection"
+        },
+        "BoardModel"       : {
+            "require": [
+                "utils","FenceHModel", "FenceVModel", "FenceModel",
+                "FieldModel", "FieldsCollection", "FencesCollection",
+                "PlayerModel", "PlayersCollection"
+            ],
+            "path"   : "js/models/BoardModel.js",
+            "exports": "window.BoardModel = BoardModel"
+        },
+        "BoardView" : {
+            "require": [
+                "GameObject", "InfoView", "FieldView", "FenceView", "PlayerView"
+            ],
+            "path"   : "js/views/BoardView.js",
+            "exports": "window.BoardView = BoardView"
+        },
+        "GameObject": {
+            "require": ["backbone.raphael", "raphael" ],
+            "path"   : "js/views/GameObject.js",
+            "exports": "window.GameObject = GameObject"
+        },
+        "InfoView"  : {
+            "path"   : "js/views/InfoView.js",
+            "exports": "window.InfoView = InfoView"
+        },
+        "Undo"      : {
+            "path"   : "js/views/UndoRedo.js",
+            "exports": "window.Undo = Undo"
+        },
+        "FieldView" : {
+            "require": ["GameObject"],
+            "path"   : "js/views/FieldView.js",
+            "exports": "window.FieldView = FieldView"
+        },
+        "FenceView" : {
+            "require": ["GameObject", "FenceHModel", "FenceVModel"],
+            "path"   : "js/views/FenceView.js",
+            "exports": "window.FenceView = FenceView"
+        },
+        "PlayerView": {
+            "require": ["GameObject"],
+            "path"   : "js/views/PlayerView.js",
+            "exports": "window.PlayerView = PlayerView"
+        },
+
+        "main": {
+            "path"   : "js/app.js",
+            "require": ["Backbone","underscore", "Undo", "jQuery", "BoardView", "BoardModel"]
+        }
+    },
+
+    "www_root"        : ".",
+    "sourcemap"       : "dev.lmd.map",
+    "sourcemap_inline": true,
+    "sourcemap_www"   : "",
+
+    "main": "main"
+}

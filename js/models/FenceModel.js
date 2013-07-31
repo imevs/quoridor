@@ -1,4 +1,4 @@
-var FenceModel = FieldModel.extend({
+var FenceModel = Backbone.Model.extend({
 
     initialize: function() {
         this.on({
