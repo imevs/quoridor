@@ -131,14 +131,16 @@ var BoardModel = Backbone.Model.extend({
         this.fields.on('moveplayer', function (x, y) {
             var current = me.players.getCurrentPlayer();
             if (me.isValidPlayerPosition(current, x, y)) {
-                current.moveTo(x, y);
-                me.players.switchPlayer();
+                this.markFieldOrMovePlayer(x, y, function() {
+                    current.moveTo(x, y);
+                    me.players.switchPlayer();
+                });
             }
         });
         this.fields.on('beforeselectfield', function (x, y) {
             var current = me.players.getCurrentPlayer();
             if (me.isValidPlayerPosition(current, x, y)) {
-                this.trigger('valid_position', x, y);
+                this.selectField(x, y);
             }
         });
         this.players.on('change setcurrent', function() {

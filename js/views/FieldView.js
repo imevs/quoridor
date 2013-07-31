@@ -11,6 +11,7 @@ var FieldView = GameObject.extend({
 
         this.listenTo(model, 'change', this.render);
         this.listenTo(model, 'selectfield', this.selectCurrent);
+        this.listenTo(model, 'markfield', this.markCurrent);
         var w = cls.squareWidth,
             h = cls.squareHeight,
             d = cls.squareDistance,
@@ -31,21 +32,18 @@ var FieldView = GameObject.extend({
     },
 
     selectCurrent  : function () {
-        this.model.set({
-            prevcolor: this.model.get('color'),
-            color: 'black'
-        });
+        this.model.set({color: 'black'});
+        this.el.toFront();
+    },
+
+    markCurrent  : function () {
+        this.model.set({color: 'gray'});
         this.el.toFront();
     },
 
     unSelectCurrent: function() {
-        if (this.model.get('prevcolor')) {
-            this.model.set({
-                prevcolor: '',
-                color: this.model.get('prevcolor')
-            });
-            this.el.toBack();
-        }
+        this.model.set({color: this.defaults.color});
+        this.el.toBack();
     },
 
     events: {
