@@ -11,6 +11,7 @@ TestCase("Test Finish game", {
         this.board.players.at(0).set({x: 5, y: 7});
         this.board.players.on('win', function() { isWin = true;});
         this.board.fields.trigger('moveplayer', 5, 8);
+        this.board.fields.trigger('moveplayer', 5, 8);
         assertTrue(isWin);
     },
 
@@ -21,6 +22,7 @@ TestCase("Test Finish game", {
         var player = this.board.players.at(0);
         player.set({x: 5, y: 7});
         this.board.fields.trigger('moveplayer', 5, 8);
+        this.board.fields.trigger('moveplayer', 5, 8);
         assertEquals(player.pick('x', 'y'), {x: 4, y: 0 });
     },
 
@@ -30,6 +32,7 @@ TestCase("Test Finish game", {
         };
         var player = this.board.players.at(0);
         player.set({x: 5, y: 7});
+        this.board.fields.trigger('moveplayer', 5, 8);
         this.board.fields.trigger('moveplayer', 5, 8);
         assertEquals(player.pick('x', 'y'), {x: 5, y: 8 });
     }
