@@ -1,25 +1,31 @@
-Игра Quoridor
+Quoridor game
 ========
+[Game description](http://en.wikipedia.org/wiki/Quoridor)
+
 
 [Demo on heroku](http://quoridor-online.herokuapp.com/)
 
-Суть игры заключается в том, чтобы довести своего подопечного - деревянного человечка - из одного конца доски в другой и не дать сделать этого противнику. В свой ход мы можем либо двигаться, дабы поскорее достичь вожделенного финиша, либо строить стены, из которых впоследствии и вырастает тот самый коридор, в котором должен заблудиться наш соперник.
+[![Build Status](https://travis-ci.org/imevs/quoridor.png?branch=master)](https://travis-ci.org/imevs/quoridor)
 
 
-План релизов
+Road map
 =
 
-1. Игра на 2-4х игроков в одном браузере / июль
-2. Игра на 2-4х игроков в разных браузерах, перенос части логики на сервер / август
-3. Доработка дизайна/3х мерный вид / сентябрь
-4. Переписать на другом фреймворке, минификация скриптов, автолоадинг классов / октябрь
-5. Игра с компьютером / ноябрь
-6. Версия для андроида / декабрь
+1. playing 2-4 players in the same browser window / 07.2013
+2. playing game on different browsers, moving game logic into server side / 08.2013
+3. 3d-View, more attractive design / 09.2013
+4. rewrite app on another framework (angularJS or anything else) / 10.2013
+5. play with computer / 11.2013
+6. android mobile version / 12.2013
+7. several games at the same time
 
-TODO (в текущей версии)
+TODO (current version)
 =
 
 * проверка возможности прохода при установки заграждения
 * отмена хода
 * подтверждение хода
 * ограничение времени на ход
+* страница с правилами
+* другой цвет для первой и последней линии
+* кнопка - сделать ход
