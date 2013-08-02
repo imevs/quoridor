@@ -79,7 +79,8 @@
         },
         "InfoView"  : {
             "path"   : "js/views/InfoView.js",
-            "exports": "InfoView"
+            "exports": "InfoView",
+            "require": "game-info"
         },
         "FieldView" : {
             "require": {"GameObject":"GameObject"},
@@ -100,6 +101,8 @@
             "path"   : "js/views/PlayerView.js",
             "exports": "PlayerView"
         },
+
+        "<%= file%>": "templates/*.html",
 
         "main": {
             "path"   : "js/app.js",

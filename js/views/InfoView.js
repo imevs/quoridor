@@ -1,7 +1,6 @@
 var InfoView = Backbone.View.extend({
-    templateId: '#info-tmpl',
     initialize: function() {
-        this.template = $(this.templateId).html();
+        this.template = require('game-info').replace(/\/\*\*.+\*\*\//, '');
         this.listenTo(this.model, "change", this.render);
         this.render();
     },
