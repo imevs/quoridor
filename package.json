@@ -12,10 +12,10 @@
         "test": "java -jar resources/JsTestDriver-1.3.5.jar --config tests/jsTestDriver.conf --tests all --reset"
     },
     "dependencies": {
-        "connect": "2.7.x"
+        "connect": "2.7.x",
+        "lmd": "1.10.15"
     },
     "devDependencies": {
-        "lmd": "1.10.15",
         "phantomjs":     "0.2.x"
     },
     "analyze": false,
