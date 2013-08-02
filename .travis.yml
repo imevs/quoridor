@@ -10,17 +10,8 @@ before_script:
 - sleep 3
 after_success:
 - wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
-- git remote add heroku git@heroku.com:quoridor-online.git
-- echo "Host heroku.com" >> ~/.ssh/config
-- echo "   StrictHostKeyChecking no" >> ~/.ssh/config
-- echo "   CheckHostIP no" >> ~/.ssh/config
-- echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
-- heroku keys:clear
-- yes | heroku keys:add
-- yes | git add dev.lmd.js
-- yes | git commit dev.lmd.js -m "dev.lmd.js"
-- yes | git push heroku master
-  
+- heroku plugins:install https://github.com/ddollar/heroku-anvil
+- heroku build -r quoridor-online  -b https://github.com/heroku/heroku-buildpack-nodejs.git
 env:
   global:
     secure: ! 'TovnHvsMhcMQ77oaF8lUoMJ6ZD23vzRjDFOunBe30wPxANbov48215pFhMt8
