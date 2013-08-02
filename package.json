@@ -8,7 +8,7 @@
         "lmd": "./bin/lmd"
     },
     "scripts": {
-        "start": "lmd build dev",
+        "pretest": "lmd build dev",
         "test": "java -jar resources/JsTestDriver-1.3.5.jar --config tests/jsTestDriver.conf --tests all --reset"
     },
     "dependencies": {
