@@ -4,7 +4,8 @@ node_js:
 - 0.6
 before_script:
 - curl -o resources/JsTestDriver-1.3.5.jar 'http://js-test-driver.googlecode.com/files/JsTestDriver-1.3.5.jar'
-- java -jar resources/JsTestDriver-1.3.5.jar --config tests/jsTestDriver.conf --port 9876  &
+- java -jar resources/JsTestDriver-1.3.5.jar --config tests/jsTestDriver.conf --port
+  9876  &
 - sleep 3
 - phantomjs resources/js-test-driver-phantomjs/phantomjs-jstd.js &
 - sleep 3
@@ -14,8 +15,8 @@ after_success:
 - heroku build -r quoridor-online  -b https://github.com/heroku/heroku-buildpack-nodejs.git
 env:
   global:
-    secure: ! 'TovnHvsMhcMQ77oaF8lUoMJ6ZD23vzRjDFOunBe30wPxANbov48215pFhMt8
+  - secure: ! 'X8rF/MDHppjeMbb7Qa79W1IIPr/wuQXYwqAa4R7wIdNsEgfVRBMY7tzUBMgt
 
-      +iSskX5hGG+tt4OLscQyn3cKiLI8IeUvjU6OfDRdxus3urQAvCgajZv7Fomj
+      Moys64HoO/wh99jjxlKhUpCg/QT0o8e3G5agXGoVN3p4nrBuo1+wYEkUQPhc
 
-      AVR1KV2z+dBg3liYkZ5Xibt5kJXl/Gx7bqEPI4se9urzAnd4zA4='
+      yg5lHC4Yc83oXZRQq5qlZsJ8RXwqhiqdC39vJ3/ijSXfiGlSxTc='
