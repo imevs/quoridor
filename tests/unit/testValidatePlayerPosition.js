@@ -12,7 +12,7 @@ TestCase("Test Validate Player Position", {
         ],
         test: function(input, expected) {
             var player = new PlayerModel({x: 4, y: 0});
-            var res = this.board.isValidPlayerPosition(player, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player.pick('x', 'y'), input);
             assertTrue(res);
         }
     }),
@@ -25,7 +25,7 @@ TestCase("Test Validate Player Position", {
         ],
         test: function(input, expected) {
             var player = new PlayerModel({x: 4, y: 0});
-            var res = this.board.isValidPlayerPosition(player, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player.pick('x', 'y'), input);
             assertFalse(res);
         }
     }),
@@ -37,7 +37,7 @@ TestCase("Test Validate Player Position", {
         ],
         test: function(input, expected) {
             var player = new PlayerModel({x: 4, y: 8});
-            var res = this.board.isValidPlayerPosition(player, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player.pick('x', 'y'), input);
             assertTrue(res);
         }
     }),
@@ -50,7 +50,7 @@ TestCase("Test Validate Player Position", {
         ],
         test: function(input, expected) {
             var player = new PlayerModel({x: 4, y: 8});
-            var res = this.board.isValidPlayerPosition(player, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player.pick('x', 'y'), input);
             assertFalse(res);
         }
     }),
@@ -67,7 +67,7 @@ TestCase("Test Validate Player Position", {
         test: function(input, expected) {
             var player1 = this.board.players.at(0).set({x: 4, y: 4});
             var player2 = this.board.players.at(1).set({x: 5, y: 4});
-            var res = this.board.isValidPlayerPosition(player1, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player1.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
     }),
@@ -84,7 +84,7 @@ TestCase("Test Validate Player Position", {
         test: function(input, expected) {
             var player1 = this.board.players.at(0).set({x: 4, y: 4});
             var player2 = this.board.players.at(1).set({x: 5, y: 4});
-            var res = this.board.isValidPlayerPosition(player2, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player2.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
     }),
@@ -110,7 +110,7 @@ TestCase("Test Validate Player Position", {
             var player1 = this.board.players.at(0).set({x: 4, y: 4});
             var player2 = this.board.players.at(1).set({x: 5, y: 4});
             var player3 = this.board.players.at(2).set({x: 6, y: 4});
-            var res = this.board.isValidPlayerPosition(player1, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player1.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
     }),
@@ -136,7 +136,7 @@ TestCase("Test Validate Player Position", {
             var player1 = this.board.players.at(0).set({x: 4, y: 4});
             var player2 = this.board.players.at(1).set({x: 5, y: 4});
             var player3 = this.board.players.at(2).set({x: 6, y: 4});
-            var res = this.board.isValidPlayerPosition(player2, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player2.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
     }),
@@ -162,7 +162,7 @@ TestCase("Test Validate Player Position", {
             var player1 = this.board.players.at(0).set({x: 4, y: 4});
             var player2 = this.board.players.at(1).set({x: 5, y: 4});
             var player3 = this.board.players.at(2).set({x: 6, y: 4});
-            var res = this.board.isValidPlayerPosition(player3, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player3.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
     })

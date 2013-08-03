@@ -21,7 +21,7 @@ TestCase("Test testValidatePlayerPositionNearFences", {
             player.set({x: 4, y: 1});
             this.board.fences.findWhere({x: 4, y: 1}).set('state', 'busy');
             this.board.fences.findWhere({x: 5, y: 1}).set('state', 'busy');
-            var res = this.board.isValidPlayerPosition(player, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
     }),
@@ -45,7 +45,7 @@ TestCase("Test testValidatePlayerPositionNearFences", {
 
             this.board.fences.findWhere({x: 4, y: 1, type: 'H'}).set('state', 'busy');
             this.board.fences.findWhere({x: 5, y: 1, type: 'H'}).set('state', 'busy');
-            var res = this.board.isValidPlayerPosition(player1, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player1.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
     }),
@@ -71,7 +71,7 @@ TestCase("Test testValidatePlayerPositionNearFences", {
 
             this.board.fences.findWhere({x: 4, y: 0, type: 'V'}).set('state', 'busy');
             this.board.fences.findWhere({x: 4, y: 1, type: 'V'}).set('state', 'busy');
-            var res = this.board.isValidPlayerPosition(player1, input.x, input.y);
+            var res = this.board.isValidPlayerPosition(player1.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
     })

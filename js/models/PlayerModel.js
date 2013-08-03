@@ -1,10 +1,10 @@
 var PlayerModel = Backbone.Model.extend({
 
-    isNearestPosition: function (x, y) {
+    isNearestPosition: function (pos) {
         var prevX = this.get('x'),
             prevY = this.get('y');
-        return Math.abs(prevX - x) == 1 && prevY == y
-            || Math.abs(prevY - y) == 1 && prevX == x;
+        return Math.abs(prevX - pos.x) == 1 && prevY == pos.y
+            || Math.abs(prevY - pos.y) == 1 && prevX == pos.x;
     },
 
     moveTo: function (x, y) {
@@ -20,6 +20,7 @@ var PlayerModel = Backbone.Model.extend({
 });
 
 var PlayersCollection = Backbone.Collection.extend({
+    model           : PlayerModel,
     currentPlayer   : 0,
     fencesCount     : 20,
     playersPositions: [
@@ -41,7 +42,8 @@ var PlayersCollection = Backbone.Collection.extend({
         this.each(function(player) {
             player.trigger('resetstate');
         });
-        this.getCurrentPlayer().trigger('setcurrent', this.currentPlayer);
+        var current = this.getCurrentPlayer();
+        current.trigger('setcurrent', this.currentPlayer);
     },
 
     checkWin: function(playerIndex) {
@@ -84,12 +86,12 @@ var PlayersCollection = Backbone.Collection.extend({
         });
     },
 
-    isFieldNotBusy: function (x, y) {
-        return !this.isFieldBusy(x, y);
+    isFieldNotBusy: function (pos) {
+        return !this.isFieldBusy(pos);
     },
 
-    isFieldBusy: function (x, y) {
-        return this.findWhere({x: x, y: y});
+    isFieldBusy: function (pos) {
+        return this.findWhere(pos);
     },
     isBetween: function(n1, n2, n3) {
         var min = Math.min(n1, n2);
@@ -97,10 +99,11 @@ var PlayersCollection = Backbone.Collection.extend({
         return min < n3 && n3 < max;
     },
 
-    isFieldBehindOtherPlayer: function(player, x, y) {
+    isFieldBehindOtherPlayer: function(pos1, pos2) {
         var me = this;
-        var playerX = player.get('x'),
-            playerY = player.get('y');
+        var playerX = pos1.x, playerY = pos1.y,
+            x = pos2.x, y = pos2.y;
+
         var distanceBetweenPositions =
             playerX == x ? Math.abs(playerY - y) :
            (playerY == y ? Math.abs(playerX - x) : 0);
@@ -115,10 +118,10 @@ var PlayersCollection = Backbone.Collection.extend({
         return busyFieldsBetweenPosition.length == (distanceBetweenPositions - 1);
     },
 
-    isFieldNearOtherPlayer: function(player, x, y) {
-        var sibling1, sibling2,
-            playerX = player.get('x'),
-            playerY = player.get('y');
+    isFieldNearOtherPlayer: function(pos1, pos2) {
+        var sibling1, sibling2;
+        var playerX = pos1.x, playerY = pos1.y,
+            x = pos2.x, y = pos2.y;
 
         var isDiagonalSibling = Math.abs(playerX - x) == 1 && Math.abs(playerY - y) == 1;
 
@@ -161,6 +164,20 @@ var PlayersCollection = Backbone.Collection.extend({
         if (sibling1 && sibling2) return true;
 
         return false;
+    },
+
+    initialize: function() {
+        this.positions = new Backbone.Collection();
+    },
+
+    _saveMemento: function(memento){
+        var newMemento = memento.memento();
+        memento.memento(newMemento);
+    },
+
+    _beforeRestoreMemento: function(memento){
+        var newMemento = memento.memento();
+        memento.memento(newMemento);
     }
 
 });

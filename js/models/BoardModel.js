@@ -36,9 +36,10 @@ var BoardModel = Backbone.Model.extend({
         var max = Math.max(n1, n2);
         return min <= n3 && n3 < max;
     },
-    isOtherPlayerAndFenceBehindHim: function(player, x, y) {
-        var sibling1, sibling2,
-            playerX = player.get('x'), playerY = player.get('y');
+    isOtherPlayerAndFenceBehindHim: function(pos1, pos2) {
+        var sibling1, sibling2;
+        var playerX = pos1.x, playerY = pos1.y,
+            x = pos2.x, y = pos2.y;
 
         var isDiagonalSibling = Math.abs(playerX - x) == 1 && Math.abs(playerY - y) == 1;
 
@@ -84,10 +85,10 @@ var BoardModel = Backbone.Model.extend({
 
         return false;
     },
-    noFenceBetweenPositions: function(player, x, y) {
+    noFenceBetweenPositions: function(pos1, pos2) {
         var me = this;
-        var playerX = player.get('x'),
-            playerY = player.get('y');
+        var playerX = pos1.x, playerY = pos1.y,
+            x = pos2.x, y = pos2.y;
 
         var busyFencesOnLine;
         if (playerX == x) {
@@ -113,33 +114,47 @@ var BoardModel = Backbone.Model.extend({
 
         return true;
     },
-    isValidPlayerPosition: function(current, x, y) {
-        return this.isBetween(0, this.get('boardSize'), x)
-            && this.isBetween(0, this.get('boardSize'), y)
-            && this.players.isFieldNotBusy(x, y)
-            && this.noFenceBetweenPositions(current, x, y)
+    isNearestPosition: function (currentPos, pos) {
+        var prevX = currentPos.x,
+            prevY = currentPos.y;
+        return Math.abs(prevX - pos.x) == 1 && prevY == pos.y
+            || Math.abs(prevY - pos.y) == 1 && prevX == pos.x;
+    },
+    isValidPlayerPosition: function(currentPos, newPos) {
+        return this.isBetween(0, this.get('boardSize'), newPos.x)
+            && this.isBetween(0, this.get('boardSize'), newPos.y)
+            && this.players.isFieldNotBusy(newPos)
+            && this.noFenceBetweenPositions(currentPos, newPos)
             && (
-                current.isNearestPosition(x, y) ||
-                this.players.isFieldBehindOtherPlayer(current, x, y) ||
-                this.players.isFieldNearOtherPlayer(current, x, y) ||
-                this.isOtherPlayerAndFenceBehindHim(current, x, y)
+                this.isNearestPosition(currentPos, newPos) ||
+                this.players.isFieldBehindOtherPlayer(currentPos, newPos) ||
+                this.players.isFieldNearOtherPlayer(currentPos, newPos) ||
+                this.isOtherPlayerAndFenceBehindHim(currentPos, newPos)
             );
     },
     initEvents: function () {
         var me = this;
 
+        this.on('turn', function() {
+            me.players.switchPlayer();
+        });
+
         this.fields.on('moveplayer', function (x, y) {
             var current = me.players.getCurrentPlayer();
-            if (me.isValidPlayerPosition(current, x, y)) {
+            var currentPos = current.pick('x', 'y');
+            var newPos = {x:x, y:y};
+            if (me.isValidPlayerPosition(currentPos, newPos)) {
                 this.markFieldOrMovePlayer(x, y, function() {
-                    current.moveTo(x, y);
-                    me.players.switchPlayer();
+                current.moveTo(x, y);
+                me.players.switchPlayer();
                 });
             }
         });
         this.fields.on('beforeselectfield', function (x, y) {
             var current = me.players.getCurrentPlayer();
-            if (me.isValidPlayerPosition(current, x, y)) {
+            var currentPos = current.pick('x', 'y');
+            var newPos = {x:x, y:y};
+            if (me.isValidPlayerPosition(currentPos, newPos)) {
                 this.selectField(x, y);
             }
         });
