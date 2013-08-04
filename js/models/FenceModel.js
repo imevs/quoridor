@@ -3,13 +3,17 @@ var FenceModel = Backbone.Model.extend({
     initialize: function() {
         this.on({
             'markasselected': function() {
-                this.set('state', 'busy');
+                this.set('state', 'prebusy');
             },
             'highlight': function() {
-                this.set('state', 'highlight');
+                if (!this.get('state')) {
+                    this.set('state', 'highlight');
+                }
             },
             'dehighlight': function() {
-                this.set('state', '');
+                if (this.get('state') == 'highlight') {
+                    this.set('state', '');
+                }
             }
         });
     }
@@ -42,6 +46,39 @@ var FenceVModel = FenceModel.extend({
 
 var FencesCollection = Backbone.Collection.extend({
     model                        : FenceModel,
+
+    initialize: function() {
+        this.on('premarkasselected', this.clearBusy, this);
+    },
+
+    clearBusy: function() {
+        _(this.where({
+            state: 'prebusy'
+        })).each(function(fence) {
+            fence.set({state: ''});
+        });
+    },
+    setBusy: function() {
+        _(this.where({
+            state: 'prebusy'
+        })).each(function(fence) {
+            fence.set({state: 'busy'});
+        });
+    },
+
+    triggerEventOnFenceAndSibling: function (item, event) {
+        var siblingPosition = item.getAdjacentFencePosition();
+        var sibling = this.findWhere({
+            x   : siblingPosition.x,
+            y   : siblingPosition.y,
+            type: item.get('type')
+        });
+
+        if (sibling && event) {
+            sibling.trigger(event);
+            item.trigger(event);
+        }
+    },
     validateAndTriggerEventOnFenceAndSibling: function (item, event) {
         if (this.isBusy(item)) return false;
         if (!this.isFencePlaceable(item)) return false;
@@ -59,6 +96,7 @@ var FencesCollection = Backbone.Collection.extend({
         if (!this.hasPassForPlayer(sibling, item)) return false;
 
         if (event) {
+            item.trigger('pre' + event);
             sibling.trigger(event);
             item.trigger(event);
         }

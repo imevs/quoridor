@@ -13,7 +13,7 @@ TestCase("Test game", {
     },
     testFirstTurnValid: function() {
         this.board.fields.trigger('moveplayer', 4, 1);
-        this.board.fields.trigger('moveplayer', 4, 1);
+        this.board.trigger('turn');
         var players = this.board.players;
         var pos1 = players.at(0).pick('x', 'y');
         var pos2 = players.at(1).pick('x', 'y');
@@ -21,15 +21,15 @@ TestCase("Test game", {
         assertEquals(pos2, {x: 4, y: 8});
         assertEquals(players.getCurrentPlayer(), players.at(1));
     },
-    testNeedDoubleClickForMovingPlayer: function() {
+    testNeedConfirmForMovingPlayer: function() {
         this.board.fields.trigger('moveplayer', 4, 1);
 
         var players = this.board.players;
-        var pos1 = players.at(0).pick('x', 'y');
-        var pos2 = players.at(1).pick('x', 'y');
+        var pos1 = players.at(0).pick('prev_x', 'prev_y');
+        var pos2 = players.at(1).pick('prev_x', 'prev_y');
 
-        assertEquals(pos1, {x: 4, y: 0});
-        assertEquals(pos2, {x: 4, y: 8});
+        assertEquals(pos1, {prev_x: 4, prev_y: 0});
+        assertEquals(pos2, {prev_x: 4, prev_y: 8});
         assertEquals(players.getCurrentPlayer(), players.at(0));
     },
     testFirstTurnInvalid: function() {

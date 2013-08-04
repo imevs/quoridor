@@ -1,6 +1,13 @@
 var BoardView = GameObject.extend({
-    el: 'holder',
+    id: function() {
+        return 'board';
+    },
+    move: function() {
+        this.model.trigger('turn');
+    },
     initialize: function () {
+        $('.move', '#' + _.result(this, 'id')).click(_.bind(this.move, this));
+
         var me = this.model,
             cls = this.constructor,
             d = cls.squareDistance,

@@ -29,7 +29,7 @@ var FenceView = GameObject.extend({
         var circle = this.el;
         var model = this.model;
 
-        if (model.get('state') == 'busy') {
+        if (model.get('state') == 'prebusy') {
             model.set('color', 'black');
             model.set('prevcolor', 'black');
             circle.toFront();

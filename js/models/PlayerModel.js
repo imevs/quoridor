@@ -1,8 +1,8 @@
 var PlayerModel = Backbone.Model.extend({
 
     isNearestPosition: function (pos) {
-        var prevX = this.get('x'),
-            prevY = this.get('y');
+        var prevX = this.get('prev_x'),
+            prevY = this.get('prev_y');
         return Math.abs(prevX - pos.x) == 1 && prevY == pos.y
             || Math.abs(prevY - pos.y) == 1 && prevX == pos.x;
     },
@@ -37,12 +37,18 @@ var PlayersCollection = Backbone.Collection.extend({
     switchPlayer: function (player) {
         this.checkWin(this.currentPlayer);
 
+        var current = this.getCurrentPlayer();
+        current.set({
+            'prev_x': current.get('x'),
+            'prev_y': current.get('y')
+        });
+
         var c = _.isUndefined(player) ? this.currentPlayer + 1 : player - 1;
         this.currentPlayer = c < this.length ? c : 0;
         this.each(function(player) {
             player.trigger('resetstate');
         });
-        var current = this.getCurrentPlayer();
+        current = this.getCurrentPlayer();
         current.trigger('setcurrent', this.currentPlayer);
     },
 
@@ -80,7 +86,9 @@ var PlayersCollection = Backbone.Collection.extend({
             var fences = Math.round(me.fencesCount / me.length);
             player.set({
                 x: position.x,
+                prev_x: position.x,
                 y: position.y,
+                prev_y: position.y,
                 fencesRemaining: fences
             });
         });
@@ -111,8 +119,8 @@ var PlayersCollection = Backbone.Collection.extend({
         if (distanceBetweenPositions != 2) return false;
 
         var busyFieldsBetweenPosition = this.filter(function(item) {
-            return playerY == y && y == item.get('y') && me.isBetween(playerX, x, item.get('x')) ||
-                   playerX == x && x == item.get('x') && me.isBetween(playerY, y, item.get('y'));
+            return playerY == y && y == item.get('prev_y') && me.isBetween(playerX, x, item.get('prev_x')) ||
+                   playerX == x && x == item.get('prev_x') && me.isBetween(playerY, y, item.get('prev_y'));
         });
 
         return busyFieldsBetweenPosition.length == (distanceBetweenPositions - 1);
