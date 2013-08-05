@@ -4,11 +4,8 @@
     "version": "0.9.0",
     "author": "Vitaliy Medvedev <medvedev.vs@gmail.com>",
     "description": "quoridor game",
-    "bin": {
-        "lmd": "./bin/lmd"
-    },
     "scripts": {
-        "postinstall": "./node_modules/lmd/bin/lmd.js build dev",
+        "postinstall": "lmd build dev",
         "test": "java -jar resources/JsTestDriver-1.3.5.jar --config tests/jsTestDriver.conf --tests all --reset"
     },
     "dependencies": {
