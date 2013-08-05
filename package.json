@@ -8,7 +8,7 @@
         "lmd": "./bin/lmd"
     },
     "scripts": {
-        "postinstall": "lmd build dev",
+        "postinstall": "./node_modules/lmd/bin/lmd.js build dev",
         "test": "java -jar resources/JsTestDriver-1.3.5.jar --config tests/jsTestDriver.conf --tests all --reset"
     },
     "dependencies": {
@@ -21,6 +21,7 @@
     "analyze": false,
     "license": "MIT",
     "engines": {
-        "node": ">=0.10.15"
+        "node": "0.10.x",
+        "npm": "1.2.x"
     }
 }
