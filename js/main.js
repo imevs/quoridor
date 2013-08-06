@@ -1,5 +1,6 @@
 require.config({
     paths: {
+        'templates': '../templates',
         'text'           : 'libs/text'
     },
     shim: {

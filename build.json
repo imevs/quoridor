@@ -1,10 +1,9 @@
 {
-    "appDir"  : "./js",
-    "baseUrl" : "/",
+    "baseUrl" : "js",
     "dir"     : "./build",
     "optimize": "none",
 
-    "mainConfigFile": "main.js",
+    "mainConfigFile": "js/main.js",
 
     "modules": [
         {
