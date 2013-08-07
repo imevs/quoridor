@@ -118,8 +118,7 @@ var BoardModel = Backbone.Model.extend({
         return true;
     },
     isNearestPosition: function (currentPos, pos) {
-        var prevX = currentPos.x,
-            prevY = currentPos.y;
+        var prevX = currentPos.x, prevY = currentPos.y;
         return Math.abs(prevX - pos.x) == 1 && prevY == pos.y
             || Math.abs(prevY - pos.y) == 1 && prevX == pos.x;
     },
@@ -135,6 +134,11 @@ var BoardModel = Backbone.Model.extend({
                 this.isOtherPlayerAndFenceBehindHim(currentPos, newPos)
             );
     },
+    isValidCurrentPlayerPosition: function (x, y) {
+        var current = this.players.getCurrentPlayer();
+        var currentPos = {x: current.get('prev_x'), y: current.get('prev_y')};
+        return this.isValidPlayerPosition(currentPos, {x:x, y:y});
+    },
     initEvents: function () {
         var me = this;
 
@@ -149,11 +153,8 @@ var BoardModel = Backbone.Model.extend({
         });
 
         this.fields.on('moveplayer', function (x, y) {
-            var current = me.players.getCurrentPlayer();
-            var currentPos = current.pick('prev_x', 'prev_y');
-            currentPos = {x: currentPos.prev_x, y: currentPos.prev_y};
-            var newPos = {x:x, y:y};
-            if (me.isValidPlayerPosition(currentPos, newPos)) {
+            if (me.isValidCurrentPlayerPosition(x, y)) {
+                var current = me.players.getCurrentPlayer();
                 current.moveTo(x, y);
                 me.fences.clearBusy();
                 me.isFenceMoved = false;
@@ -161,13 +162,7 @@ var BoardModel = Backbone.Model.extend({
             }
         });
         this.fields.on('beforeselectfield', function (x, y) {
-            var current = me.players.getCurrentPlayer();
-            var currentPos = current.pick('prev_x', 'prev_y');
-            currentPos = {
-                x: currentPos.prev_x, y: currentPos.prev_y
-            };
-            var newPos = {x:x, y:y};
-            if (me.isValidPlayerPosition(currentPos, newPos)) {
+            if (me.isValidCurrentPlayerPosition(x, y)) {
                 this.selectField(x, y);
             }
         });
@@ -186,15 +181,7 @@ var BoardModel = Backbone.Model.extend({
             'selected'                     : function (model) {
                 var hasFences = me.players.getCurrentPlayer().hasFences();
                 if (hasFences && me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markasselected')) {
-                    me.players.each(function(item) {
-                        if (item.get('x') != item.get('prev_x') ||
-                            item.get('y') != item.get('prev_y')) {
-                            item.set({
-                                x: item.get('prev_x'),
-                                y: item.get('prev_y')
-                            });
-                        }
-                    });
+                    me.players.updatePlayersPositions();
                     me.isPlayerMoved = false;
                     me.isFenceMoved = true;
                 }

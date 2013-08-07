@@ -1,12 +1,5 @@
 var PlayerModel = Backbone.Model.extend({
 
-    isNearestPosition: function (pos) {
-        var prevX = this.get('prev_x'),
-            prevY = this.get('prev_y');
-        return Math.abs(prevX - pos.x) == 1 && prevY == pos.y
-            || Math.abs(prevY - pos.y) == 1 && prevX == pos.x;
-    },
-
     moveTo: function (x, y) {
         this.set({x: x, y: y});
     },
@@ -174,18 +167,16 @@ var PlayersCollection = Backbone.Collection.extend({
         return false;
     },
 
-    initialize: function() {
-        this.positions = new Backbone.Collection();
-    },
-
-    _saveMemento: function(memento){
-        var newMemento = memento.memento();
-        memento.memento(newMemento);
-    },
-
-    _beforeRestoreMemento: function(memento){
-        var newMemento = memento.memento();
-        memento.memento(newMemento);
+    updatePlayersPositions: function() {
+        this.each(function(item) {
+            if (item.get('x') != item.get('prev_x') ||
+                item.get('y') != item.get('prev_y')) {
+                item.set({
+                    x: item.get('prev_x'),
+                    y: item.get('prev_y')
+                });
+            }
+        });
     }
 
 });
