@@ -55,6 +55,7 @@ var FieldView = GameObject.extend({
     movePlayer     : function (evt) {
         this.model.trigger('moveplayer',
             this.model.get('x'), this.model.get('y'));
+        this.unSelectCurrent();
     },
     onSelectFieldBefore: function() {
         this.model.trigger('beforeselectfield',
