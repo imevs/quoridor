@@ -1,0 +1,17 @@
+{
+    "baseUrl" : "js",
+    "dir"     : "./build",
+    "optimize": "uglify2",
+    "preserveLicenseComments": false,
+
+    "mainConfigFile": "js/main.js",
+    "removeCombined": true,
+    "generateSourceMaps": true,
+    "fileExclusionRegExp": /^(r|require)\.js/,
+
+    "modules": [
+        {
+            "name": "main"
+        }
+    ]
+}

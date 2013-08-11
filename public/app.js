@@ -1,6 +1,6 @@
-$(function() {
+$(function () {
     var boardModel = new BoardModel({
-        playersCount    : 2
+        playersCount: 2
     });
     new BoardView({
         model: boardModel
