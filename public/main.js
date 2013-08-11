@@ -1,5 +1,6 @@
 require.config({
     paths: {
+        'socket.io': 'libs/socket.io/socket.io',
         'templates': '../templates',
         'text'           : 'libs/text'
     },
@@ -79,7 +80,8 @@ require.config({
             deps: [
                 'libs/jquery-1.10.2',
                 'models/BoardModel',
-                'views/BoardView'
+                'views/BoardView',
+                'socket.io'
             ]
         }
     }

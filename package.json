@@ -11,8 +11,9 @@
     "dependencies": {
         "connect": "2.7.x",
         "lmd": "1.10.15",
-        "express": "*",
-        "socket.io": "*"
+        "express": "3.3.5",
+        "express3-handlebars": "1.0.x",
+        "socket.io": "0.9.x"
     },
     "devDependencies": {
         "phantomjs":     "0.2.x",
