@@ -10,10 +10,13 @@
     },
     "dependencies": {
         "connect": "2.7.x",
-        "lmd": "1.10.15"
+        "lmd": "1.10.15",
+        "express": "*",
+        "socket.io": "*"
     },
     "devDependencies": {
-        "phantomjs":     "0.2.x"
+        "phantomjs":     "0.2.x",
+        "supervizor": "*"
     },
     "analyze": false,
     "license": "MIT",
