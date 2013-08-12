@@ -147,7 +147,15 @@ var BoardModel = Backbone.Model.extend({
                 me.players.getCurrentPlayer().placeFence();
                 me.fences.setBusy();
             }
-            (me.isPlayerMoved || me.isFenceMoved) && me.players.switchPlayer();
+            var currentPlayer = me.players.getCurrentPlayer();
+            if (me.isPlayerMoved || me.isFenceMoved) {
+                var socket = this.get('socket');
+                var x = currentPlayer.get('x');
+                var y = currentPlayer.get('y');
+                socket.emit('turn', me.players.currentPlayer, x, y);
+                me.players.switchPlayer();
+            }
+
             me.isPlayerMoved = false;
             me.isFenceMoved = false;
         });
@@ -198,9 +206,22 @@ var BoardModel = Backbone.Model.extend({
     run: function() {
         this.players.switchPlayer(1);
     },
+    socketEvents: function() {
+        //this.get('socket').on('stats', this.onStat);
+        this.get('socket').on('turn', _(this.onTurn).bind(this));
+    },
+    onStat: function(arr) {
+        console.log(arr);
+    },
+    onTurn: function(player, x, y) {
+        console.log('onTurn', player, x, y);
+        this.fields.trigger('moveplayer', x, y);
+        this.trigger('turn');
+    },
     initialize: function () {
         this.createModels();
         this.initEvents();
         this.initModels();
+        this.socketEvents();
     }
 });

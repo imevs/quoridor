@@ -48,16 +48,16 @@ setInterval(function() {
 }, 5000);
 
 io.sockets.on('connection', function (socket) {
-
     console.log('%s: %s - connected', socket.id.toString(), socket.handshake.address.address);
-
     gamers.push(socket.handshake.address.address);
-
     socket.on('disconnect', function () {
         console.log('%s: %s - disconnected', socket.id.toString(), socket.handshake.address.address);
-
         gamers.splice(gamers.indexOf(socket.handshake.address.address), 1);
     });
 
+    socket.on('turn', function (player, x, y) {
+        console.log('turn: player %s: %s-%s', player, x, y);
+        io.sockets.emit('turn', player, x, y);
+    });
 });
 
