@@ -154,6 +154,13 @@ var FencesCollection = Backbone.Collection.extend({
             return model.get(j) == item.get(j) + 1
         });
         return !(f1 && f2);
+    },
+
+    addHorizontal: function(attrs) {
+        this.add(new FenceHModel(attrs));
+    },
+    addVertical: function(attrs) {
+        this.add(new FenceVModel(attrs));
     }
 
 });

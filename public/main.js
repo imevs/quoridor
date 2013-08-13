@@ -30,12 +30,20 @@ require.config({
         'models/PlayerModel': {
             deps: ['libs/backbone']
         },
+        'models/BoardValidation': {
+            deps: []
+        },
+        'models/BoardSocketEvents': {
+            deps: []
+        },
         'models/BoardModel': {
             deps: [
                 'libs/underscore',
                 'libs/backbone',
                 'models/FenceModel',
                 'models/FieldModel',
+                'models/BoardValidation',
+                'models/BoardSocketEvents',
                 'models/PlayerModel',
                 'utils'
             ]
