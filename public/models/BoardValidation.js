@@ -99,9 +99,18 @@ var BoardValidation = ({
                 this.isOtherPlayerAndFenceBehindHim(currentPos, newPos)
             );
     },
+    isCurrentPlayerTurn            : function () {
+        return this.auto || this.get('playerNumber') === this.players.currentPlayer;
+    },
     isValidCurrentPlayerPosition: function (x, y) {
         var current = this.players.getCurrentPlayer();
+
+        if (!this.isCurrentPlayerTurn()) return false;
+
         var currentPos = {x: current.get('prev_x'), y: current.get('prev_y')};
         return this.isValidPlayerPosition(currentPos, {x:x, y:y});
+    },
+    canSelectFences: function() {
+        return this.players.getCurrentPlayer().hasFences() && this.isCurrentPlayerTurn();
     }
 });

@@ -40,23 +40,53 @@ io.set('resource', '/api');
 
 app.use(express.static(path.join(__dirname, '/../public')));
 
-var gamers = [];
+var game = {
+    players: {
+        1: 'empty',
+        2: 'empty'
+    },
+    getPlayersCount: function() {
+        return this.players.length;
+    },
+    addPlayer: function(address) {
+        for (var i in this.players) {
+            if (this.players[i] == 'empty') {
+                this.players[i] = address;
+                return i;
+            }
+        }
+        return null;
+    },
+    removePlayer: function(address) {
+        for (var i in this.players) {
+            if (this.players[i] == address) {
+                this.players[i] = 'empty';
+            }
+        }
+    }
+};
 setInterval(function() {
     io.sockets.emit('stats', [
-        'Сейчас игроков: ' + gamers.length
+        'Сейчас игроков: ' + game.getPlayersCount()
     ]);
 }, 5000);
 
 io.sockets.on('connection', function (socket) {
-    console.log('%s: %s - connected', socket.id.toString(), socket.handshake.address.address);
-    gamers.push(socket.handshake.address.address);
+
     socket.on('disconnect', function () {
-        console.log('%s: %s - disconnected', socket.id.toString(), socket.handshake.address.address);
-        gamers.splice(gamers.indexOf(socket.handshake.address.address), 1);
+        console.log('%s: %s - disconnected', socket.id.toString(),
+            socket.handshake.address.address);
+        game.removePlayer(socket.id.toString());
     });
 
     socket.on('turn', function (eventInfo) {
         io.sockets.emit('turn', eventInfo);
     });
+
+    console.log('%s: %s - connected',
+        socket.id.toString(), socket.handshake.address.address);
+
+    var playerNumber = game.addPlayer(socket.id.toString());
+    playerNumber && socket.emit('start', playerNumber);
 });
 

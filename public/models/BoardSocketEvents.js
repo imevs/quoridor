@@ -1,10 +1,19 @@
 var BoardSocketEvents = {
+
+    initSocket: function() {
+        return this.get('socket') || this.set('socket', io.connect('http://localhost:3000', {resource: 'api'}));
+    },
+
     socketEvents: function() {
-        var me = this;
+        var socket = this.get('socket');
+        if (!socket) return;
         //this.get('socket').on('stats', this.onStat);
-        this.get('socket') && this.get('socket').on('turn', _(this.onTurn).bind(this));
+        socket.on('turn', _(this.onTurn).bind(this));
+        socket.on('start', _(this.onStart).bind(this));
     },
     onTurnSendSocketEvent: function() {
+        if (!this.isPlayerMoved && !this.isFenceMoved) return;
+
         var socket = this.get('socket'), eventInfo = {};
 
         if (this.isPlayerMoved) {
@@ -25,6 +34,7 @@ var BoardSocketEvents = {
         console.log(arr);
     },
     onTurn: function(pos) {
+        this.auto = true;
         if (pos.eventType == 'player') {
             this.fields.trigger('moveplayer', pos.x, pos.y);
         }
@@ -33,7 +43,11 @@ var BoardSocketEvents = {
             var fence = this.fences.findWhere(pos);
             fence.trigger('selected', fence);
         }
-        var isEcho = true;
+        this.auto = false;
+        var isEcho = false;
         this.trigger('turn', isEcho);
+    },
+    onStart: function(playerNumber) {
+        this.run(playerNumber);
     }
 };

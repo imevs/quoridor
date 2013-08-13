@@ -4,7 +4,7 @@ var BoardView = GameObject.extend({
         'click': 'move'
     },
     move: function() {
-        this.model.trigger('turn');
+        this.model.trigger('turn', true);
     },
     render: function(callback) {
         var me = this;

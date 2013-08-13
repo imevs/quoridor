@@ -38,10 +38,12 @@ var BoardModel = Backbone.Model.extend({
         var me = this;
 
         this.on('turn', function(isEcho) {
+            if (isEcho) {
+                me.onTurnSendSocketEvent();
+                return;
+            }
+
             if (me.isPlayerMoved || me.isFenceMoved) {
-
-                !isEcho && me.onTurnSendSocketEvent();
-
                 if (me.isFenceMoved) {
                     me.players.getCurrentPlayer().placeFence();
                     me.fences.setBusy();
@@ -81,31 +83,35 @@ var BoardModel = Backbone.Model.extend({
         });
         this.fences.on({
             'selected'                     : function (model) {
-                var hasFences = me.players.getCurrentPlayer().hasFences();
-                if (hasFences && me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markasselected')) {
+                if (me.canSelectFences()
+                    && me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markasselected')) {
                     me.players.updatePlayersPositions();
                     me.isPlayerMoved = false;
                     me.isFenceMoved = true;
                 }
             },
             'highlight_current_and_sibling': function (model) {
-                var hasFences = me.players.getCurrentPlayer().hasFences();
-                hasFences && me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'highlight');
+                if (me.canSelectFences()) {
+                    me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'highlight');
+                }
             },
             'reset_current_and_sibling'    : function (model) {
                 me.fences.triggerEventOnFenceAndSibling(model, 'dehighlight');
             }
         });
     },
-    run: function() {
+    run: function(playerNumber) {
+        playerNumber = _.isUndefined(playerNumber) ? 1 : playerNumber;
         this.players.switchPlayer(1);
+        this.set('playerNumber', playerNumber-1);
     },
     initialize: function () {
-        _.extend(this, BoardValidation);
-        _.extend(this, BoardSocketEvents);
+        this.initSocket();
         this.createModels();
         this.initEvents();
         this.initModels();
         this.socketEvents();
     }
 });
+_.extend(BoardModel.prototype, window.BoardValidation);
+_.extend(BoardModel.prototype, window.BoardSocketEvents);
