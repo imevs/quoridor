@@ -55,9 +55,8 @@ io.sockets.on('connection', function (socket) {
         gamers.splice(gamers.indexOf(socket.handshake.address.address), 1);
     });
 
-    socket.on('turn', function (player, x, y) {
-        console.log('turn: player %s: %s-%s', player, x, y);
-        io.sockets.emit('turn', player, x, y);
+    socket.on('turn', function (eventInfo) {
+        io.sockets.emit('turn', eventInfo);
     });
 });
 

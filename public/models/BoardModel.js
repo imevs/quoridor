@@ -142,17 +142,32 @@ var BoardModel = Backbone.Model.extend({
     initEvents: function () {
         var me = this;
 
-        this.on('turn', function() {
-            if (me.isFenceMoved) {
-                me.players.getCurrentPlayer().placeFence();
-                me.fences.setBusy();
-            }
-            var currentPlayer = me.players.getCurrentPlayer();
+        this.on('turn', function(isEcho) {
             if (me.isPlayerMoved || me.isFenceMoved) {
-                var socket = this.get('socket');
-                var x = currentPlayer.get('x');
-                var y = currentPlayer.get('y');
-                socket.emit('turn', me.players.currentPlayer, x, y);
+
+                if (!isEcho) {
+                    var socket = this.get('socket'), eventInfo = {};
+
+                    if (me.isPlayerMoved) {
+                        var currentPlayer = me.players.getCurrentPlayer();
+                        eventInfo = currentPlayer.pick('x', 'y');
+                        eventInfo.playerIndex = me.players.currentPlayer;
+                        eventInfo.eventType = 'player';
+                    }
+
+                    if (me.isFenceMoved) {
+                        eventInfo = me.fences.getMovedFence().pick('x', 'y', 'type');
+                        eventInfo.eventType = 'fence';
+                    }
+
+                    socket.emit('turn', eventInfo);
+                }
+
+                if (me.isFenceMoved) {
+                    me.players.getCurrentPlayer().placeFence();
+                    me.fences.setBusy();
+                }
+
                 me.players.switchPlayer();
             }
 
@@ -213,10 +228,17 @@ var BoardModel = Backbone.Model.extend({
     onStat: function(arr) {
         console.log(arr);
     },
-    onTurn: function(player, x, y) {
-        console.log('onTurn', player, x, y);
-        this.fields.trigger('moveplayer', x, y);
-        this.trigger('turn');
+    onTurn: function(pos) {
+        if (pos.eventType == 'player') {
+            this.fields.trigger('moveplayer', pos.x, pos.y);
+        }
+        if (pos.eventType == 'fence') {
+            delete pos.eventType;
+            var fence = this.fences.findWhere(pos);
+            fence.trigger('selected', fence);
+        }
+        var isEcho = true;
+        this.trigger('turn', isEcho);
     },
     initialize: function () {
         this.createModels();

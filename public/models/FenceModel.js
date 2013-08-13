@@ -66,6 +66,16 @@ var FencesCollection = Backbone.Collection.extend({
         });
     },
 
+    getMovedFence: function() {
+        var fences = this.where({
+            state: 'prebusy'
+        });
+        return _.chain(fences)
+            .sortBy(function(i) { return i.get('x')})
+            .sortBy(function(i) { return i.get('y')})
+            .last().value();
+    },
+
     triggerEventOnFenceAndSibling: function (item, event) {
         var siblingPosition = item.getAdjacentFencePosition();
         var sibling = this.findWhere({
