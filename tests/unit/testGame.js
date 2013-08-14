@@ -3,6 +3,7 @@ TestCase("Test game", {
         this.board = new BoardModel({
             playersCount: 2
         });
+        this.board.run(1);
     },
     testPlayersPositionsBeforeGame: function() {
         var players = this.board.players;

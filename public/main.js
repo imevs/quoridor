@@ -33,7 +33,7 @@ require.config({
             deps: []
         },
         'models/BoardSocketEvents': {
-            deps: []
+            deps: ['socket.io']
         },
         'models/BoardModel': {
             deps: [
@@ -87,8 +87,7 @@ require.config({
             deps: [
                 'libs/jquery-1.10.2',
                 'models/BoardModel',
-                'views/BoardView',
-                'socket.io'
+                'views/BoardView'
             ]
         }
     }

@@ -3,6 +3,7 @@ TestCase("Test Finish game", {
         this.board = new BoardModel({
             playersCount: 2
         });
+        this.board.run(1);
     },
 
     testWin: function() {

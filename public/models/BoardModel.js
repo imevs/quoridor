@@ -50,6 +50,7 @@ var BoardModel = Backbone.Model.extend({
                 }
 
                 me.players.switchPlayer();
+                me.get('socket') || me.set('playerNumber', me.players.currentPlayer);
             }
 
             me.isPlayerMoved = false;
@@ -103,7 +104,7 @@ var BoardModel = Backbone.Model.extend({
     run: function(playerNumber) {
         playerNumber = _.isUndefined(playerNumber) ? 1 : playerNumber;
         this.players.switchPlayer(1);
-        this.set('playerNumber', playerNumber-1);
+        this.set('playerNumber', playerNumber - 1);
     },
     initialize: function () {
         this.initSocket();
