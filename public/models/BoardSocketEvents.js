@@ -1,7 +1,7 @@
 var BoardSocketEvents = {
 
     initSocket: function() {
-        return this.get('socket') || this.set('socket', io.connect('http://localhost:3000', {resource: 'api'}));
+        return this.get('socket') || io && this.set('socket', io.connect('http://localhost:3000', {resource: 'api'}));
     },
 
     socketEvents: function() {
