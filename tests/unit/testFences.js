@@ -5,6 +5,7 @@ TestCase("Test fences", {
             playersCount: 2
         });
         this.board.run(1);
+        this.board.set('playerNumber', 1 - 1);
     },
 
     testCountFencesForTwoPlayers: function() {
@@ -138,6 +139,7 @@ TestCase("Test fences", {
             boardSize   : 3
         });
         this.board.run(1);
+        this.board.set('playerNumber', 1 - 1);
 
         var fence1 = this.board.fences.findWhere({x: 0, y: 0, type: 'H'});
         var fence2 = this.board.fences.findWhere({x: 1, y: 0, type: 'H'});
@@ -156,6 +158,7 @@ TestCase("Test fences", {
     'test Place Fence on the line - check pass': function() {
         this.board = new BoardModel({boardSize: 4});
         this.board.run(1);
+        this.board.set('playerNumber', 1 - 1);
         var fence2 = this.board.fences.findWhere({x: 1, y: 0, type: 'H'});
         var fence4 = this.board.fences.findWhere({x: 3, y: 0, type: 'H'});
 
