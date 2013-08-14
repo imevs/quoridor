@@ -16,8 +16,7 @@
         "socket.io": "0.9.x"
     },
     "devDependencies": {
-        "phantomjs":     "0.2.x",
-        "supervizor": "*"
+        "phantomjs":     "0.2.x"
     },
     "analyze": false,
     "license": "MIT",
