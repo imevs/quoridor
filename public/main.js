@@ -1,7 +1,6 @@
 require.config({
     paths: {
         'socket.io': 'libs/socket.io/socket.io',
-        'templates': '../templates',
         'text'           : 'libs/text'
     },
     shim: {
