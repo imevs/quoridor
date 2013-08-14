@@ -47,7 +47,20 @@ var BoardSocketEvents = {
         var isEcho = false;
         this.trigger('turn', isEcho);
     },
-    onStart: function(playerNumber) {
-        this.run(playerNumber);
+    onStart: function(playerNumber, players) {
+        //console.log(arguments);
+        var me = this;
+
+        _(players).each(function(player, i) {
+            if (player.x && player.y) {
+                me.players.at(i - 1).moveTo(player.x, player.y);
+            }
+        });
+        this.set('playerNumber', playerNumber - 1);
+
+        me.run(playerNumber);
+        _(players).each(function(player, i) {
+            player.isCurrent && me.run(i);
+        });
     }
 };

@@ -3,17 +3,15 @@ var routes = require('./routes');
 var http = require('http');
 var path = require('path');
 var exphbs  = require('express3-handlebars');
-var io = require('socket.io');
+var game = require('./game');
 
 var app = express();
 
 app.set('port', process.env.PORT || 3000);
-var viewsPath = __dirname + '\\views';
-console.log(viewsPath);
-app.set('views', viewsPath );
+app.set('views', __dirname + '\\views');
 app.engine('handlebars', exphbs({
+    //    extname: ".hbs",
     layoutsDir: "server/views/layouts/",
-   //    extname: ".hbs",
     defaultLayout: 'main'
 }));
 app.set('view engine', 'handlebars');
@@ -34,59 +32,7 @@ var server = http.createServer(app);
 server.listen(app.get('port'), function(){
     console.log('Express server listening on port ' + app.get('port'));
 });
-io = io.listen(server);
-io.set('log level', 1);
-io.set('resource', '/api');
 
 app.use(express.static(path.join(__dirname, '/../public')));
 
-var game = {
-    players: {
-        1: 'empty',
-        2: 'empty'
-    },
-    getPlayersCount: function() {
-        return this.players.length;
-    },
-    addPlayer: function(address) {
-        for (var i in this.players) {
-            if (this.players[i] == 'empty') {
-                this.players[i] = address;
-                return i;
-            }
-        }
-        return null;
-    },
-    removePlayer: function(address) {
-        for (var i in this.players) {
-            if (this.players[i] == address) {
-                this.players[i] = 'empty';
-            }
-        }
-    }
-};
-setInterval(function() {
-    io.sockets.emit('stats', [
-        'Сейчас игроков: ' + game.getPlayersCount()
-    ]);
-}, 5000);
-
-io.sockets.on('connection', function (socket) {
-
-    socket.on('disconnect', function () {
-        console.log('%s: %s - disconnected', socket.id.toString(),
-            socket.handshake.address.address);
-        game.removePlayer(socket.id.toString());
-    });
-
-    socket.on('turn', function (eventInfo) {
-        io.sockets.emit('turn', eventInfo);
-    });
-
-    console.log('%s: %s - connected',
-        socket.id.toString(), socket.handshake.address.address);
-
-    var playerNumber = game.addPlayer(socket.id.toString());
-    playerNumber && socket.emit('start', playerNumber);
-});
-
+game.start(server);
