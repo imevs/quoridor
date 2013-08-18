@@ -1,13 +1,15 @@
 var BoardSocketEvents = {
 
     initSocket: function() {
-        return this.get('socket') || window.io && this.set('socket', io.connect('http://localhost:3000', {resource: 'api'}));
+        var host = 'http://localhost:3000';
+        return this.get('socket') || window.io && this.set('socket', io.connect(host, {resource: 'api'}));
     },
 
     socketEvents: function() {
+        this.initSocket();
+
         var socket = this.get('socket');
         if (!socket) return;
-        //this.get('socket').on('stats', this.onStat);
         socket.on('turn', _(this.onTurn).bind(this));
         socket.on('start', _(this.onStart).bind(this));
     },
@@ -30,9 +32,6 @@ var BoardSocketEvents = {
 
         socket && socket.emit('turn', eventInfo);
     },
-    onStat: function(arr) {
-        console.log(arr);
-    },
     onTurn: function(pos) {
         this.auto = true;
         if (pos.eventType == 'player') {
@@ -47,8 +46,7 @@ var BoardSocketEvents = {
         var isEcho = false;
         this.trigger('turn', isEcho);
     },
-    onStart: function(playerNumber, players) {
-        //console.log(arguments);
+    onStart: function(playerNumber, players, fences) {
         var me = this;
 
         _(players).each(function(player, i) {
@@ -56,6 +54,18 @@ var BoardSocketEvents = {
                 me.players.at(i - 1).moveTo(player.x, player.y);
             }
         });
+        _(fences).each(function(fencePos) {
+            fencePos = {
+                x: fencePos.x,
+                y: fencePos.y,
+                type: fencePos.type
+            };
+            var fence = me.fences.findWhere(fencePos);
+            fence.trigger('markasselected');
+            me.fences.getSibling(fence).trigger('markasselected');
+        });
+        me.fences.setBusy();
+
         this.set('playerNumber', playerNumber - 1);
 
         me.run(playerNumber);

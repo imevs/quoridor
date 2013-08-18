@@ -7,8 +7,7 @@ var player = function(socket) {
 };
 
 var game = {
-    fencesH: [],
-    fencesV: [],
+    fences: [],
     players: {
         1: {
             key: 'empty'
@@ -55,6 +54,11 @@ var game = {
 
             nextPlayer.isCurrent = true;
         }
+
+        if (eventInfo.eventType == 'fence') {
+            this.fences.push(eventInfo);
+        }
+
         io.sockets.emit('turn', eventInfo);
     },
     onDisconnect: function (socket) {
@@ -77,8 +81,8 @@ var game = {
                 socket.handshake.address.address);
 
             var playerNumber = game.addPlayer(socket.id.toString());
-            var player = self.players[playerNumber];
-            playerNumber && socket.emit('start', playerNumber, self.players);
+            playerNumber && socket.emit('start', playerNumber,
+                self.players, self.fences);
         });
     }
 };

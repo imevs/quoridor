@@ -106,7 +106,6 @@ var BoardModel = Backbone.Model.extend({
         this.players.switchPlayer(playerNumber);
     },
     initialize: function () {
-        this.initSocket();
         this.createModels();
         this.initEvents();
         this.initModels();

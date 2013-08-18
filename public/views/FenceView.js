@@ -1,7 +1,4 @@
 var FenceView = GameObject.extend({
-    defaults: {
-        color: '#c75'
-    },
     events                    : {
         'click'    : 'onClick',
         'mouseover': 'highlightCurrentAndSibling',
@@ -17,9 +14,8 @@ var FenceView = GameObject.extend({
         this.model.trigger('reset_current_and_sibling', this.model);
     },
     initialize                : function () {
-        this.model.set('color', this.defaults.color);
         this.model.on({
-            'change:state'  : this.render
+            'change:color'  : this.render
         }, this);
 
         var obj = this.createElement && this.createElement();
@@ -30,18 +26,12 @@ var FenceView = GameObject.extend({
         var model = this.model;
 
         if (model.get('state') == 'prebusy') {
-            model.set('color', 'black');
-            model.set('prevcolor', 'black');
             circle.toFront();
         }
         if (model.get('state') == '') {
-            model.set('color', this.defaults.color);
-            model.set('prevcolor', '');
             circle.toBack();
         }
         if (model.get('state') == 'highlight') {
-            model.set('color', 'black');
-            model.set('prevcolor', model.get('color'));
             circle.toFront();
         }
         circle.attr({fill: model.get('color')});

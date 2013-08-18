@@ -1,5 +1,9 @@
 var FenceModel = Backbone.Model.extend({
 
+    defaults: {
+        color: '#c75'
+    },
+
     initialize: function() {
         this.on({
             'markasselected': function() {
@@ -14,8 +18,31 @@ var FenceModel = Backbone.Model.extend({
                 if (this.get('state') == 'highlight') {
                     this.set('state', '');
                 }
-            }
+            },
+            'change:state': this.onChangeState
         });
+    },
+
+    onChangeState: function() {
+        if (this.get('state') == 'prebusy') {
+            this.set({
+                color: 'black',
+                prevcolor: 'black'
+            });
+        }
+        if (this.get('state') == '') {
+            this.set({
+                color: this.defaults.color,
+                prevcolor: ''
+            });
+        }
+        if (this.get('state') == 'highlight') {
+            this.set({
+                color: 'black',
+                prevcolor: this.get('color')
+            });
+        }
+
     }
 
 });
@@ -31,6 +58,7 @@ var FenceHModel = FenceModel.extend({
         };
     }
 });
+_.defaults(FenceHModel.prototype.defaults, FenceModel.prototype.defaults);
 
 var FenceVModel = FenceModel.extend({
     defaults                : {
@@ -43,6 +71,7 @@ var FenceVModel = FenceModel.extend({
         };
     }
 });
+_.defaults(FenceVModel.prototype.defaults, FenceModel.prototype.defaults);
 
 var FencesCollection = Backbone.Collection.extend({
     model                        : FenceModel,
@@ -76,14 +105,17 @@ var FencesCollection = Backbone.Collection.extend({
             .last().value();
     },
 
-    triggerEventOnFenceAndSibling: function (item, event) {
+    getSibling                      : function (item) {
         var siblingPosition = item.getAdjacentFencePosition();
-        var sibling = this.findWhere({
+        return this.findWhere({
             x   : siblingPosition.x,
             y   : siblingPosition.y,
             type: item.get('type')
         });
+    },
 
+    triggerEventOnFenceAndSibling: function (item, event) {
+        var sibling = this.getSibling(item);
         if (sibling && event) {
             sibling.trigger(event);
             item.trigger(event);
@@ -93,24 +125,18 @@ var FencesCollection = Backbone.Collection.extend({
         if (this.isBusy(item)) return false;
         if (!this.isFencePlaceable(item)) return false;
 
-        var siblingPosition = item.getAdjacentFencePosition();
-        var sibling = this.findWhere({
-            x   : siblingPosition.x,
-            y   : siblingPosition.y,
-            type: item.get('type')
-        });
+        var sibling = this.getSibling(item);
 
-        if (!sibling) return false;
-        if (this.isBusy(sibling)) return false;
+        var shouldTriggerEvent = !sibling
+            || this.isBusy(sibling)
+            || !this.hasPassForPlayer(sibling, item);
 
-        if (!this.hasPassForPlayer(sibling, item)) return false;
-
-        if (event) {
+        if (shouldTriggerEvent && event) {
             item.trigger('pre' + event);
             sibling.trigger(event);
             item.trigger(event);
         }
-        return true;
+        return shouldTriggerEvent;
     },
     isBusy                       : function (item) {
         return item.get('state') == 'busy';
