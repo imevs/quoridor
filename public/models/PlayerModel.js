@@ -1,5 +1,9 @@
 var PlayerModel = Backbone.Model.extend({
 
+    defaults: {
+        fencesRemaining: 0
+    },
+
     moveTo: function (x, y) {
         this.set({x: x, y: y});
     },
@@ -120,51 +124,51 @@ var PlayersCollection = Backbone.Collection.extend({
     },
 
     isFieldNearOtherPlayer: function(pos1, pos2) {
-        var sibling1, sibling2;
-        var playerX = pos1.x, playerY = pos1.y,
-            x = pos2.x, y = pos2.y;
+        var isDiagonal = Math.abs(pos1.x - pos2.x) == 1 && Math.abs(pos1.y - pos2.y) == 1;
+        if (!isDiagonal) return false;
 
-        var isDiagonalSibling = Math.abs(playerX - x) == 1 && Math.abs(playerY - y) == 1;
+        return !!(this.hasTwoVerticalSibling(pos1, pos2)
+            || this.hasTwoHorizontalSiblings(pos1, pos2));
+    },
 
-        if (!isDiagonalSibling) return false;
-
-        /**
-         *   s2
-         * x s1 x
-         *   p
-         *
-         *  s1,s2 - siblings
-         *  x - possible position
-         *  p - player
-         */
-        sibling1 = this.findWhere({
+    /**
+     *   s2
+     * x s1 x
+     *   p
+     *
+     *  s1,s2 - siblings
+     *  x - possible position
+     *  p - player
+     */
+    hasTwoVerticalSibling    : function (pos1, pos2) {
+        var playerX = pos1.x, playerY = pos1.y, y = pos2.y;
+        var sibling1 = this.findWhere({
             x: playerX, y: playerY - (playerY - y)
         });
-        sibling2 = this.findWhere({
+        var sibling2 = this.findWhere({
             x: playerX, y: playerY - (playerY - y) * 2
         });
+        return sibling1 && sibling2;
+    },
 
-        if (sibling1 && sibling2) return true;
-
-        /**
-         *     x
-         *  s2 s1 p
-         *     x
-         *
-         *  s1,s2 - siblings
-         *  x - possible position
-         *  p - player
-         */
-        sibling1 = this.findWhere({
+    /**
+     *     x
+     *  s2 s1 p
+     *     x
+     *
+     *  s1,s2 - siblings
+     *  x - possible position
+     *  p - player
+     */
+    hasTwoHorizontalSiblings : function (pos1, pos2) {
+        var playerX = pos1.x, playerY = pos1.y, x = pos2.x;
+        var sibling1 = this.findWhere({
             x: playerX - (playerX - x), y: playerY
         });
-        sibling2 = this.findWhere({
+        var sibling2 = this.findWhere({
             x: playerX - (playerX - x) * 2, y: playerY
         });
-
-        if (sibling1 && sibling2) return true;
-
-        return false;
+        return sibling1 && sibling2;
     },
 
     updatePlayersPositions: function() {

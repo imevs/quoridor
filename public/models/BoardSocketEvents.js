@@ -1,3 +1,6 @@
+/**
+ * Describes client-server communications
+ */
 var BoardSocketEvents = {
 
     initSocket: function() {
@@ -10,49 +13,68 @@ var BoardSocketEvents = {
 
         var socket = this.get('socket');
         if (!socket) return;
-        socket.on('turn', _(this.onTurn).bind(this));
-        socket.on('start', _(this.onStart).bind(this));
+
+        this.on('confirmturn', this.onTurnSendSocketEvent);
+
+        socket.on('server_move_fence', _(this.onSocketMoveFence).bind(this));
+        socket.on('server_move_player', _(this.onSocketMovePlayer).bind(this));
+        socket.on('server_start', _(this.onStart).bind(this));
     },
     onTurnSendSocketEvent: function() {
         if (!this.isPlayerMoved && !this.isFenceMoved) return;
 
         var socket = this.get('socket'), eventInfo = {};
 
+        var currentPlayer = this.players.getCurrentPlayer();
+
         if (this.isPlayerMoved) {
-            var currentPlayer = this.players.getCurrentPlayer();
             eventInfo = currentPlayer.pick('x', 'y');
             eventInfo.playerIndex = this.players.currentPlayer;
-            eventInfo.eventType = 'player';
+
+            socket.emit('client_move_player', eventInfo);
         }
 
         if (this.isFenceMoved) {
             eventInfo = this.fences.getMovedFence().pick('x', 'y', 'type');
-            eventInfo.eventType = 'fence';
-        }
+            eventInfo.playerIndex = this.players.currentPlayer;
+            eventInfo.fencesRemaining = currentPlayer.get('fencesRemaining');
 
-        socket && socket.emit('turn', eventInfo);
+            socket.emit('client_move_fence', eventInfo);
+        }
     },
-    onTurn: function(pos) {
+    onSocketMoveFence: function(pos) {
+        pos = {
+            type: pos.type,
+            x: pos.x,
+            y: pos.y
+        };
+        var fence = this.fences.findWhere(pos);
         this.auto = true;
-        if (pos.eventType == 'player') {
-            this.fields.trigger('moveplayer', pos.x, pos.y);
-        }
-        if (pos.eventType == 'fence') {
-            delete pos.eventType;
-            var fence = this.fences.findWhere(pos);
-            fence.trigger('selected', fence);
-        }
+        fence.trigger('selected', fence);
         this.auto = false;
-        var isEcho = false;
-        this.trigger('turn', isEcho);
+        this.trigger('maketurn');
+    },
+    onSocketMovePlayer: function(pos) {
+        this.auto = true;
+        this.fields.trigger('moveplayer', pos.x, pos.y);
+        this.auto = false;
+        this.trigger('maketurn');
     },
     onStart: function(playerNumber, players, fences) {
         var me = this;
 
-        _(players).each(function(player, i) {
-            if (player.x && player.y) {
-                me.players.at(i - 1).moveTo(player.x, player.y);
+        _(players).each(function(playerInfo, i) {
+            var player = me.players.at(i - 1);
+            if (playerInfo.x && playerInfo.y) {
+                player.set({
+                    x: playerInfo.x,
+                    prev_x: playerInfo.x,
+                    y: playerInfo.y,
+                    prev_y: playerInfo.y
+                });
             }
+            var fencesRemaining = playerInfo.fencesRemaining;
+            fencesRemaining && player.set('fencesRemaining', fencesRemaining);
         });
         _(fences).each(function(fencePos) {
             fencePos = {
@@ -61,16 +83,13 @@ var BoardSocketEvents = {
                 type: fencePos.type
             };
             var fence = me.fences.findWhere(fencePos);
-            fence.trigger('markasselected');
-            me.fences.getSibling(fence).trigger('markasselected');
+            fence.trigger('movefence');
+            me.fences.getSibling(fence).trigger('movefence');
         });
         me.fences.setBusy();
 
-        this.set('playerNumber', playerNumber - 1);
-
-        me.run(playerNumber);
         _(players).each(function(player, i) {
-            player.isCurrent && me.run(i);
+            player.isActive && me.run(i, playerNumber);
         });
     }
 };

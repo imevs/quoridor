@@ -34,28 +34,27 @@ var BoardModel = Backbone.Model.extend({
         });
         this.players.createPlayers(this.get('playersCount'));
     },
-    initEvents: function () {
+
+    makeTurn: function () {
         var me = this;
-
-        this.on('turn', function(isEcho) {
-            if (isEcho) {
-                me.onTurnSendSocketEvent();
-                return;
+        if (me.isPlayerMoved || me.isFenceMoved) {
+            if (me.isFenceMoved) {
+                me.players.getCurrentPlayer().placeFence();
+                me.fences.setBusy();
             }
 
-            if (me.isPlayerMoved || me.isFenceMoved) {
-                if (me.isFenceMoved) {
-                    me.players.getCurrentPlayer().placeFence();
-                    me.fences.setBusy();
-                }
-
-                me.players.switchPlayer();
-                me.get('socket') || me.set('playerNumber', me.players.currentPlayer);
-            }
+            me.players.switchPlayer();
+            me.get('socket') || me.set('playerNumber', me.players.currentPlayer);
 
             me.isPlayerMoved = false;
             me.isFenceMoved = false;
-        });
+        }
+    },
+
+    initEvents: function () {
+        var me = this;
+
+        this.on('maketurn', this.makeTurn);
 
         this.fields.on('moveplayer', function (x, y) {
             if (me.isValidCurrentPlayerPosition(x, y)) {
@@ -85,7 +84,7 @@ var BoardModel = Backbone.Model.extend({
         this.fences.on({
             'selected'                     : function (model) {
                 if (me.canSelectFences()
-                    && me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markasselected')) {
+                    && me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'movefence')) {
                     me.players.updatePlayersPositions();
                     me.isPlayerMoved = false;
                     me.isFenceMoved = true;
@@ -93,17 +92,18 @@ var BoardModel = Backbone.Model.extend({
             },
             'highlight_current_and_sibling': function (model) {
                 if (me.canSelectFences()) {
-                    me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'highlight');
+                    me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markfence');
                 }
             },
             'reset_current_and_sibling'    : function (model) {
-                me.fences.triggerEventOnFenceAndSibling(model, 'dehighlight');
+                me.fences.triggerEventOnFenceAndSibling(model, 'unmarkfence');
             }
         });
     },
-    run: function(playerNumber) {
-        playerNumber = _.isUndefined(playerNumber) ? 1 : playerNumber;
-        this.players.switchPlayer(playerNumber);
+    run: function(activePlayer, currentPlayer) {
+        activePlayer = _.isUndefined(activePlayer) ? 1 : activePlayer;
+        this.players.switchPlayer(activePlayer);
+        this.set('playerNumber', currentPlayer - 1);
     },
     initialize: function () {
         this.createModels();

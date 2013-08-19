@@ -6,15 +6,15 @@ var FenceModel = Backbone.Model.extend({
 
     initialize: function() {
         this.on({
-            'markasselected': function() {
+            'movefence': function() {
                 this.set('state', 'prebusy');
             },
-            'highlight': function() {
+            'markfence': function() {
                 if (!this.get('state')) {
                     this.set('state', 'highlight');
                 }
             },
-            'dehighlight': function() {
+            'unmarkfence': function() {
                 if (this.get('state') == 'highlight') {
                     this.set('state', '');
                 }
@@ -127,14 +127,14 @@ var FencesCollection = Backbone.Collection.extend({
 
         var sibling = this.getSibling(item);
 
-        var shouldTriggerEvent = !sibling
-            || this.isBusy(sibling)
-            || !this.hasPassForPlayer(sibling, item);
+        var shouldTriggerEvent = sibling
+            && !this.isBusy(sibling)
+            && this.hasPassForPlayer(sibling, item);
 
         if (shouldTriggerEvent && event) {
             item.trigger('pre' + event);
-            sibling.trigger(event);
             item.trigger(event);
+            sibling.trigger(event);
         }
         return shouldTriggerEvent;
     },

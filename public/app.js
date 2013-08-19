@@ -5,5 +5,5 @@ $(function () {
     new BoardView({
         model: boardModel
     });
-    //boardModel.run(2);
+    //boardModel.run(2, 1);
 });

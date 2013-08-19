@@ -15,7 +15,7 @@ TestCase("Test game", {
     },
     testFirstTurnValid: function() {
         this.board.fields.trigger('moveplayer', 4, 1);
-        this.board.trigger('turn');
+        this.board.trigger('maketurn');
         var players = this.board.players;
         var pos1 = players.at(0).pick('x', 'y');
         var pos2 = players.at(1).pick('x', 'y');

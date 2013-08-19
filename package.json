@@ -1,7 +1,7 @@
 {
     "name": "quoridor-online",
     "preferGlobal": "false",
-    "version": "0.9.0",
+    "version": "1.1.0",
     "author": "Vitaliy Medvedev <medvedev.vs@gmail.com>",
     "description": "quoridor game",
     "scripts": {
