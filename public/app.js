@@ -1,6 +1,8 @@
 $(function () {
+
+    var params = parseUrl(document.location.search);
     var boardModel = new BoardModel({
-        playersCount: 2
+        playersCount: params['playersCount']
     });
     new BoardView({
         model: boardModel

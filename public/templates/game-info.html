@@ -1,4 +1,5 @@
-<div>Текущий игрок: <%= data.currentplayer %></div>
+<div>Вы играете за: <%= data.currentplayer %></div>
+<div>Текущий ход игрока номер: <%= data.activeplayer %></div>
 <% _(data.fences).each(function(fence, index) {%>
-<div>Количество фишек <%=index + 1 %>-го игрока <%=fence%></div>
+    <div>Количество фишек <%=index + 1 %>-го игрока <%=fence%></div>
 <%}); %>

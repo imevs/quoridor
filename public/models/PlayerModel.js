@@ -1,9 +1,12 @@
-var PlayerModel = Backbone.Model.extend({
+/**
+ * @type Backbone
+ */
+//var Backbone = require('backbone');
 
+var PlayerModel = Backbone.Model.extend({
     defaults: {
         fencesRemaining: 0
     },
-
     moveTo: function (x, y) {
         this.set({x: x, y: y});
     },
@@ -13,7 +16,6 @@ var PlayerModel = Backbone.Model.extend({
     hasFences: function() {
         return this.get('fencesRemaining') > 0;
     }
-
 });
 
 var PlayersCollection = Backbone.Collection.extend({
@@ -62,32 +64,21 @@ var PlayersCollection = Backbone.Collection.extend({
     createPlayers: function (playersCount) {
         var me = this;
         if (playersCount == 2) {
-            me.playersPositions = _(me.playersPositions).reject(function(v, i) {
-                return _([1,3]).contains(i);
-            });
+            me.playersPositions.splice(1,1);
+            me.playersPositions.splice(3,1);
         }
+        var fences = Math.round(me.fencesCount / playersCount);
         _(playersCount).times(function (player) {
             var position = me.playersPositions[player];
             var model = new PlayerModel({
-                color: position.color
-            });
-            me.add(model);
-        });
-        me.initPlayerPositions();
-    },
-
-    initPlayerPositions: function() {
-        var me = this;
-        this.each(function(player, i) {
-            var position = me.playersPositions[i];
-            var fences = Math.round(me.fencesCount / me.length);
-            player.set({
-                x: position.x,
-                prev_x: position.x,
-                y: position.y,
-                prev_y: position.y,
+                color          : position.color,
+                x              : position.x,
+                prev_x         : position.x,
+                y              : position.y,
+                prev_y         : position.y,
                 fencesRemaining: fences
             });
+            me.add(model);
         });
     },
 
@@ -184,3 +175,5 @@ var PlayersCollection = Backbone.Collection.extend({
     }
 
 });
+
+//module.exports = PlayersCollection;

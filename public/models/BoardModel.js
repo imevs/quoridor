@@ -4,7 +4,7 @@ var BoardModel = Backbone.Model.extend({
 
     defaults: {
         boardSize       : 9,
-        playersCount    : 4
+        playersCount    : 2
     },
 
     resetModels: function() {
@@ -21,6 +21,11 @@ var BoardModel = Backbone.Model.extend({
         this.infoModel = new Backbone.Model();
     },
     initModels   : function () {
+        var count = this.get('playersCount');
+        if (count != 2 && count != 4) {
+            this.set('playersCount', 2);
+        }
+
         var me = this, boardSize = this.get('boardSize');
 
         _([boardSize, boardSize]).iter(function (i, j) {
@@ -72,7 +77,8 @@ var BoardModel = Backbone.Model.extend({
         });
         this.players.on('change setcurrent', function() {
             me.infoModel.set({
-                currentplayer: this.currentPlayer + 1,
+                currentplayer: me.get('playerNumber') + 1,
+                activeplayer: this.currentPlayer + 1,
                 fences: this.pluck('fencesRemaining')
             });
         });
@@ -101,9 +107,9 @@ var BoardModel = Backbone.Model.extend({
         });
     },
     run: function(activePlayer, currentPlayer) {
+        this.set('playerNumber', currentPlayer - 1);
         activePlayer = _.isUndefined(activePlayer) ? 1 : activePlayer;
         this.players.switchPlayer(activePlayer);
-        this.set('playerNumber', currentPlayer - 1);
     },
     initialize: function () {
         this.createModels();

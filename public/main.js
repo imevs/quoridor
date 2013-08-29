@@ -85,6 +85,7 @@ require.config({
         },
         'app': {
             deps: [
+                'urlParser',
                 'libs/jquery-1.10.2',
                 'models/BoardModel',
                 'views/BoardView'
