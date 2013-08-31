@@ -1,10 +1,9 @@
 /**
  * @type Backbone
  */
-if (this.module) {
-    var Backbone = require('backbone');
-    var _ = require('underscore');
-}
+var global = this;
+var Backbone = global.Backbone || require('backbone');
+var _ = global._ || require('underscore');
 
 var PlayerModel = Backbone.Model.extend({
     defaults: {
@@ -182,4 +181,4 @@ var PlayersCollection = Backbone.Collection.extend({
 
 });
 
-this.module && (module.exports = PlayersCollection);
+module && (module.exports = PlayersCollection);

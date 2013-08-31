@@ -155,12 +155,31 @@ describe('Game', function() {
             var p = new playerSocket('3');
             p.on('server_start', function(playerNumber, players) {
                 assert.equal(0, playerNumber);
+                assert.ok(players[playerNumber].active);
                 done();
             });
 
             io.sockets.emit('connection', new playerSocket('1'));
             io.sockets.emit('connection', new playerSocket('2'));
             io.sockets.emit('connection', p);
+        });
+
+        it('move player',  function(done) {
+            var p1 = new playerSocket('1');
+            var p2 = new playerSocket('2');
+
+            io.sockets.emit('connection', p1);
+            io.sockets.emit('connection', p2);
+
+            p2.on('server_move_player', function(eventInfo) {
+                assert.equal(eventInfo.x, 4);
+                assert.equal(eventInfo.y, 1);
+                assert.equal(eventInfo.playerIndex, 0);
+                done();
+            });
+
+            p1.emit('client_move_player', {x: 4,y: 1});
+
         });
 
     })
