@@ -20,6 +20,7 @@ var Room = Backbone.Model.extend({
             id: playerId
         });
         socket.on('disconnect', _(this.disconnectPlayer).bind(this));
+        socket.emit('server_start', this.players.length);
         return true;
     },
     disconnectPlayer: function(socket) {

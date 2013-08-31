@@ -12,14 +12,19 @@ var playerSocket = function(id) {
 };
 extend(playerSocket, emitter);
 
-var io = {
-    sockets: new emitter(),
-    listen: function() {
-
-    }
-};
-
 describe('Game', function() {
+
+    var io, game;
+
+    beforeEach(function() {
+        io = {
+            sockets: new emitter(),
+            listen: function() {}
+        };
+        game = new Game();
+        game.start(io);
+    });
+
     describe('create Game', function(){
 
         it('First Game create', function(){
@@ -29,7 +34,7 @@ describe('Game', function() {
         });
 
         it('start game', function() {
-            var game = new Game();
+            game = new Game();
             assert.equal(0, game.length);
 
             game.start(io);
@@ -42,9 +47,6 @@ describe('Game', function() {
         });
 
         it('connect 1 player', function() {
-            var game = new Game();
-            game.start(io);
-
             var p = new playerSocket('1');
             io.sockets.emit('connection', p);
 
@@ -53,9 +55,6 @@ describe('Game', function() {
         });
 
         it('connect 2 player', function() {
-            var game = new Game();
-            game.start(io);
-
             io.sockets.emit('connection', new playerSocket('1'));
             io.sockets.emit('connection', new playerSocket('2'));
 
@@ -64,9 +63,6 @@ describe('Game', function() {
         });
 
         it('connect 3 player', function() {
-            var game = new Game();
-            game.start(io);
-
             io.sockets.emit('connection', new playerSocket('1'));
             io.sockets.emit('connection', new playerSocket('2'));
             io.sockets.emit('connection', new playerSocket('3'));
@@ -80,9 +76,6 @@ describe('Game', function() {
         });
 
         it('disconnect player from room 1', function() {
-            var game = new Game();
-            game.start(io);
-
             var p = new playerSocket('1');
             io.sockets.emit('connection', p);
             p.emit('disconnect', p);
@@ -93,9 +86,6 @@ describe('Game', function() {
         });
 
         it("find player's room", function() {
-            var game = new Game();
-            game.start(io);
-
             io.sockets.emit('connection', new playerSocket('1'));
             io.sockets.emit('connection', new playerSocket('2'));
             io.sockets.emit('connection', new playerSocket('3'));
@@ -105,9 +95,6 @@ describe('Game', function() {
         });
 
         it('disconnect user from room 2', function() {
-            var game = new Game();
-            game.start(io);
-
             var p = new playerSocket('3');
 
             io.sockets.emit('connection', new playerSocket('1'));
@@ -121,17 +108,11 @@ describe('Game', function() {
         });
 
         it('findFreeRoom get room 1', function() {
-            var game = new Game();
-            game.start(io);
-
             var room1 = game.at(0);
             assert.equal(room1, game.findFreeRoom());
         });
 
         it('findFreeRoom get room 2', function() {
-            var game = new Game();
-            game.start(io);
-
             var p = new playerSocket('3');
 
             io.sockets.emit('connection', new playerSocket('1'));
@@ -142,6 +123,39 @@ describe('Game', function() {
 
             var room2 = game.at(1);
             assert.equal(room2, game.findFreeRoom());
+        });
+
+        it('test start 1st player', function(done) {
+            var p = new playerSocket('1');
+            p.on('server_start', function(playerNumber) {
+                assert.equal(1, playerNumber);
+                done();
+            });
+
+            io.sockets.emit('connection', p);
+        });
+
+        it('test start 2nd player', function(done) {
+            var p = new playerSocket('2');
+            p.on('server_start', function(playerNumber) {
+                assert.equal(2, playerNumber);
+                done();
+            });
+
+            io.sockets.emit('connection', new playerSocket('1'));
+            io.sockets.emit('connection', p);
+        });
+
+        it('test start 3rd player', function(done) {
+            var p = new playerSocket('3');
+            p.on('server_start', function(playerNumber) {
+                assert.equal(1, playerNumber);
+                done();
+            });
+
+            io.sockets.emit('connection', new playerSocket('1'));
+            io.sockets.emit('connection', new playerSocket('2'));
+            io.sockets.emit('connection', p);
         });
 
     })
