@@ -30,7 +30,9 @@ describe('Game', function() {
         it('First Game create', function(){
             assert.notEqual(false, Game);
             assert.ok(Game.prototype instanceof Backbone.Collection);
-            assert.ok(new Game() instanceof Backbone.Collection);
+            assert.ok(game instanceof Backbone.Collection);
+            var room1 = game.at(0);
+            assert.equal(2, room1.players.length);
         });
 
         it('start game', function() {
@@ -43,7 +45,7 @@ describe('Game', function() {
             var room1 = game.at(0);
             assert.ok(room1 instanceof Backbone.Model);
             assert.ok(room1.players instanceof Backbone.Collection);
-            assert.equal(0, room1.players.length);
+            assert.equal(0, room1.findBusyPlayersPlaces().length);
         });
 
         it('connect 1 player', function() {
@@ -51,7 +53,7 @@ describe('Game', function() {
             io.sockets.emit('connection', p);
 
             var room1 = game.at(0);
-            assert.equal(1, room1.players.length);
+            assert.equal(1, room1.findBusyPlayersPlaces().length);
         });
 
         it('connect 2 player', function() {
@@ -59,7 +61,7 @@ describe('Game', function() {
             io.sockets.emit('connection', new playerSocket('2'));
 
             var room1 = game.at(0);
-            assert.equal(2, room1.players.length);
+            assert.equal(2, room1.findBusyPlayersPlaces().length);
         });
 
         it('connect 3 player', function() {
@@ -70,9 +72,9 @@ describe('Game', function() {
             var room1 = game.at(0);
             var room2 = game.at(1);
 
-            assert.equal(2, room1.players.length);
+            assert.equal(2, room1.findBusyPlayersPlaces().length);
             assert.equal(2, game.length);
-            assert.equal(1, room2.players.length);
+            assert.equal(1, room2.findBusyPlayersPlaces().length);
         });
 
         it('disconnect player from room 1', function() {
@@ -82,7 +84,7 @@ describe('Game', function() {
 
             assert.equal(1, game.length);
             var room1 = game.at(0);
-            assert.equal(0, room1.players.length);
+            assert.equal(0, room1.findBusyPlayersPlaces().length);
         });
 
         it("find player's room", function() {
@@ -104,7 +106,7 @@ describe('Game', function() {
             p.emit('disconnect', p);
 
             var room2 = game.at(1);
-            assert.equal(0, room2.players.length);
+            assert.equal(0, room2.findBusyPlayersPlaces().length);
         });
 
         it('findFreeRoom get room 1', function() {
@@ -127,8 +129,9 @@ describe('Game', function() {
 
         it('test start 1st player', function(done) {
             var p = new playerSocket('1');
-            p.on('server_start', function(playerNumber) {
-                assert.equal(1, playerNumber);
+            p.on('server_start', function(playerNumber, players) {
+                assert.equal(0, playerNumber);
+                assert.ok(players[playerNumber].active);
                 done();
             });
 
@@ -137,8 +140,10 @@ describe('Game', function() {
 
         it('test start 2nd player', function(done) {
             var p = new playerSocket('2');
-            p.on('server_start', function(playerNumber) {
-                assert.equal(2, playerNumber);
+            p.on('server_start', function(playerNumber, players) {
+                assert.equal(1, playerNumber);
+                assert.ok(players[playerNumber - 1].active);
+                assert.ok(!players[playerNumber].active);
                 done();
             });
 
@@ -148,8 +153,8 @@ describe('Game', function() {
 
         it('test start 3rd player', function(done) {
             var p = new playerSocket('3');
-            p.on('server_start', function(playerNumber) {
-                assert.equal(1, playerNumber);
+            p.on('server_start', function(playerNumber, players) {
+                assert.equal(0, playerNumber);
                 done();
             });
 

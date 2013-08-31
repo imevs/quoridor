@@ -1,7 +1,10 @@
 /**
  * @type Backbone
  */
-//var Backbone = require('backbone');
+if (this.module) {
+    var Backbone = require('backbone');
+    var _ = require('underscore');
+}
 
 var PlayerModel = Backbone.Model.extend({
     defaults: {
@@ -22,12 +25,15 @@ var PlayersCollection = Backbone.Collection.extend({
     model           : PlayerModel,
     currentPlayer   : 0,
     fencesCount     : 20,
-    playersPositions: [
-        {x: 4, y: 0, color: 'red', isWin: function(x,y) { return y == 8; } },
-        {x: 8, y: 4, color: 'blue', isWin: function(x,y) { return x == 0; } },
-        {x: 4, y: 8, color: 'white', isWin: function(x,y) { return y == 0; } },
-        {x: 0, y: 4, color: 'yellow', isWin: function(x,y) { return x == 8; } }
-    ],
+
+    initialize: function() {
+        this.playersPositions = [
+            {x: 4, y: 0, color: 'red', isWin: function(x,y) { return y == 8; } },
+            {x: 8, y: 4, color: 'blue', isWin: function(x,y) { return x == 0; } },
+            {x: 4, y: 8, color: 'white', isWin: function(x,y) { return y == 0; } },
+            {x: 0, y: 4, color: 'yellow', isWin: function(x,y) { return x == 8; } }
+        ];
+    },
 
     getCurrentPlayer: function () {
         return this.at(this.currentPlayer);
@@ -64,8 +70,8 @@ var PlayersCollection = Backbone.Collection.extend({
     createPlayers: function (playersCount) {
         var me = this;
         if (playersCount == 2) {
-            me.playersPositions.splice(1,1);
             me.playersPositions.splice(3,1);
+            me.playersPositions.splice(1,1);
         }
         var fences = Math.round(me.fencesCount / playersCount);
         _(playersCount).times(function (player) {
@@ -176,4 +182,4 @@ var PlayersCollection = Backbone.Collection.extend({
 
 });
 
-//module.exports = PlayersCollection;
+this.module && (module.exports = PlayersCollection);

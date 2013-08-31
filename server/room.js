@@ -8,24 +8,35 @@ var PlayersCollection = require('../public/models/PlayerModel.js');
 var Room = Backbone.Model.extend({
     initialize: function() {
         this.players = new PlayersCollection();
+        this.players.createPlayers(2);
+        this.players.at(0).set('active', true);
     },
     isFull: function() {
-        return this.players.length >= 2;
+        return this.findBusyPlayersPlaces().length >= 2;
     },
     addPlayer: function(socket) {
         var playerId = socket && socket.id && socket.id.toString();
         if (this.isFull()) return false;
 
-        var player = this.players.add({
-            id: playerId
+        var player = this.players.find(function(player) {
+            return player.get('state') != 'busy';
         });
+        player.set('id', playerId);
+        player.set('state', 'busy');
+        var index = this.players.indexOf(player);
         socket.on('disconnect', _(this.disconnectPlayer).bind(this));
-        socket.emit('server_start', this.players.length);
+        socket.emit('server_start', index, this.players.toJSON());
         return true;
+    },
+    findBusyPlayersPlaces: function() {
+        return this.players.filter(function(player) {
+            return player.get('state') == 'busy';
+        });
     },
     disconnectPlayer: function(socket) {
         var player = this.findPlayer(socket);
-        this.players.remove(player);
+        player.set('state', '');
+        player.set('id', '');
     },
     findPlayer: function(socket) {
         var playerId = socket && socket.id && socket.id.toString();
