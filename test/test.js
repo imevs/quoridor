@@ -2,7 +2,16 @@ var assert = require("assert");
 var Backbone = require('backbone');
 var Game = require('../server/game_.js');
 
+function extend(Child, Parent) {
+    Child.prototype = Parent.prototype;
+}
+
 var emitter = require('events').EventEmitter;
+var playerSocket = function(id) {
+    this.id = id;
+};
+extend(playerSocket, emitter);
+
 var io = {
     sockets: new emitter(),
     listen: function() {
@@ -36,7 +45,8 @@ describe('Game', function() {
             var game = new Game();
             game.start(io);
 
-            io.sockets.emit('connection', {id: '1'});
+            var p = new playerSocket('1');
+            io.sockets.emit('connection', p);
 
             var room1 = game.at(0);
             assert.equal(1, room1.players.length);
@@ -46,8 +56,8 @@ describe('Game', function() {
             var game = new Game();
             game.start(io);
 
-            io.sockets.emit('connection', {id: '1'});
-            io.sockets.emit('connection', {id: '2'});
+            io.sockets.emit('connection', new playerSocket('1'));
+            io.sockets.emit('connection', new playerSocket('2'));
 
             var room1 = game.at(0);
             assert.equal(2, room1.players.length);
@@ -57,9 +67,9 @@ describe('Game', function() {
             var game = new Game();
             game.start(io);
 
-            io.sockets.emit('connection', {id: '1'});
-            io.sockets.emit('connection', {id: '2'});
-            io.sockets.emit('connection', {id: '3'});
+            io.sockets.emit('connection', new playerSocket('1'));
+            io.sockets.emit('connection', new playerSocket('2'));
+            io.sockets.emit('connection', new playerSocket('3'));
 
             var room1 = game.at(0);
             var room2 = game.at(1);
@@ -73,8 +83,9 @@ describe('Game', function() {
             var game = new Game();
             game.start(io);
 
-            io.sockets.emit('connection', {id: '1'});
-            io.sockets.emit('disconnect', {id: '1'});
+            var p = new playerSocket('1');
+            io.sockets.emit('connection', p);
+            p.emit('disconnect', p);
 
             assert.equal(1, game.length);
             var room1 = game.at(0);
@@ -85,9 +96,9 @@ describe('Game', function() {
             var game = new Game();
             game.start(io);
 
-            io.sockets.emit('connection', {id: '1'});
-            io.sockets.emit('connection', {id: '2'});
-            io.sockets.emit('connection', {id: '3'});
+            io.sockets.emit('connection', new playerSocket('1'));
+            io.sockets.emit('connection', new playerSocket('2'));
+            io.sockets.emit('connection', new playerSocket('3'));
 
             assert.equal(game.at(0), game.findPlayerRoom({id: '1'}));
             assert.equal(game.at(1), game.findPlayerRoom({id: '3'}));
@@ -97,11 +108,13 @@ describe('Game', function() {
             var game = new Game();
             game.start(io);
 
-            io.sockets.emit('connection', {id: '1'});
-            io.sockets.emit('connection', {id: '2'});
-            io.sockets.emit('connection', {id: '3'});
+            var p = new playerSocket('3');
 
-            io.sockets.emit('disconnect', {id: '3'});
+            io.sockets.emit('connection', new playerSocket('1'));
+            io.sockets.emit('connection', new playerSocket('2'));
+            io.sockets.emit('connection', p);
+
+            p.emit('disconnect', p);
 
             var room2 = game.at(1);
             assert.equal(0, room2.players.length);
@@ -119,10 +132,13 @@ describe('Game', function() {
             var game = new Game();
             game.start(io);
 
-            io.sockets.emit('connection', {id: '1'});
-            io.sockets.emit('connection', {id: '2'});
-            io.sockets.emit('connection', {id: '3'});
-            io.sockets.emit('disconnect', {id: '3'});
+            var p = new playerSocket('3');
+
+            io.sockets.emit('connection', new playerSocket('1'));
+            io.sockets.emit('connection', new playerSocket('2'));
+            io.sockets.emit('connection', p);
+
+            p.emit('disconnect', p);
 
             var room2 = game.at(1);
             assert.equal(room2, game.findFreeRoom());
