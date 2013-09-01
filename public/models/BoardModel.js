@@ -47,20 +47,23 @@ var BoardModel = Backbone.Model.extend({
         }
     },
 
+    onMovePlayer: function (x, y) {
+        var me = this;
+        if (me.isValidCurrentPlayerPosition(x, y)) {
+            var current = me.players.getCurrentPlayer();
+            current.moveTo(x, y);
+            me.fences.clearBusy();
+            me.isFenceMoved = false;
+            me.isPlayerMoved = true;
+        }
+    },
+
     initEvents: function () {
         var me = this;
 
         this.on('maketurn', this.makeTurn);
 
-        this.fields.on('moveplayer', function (x, y) {
-            if (me.isValidCurrentPlayerPosition(x, y)) {
-                var current = me.players.getCurrentPlayer();
-                current.moveTo(x, y);
-                me.fences.clearBusy();
-                me.isFenceMoved = false;
-                me.isPlayerMoved = true;
-            }
-        });
+        this.fields.on('moveplayer', me.onMovePlayer, this);
         this.fields.on('beforeselectfield', function (x, y) {
             if (me.isValidCurrentPlayerPosition(x, y)) {
                 this.selectField(x, y);
@@ -68,8 +71,8 @@ var BoardModel = Backbone.Model.extend({
         });
         this.players.on('change setcurrent', function() {
             me.infoModel.set({
-                currentplayer: me.get('playerNumber') + 1,
-                activeplayer: this.currentPlayer + 1,
+                currentplayer: me.get('playerNumber'),
+                activeplayer: this.currentPlayer,
                 fences: this.pluck('fencesRemaining')
             });
         });
