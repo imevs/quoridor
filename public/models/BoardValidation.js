@@ -1,4 +1,8 @@
-var BoardValidation = ({
+if (module) {
+    var _ = require('../utils.js');
+}
+
+var BoardValidation = {
     isBetween                     : function (n1, n2, n3) {
         var min = Math.min(n1, n2);
         var max = Math.max(n1, n2);
@@ -93,7 +97,7 @@ var BoardValidation = ({
             && this.players.isFieldNotBusy(newPos)
             && this.noFenceBetweenPositions(currentPos, newPos)
             && (
-            this.isNearestPosition(currentPos, newPos) ||
+                this.isNearestPosition(currentPos, newPos) ||
                 this.players.isFieldBehindOtherPlayer(currentPos, newPos) ||
                 this.players.isFieldNearOtherPlayer(currentPos, newPos) ||
                 this.isOtherPlayerAndFenceBehindHim(currentPos, newPos)
@@ -113,4 +117,8 @@ var BoardValidation = ({
     canSelectFences               : function () {
         return this.players.getCurrentPlayer().hasFences() && this.isCurrentPlayerTurn();
     }
-});
+};
+
+if (module) {
+    module.exports = BoardValidation;
+}

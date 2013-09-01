@@ -5,21 +5,25 @@ var Backbone = require('backbone');
  */
 var PlayersCollection = require('../public/models/PlayerModel.js');
 var FencesCollection = require('../public/models/FenceModel.js');
+var BoardValidation = require('../public/models/BoardValidation.js');
 
 var Room = Backbone.Model.extend({
 
-    boardSize: 9,
-    playersCount: 2,
+    defaults: {
+        boardSize: 9,
+        playersCount: 2
+    },
 
     initialize: function(playersCount) {
-        this.playersCount = playersCount || this.playersCount;
+        this.set('playersCount', playersCount || this.get('playersCount'));
+        this.set('playerNumber', 0);
 
         this.players = new PlayersCollection();
-        this.players.createPlayers(this.playersCount);
-        this.players.at(0).set('active', true);
-
         this.fences = new FencesCollection();
-        this.fences.createFences(this.boardSize);
+
+        this.fences.createFences(this.get('boardSize'));
+        this.players.createPlayers(this.get('playersCount'));
+        this.players.at(0).set('active', true);
     },
     isFull: function() {
         return this.findBusyPlayersPlaces().length >= 2;
@@ -81,12 +85,10 @@ var Room = Backbone.Model.extend({
     },
     onMovePlayer: function(player, eventInfo) {
         if (!player.get('active')) return;
+        if (!this.isValidCurrentPlayerPosition(eventInfo.x, eventInfo.y)) return;
 
         player.set('active', false);
-        player.set({
-            x: eventInfo.x,
-            y: eventInfo.y
-        });
+        player.moveTo(eventInfo.x, eventInfo.y);
 
         var index = this.players.indexOf(player);
         this.players.switchPlayer();
@@ -118,5 +120,6 @@ var Room = Backbone.Model.extend({
         return this.players.findWhere({id: playerId});
     }
 });
+_.extend(Room.prototype, BoardValidation);
 
 module.exports = Room;

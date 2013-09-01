@@ -198,14 +198,13 @@ describe('Game', function() {
         });
 
         it('player can`t move (check that there`s no event)',  function() {
-            var spy = sinon.spy();
-
             var p1 = new playerSocket('1');
             var p2 = new playerSocket('2');
 
             io.sockets.emit('connection', p1);
             io.sockets.emit('connection', p2);
 
+            var spy = sinon.spy();
             p2.on('server_move_player', spy);
 
             p2.emit('client_move_player', {x: 4, y: 7});
@@ -213,8 +212,6 @@ describe('Game', function() {
         });
 
         it('player can`t move (check player position)',  function() {
-            var spy = sinon.spy();
-
             var p1 = new playerSocket('1');
             var p2 = new playerSocket('2');
 
@@ -321,7 +318,19 @@ describe('Game', function() {
             io.sockets.emit('connection', p3);
         });
 
-        // валидация координат на сервере
+        it('player can`t move (invalid position)',  function() {
+            var p1 = new playerSocket('1');
+            var p2 = new playerSocket('2');
+
+            io.sockets.emit('connection', p1);
+            io.sockets.emit('connection', p2);
+
+            var spy = sinon.spy();
+            p1.on('server_move_player', spy);
+
+            p1.emit('client_move_player', {x: 4, y: 2});
+            sinon.assert.notCalled(spy);
+        });
 
     })
 });
