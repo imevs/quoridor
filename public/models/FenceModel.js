@@ -1,3 +1,7 @@
+var global = this;
+var Backbone = global.Backbone || require('backbone');
+var _ = require('../utils.js');
+
 var FenceModel = Backbone.Model.extend({
 
     defaults: {
@@ -74,10 +78,20 @@ var FenceVModel = FenceModel.extend({
 _.defaults(FenceVModel.prototype.defaults, FenceModel.prototype.defaults);
 
 var FencesCollection = Backbone.Collection.extend({
-    model                        : FenceModel,
+    model     : FenceModel,
 
     initialize: function() {
         this.on('premarkasselected', this.clearBusy, this);
+    },
+
+    createFences: function(boardSize) {
+        var me = this;
+        _([boardSize, boardSize - 1]).iter(function (i, j) {
+            me.addHorizontal({x: i, y: j});
+        });
+        _([boardSize - 1, boardSize]).iter(function (i, j) {
+            me.addVertical({x: i, y: j});
+        });
     },
 
     clearBusy: function() {
@@ -190,3 +204,5 @@ var FencesCollection = Backbone.Collection.extend({
     }
 
 });
+
+module.exports = FencesCollection;

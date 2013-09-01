@@ -21,23 +21,14 @@ var BoardModel = Backbone.Model.extend({
         this.infoModel = new Backbone.Model();
     },
     initModels   : function () {
-        var count = this.get('playersCount');
+        var me = this;
+        var count = me.get('playersCount');
         if (count != 2 && count != 4) {
-            this.set('playersCount', 2);
+            me.set('playersCount', 2);
         }
-
-        var me = this, boardSize = this.get('boardSize');
-
-        _([boardSize, boardSize]).iter(function (i, j) {
-            me.fields.add({x: i, y: j});
-        });
-        _([boardSize, boardSize - 1]).iter(function (i, j) {
-            me.fences.addHorizontal({x: i, y: j});
-        });
-        _([boardSize - 1, boardSize]).iter(function (i, j) {
-            me.fences.addVertical({x: i, y: j});
-        });
-        this.players.createPlayers(this.get('playersCount'));
+        me.fields.createFields(me.get('boardSize'));
+        me.fences.createFences(me.get('boardSize'));
+        me.players.createPlayers(me.get('playersCount'));
     },
 
     makeTurn: function () {

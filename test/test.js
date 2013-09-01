@@ -1,6 +1,7 @@
 var assert = require("assert");
 var Backbone = require('backbone');
 var Game = require('../server/game_.js');
+var sinon = require('sinon');
 
 function extend(Child, Parent) {
     Child.prototype = Parent.prototype;
@@ -179,8 +180,60 @@ describe('Game', function() {
             });
 
             p1.emit('client_move_player', {x: 4,y: 1});
-
         });
+
+        it('player can`t move',  function() {
+            var spy = sinon.spy();
+
+            var p1 = new playerSocket('1');
+            var p2 = new playerSocket('2');
+
+            io.sockets.emit('connection', p1);
+            io.sockets.emit('connection', p2);
+
+            p2.on('server_move_player', spy);
+
+            p2.emit('client_move_player', {x: 4, y: 7});
+            sinon.assert.notCalled(spy);
+        });
+
+        it('player move fence', function(done) {
+            var p1 = new playerSocket('1');
+            var p2 = new playerSocket('2');
+
+            io.sockets.emit('connection', p1);
+            io.sockets.emit('connection', p2);
+
+            p2.on('server_move_fence', function(eventInfo) {
+                assert.equal(eventInfo.x, 4);
+                assert.equal(eventInfo.y, 7);
+                assert.equal(eventInfo.type, 'H');
+                assert.equal(eventInfo.playerIndex, 0);
+                assert.equal(eventInfo.fencesRemaining, 9);
+                done();
+            });
+
+            p1.emit('client_move_fence', {x: 4, y: 7, type: 'H'});
+        });
+
+        it('player can`t move fence', function() {
+            var spy = sinon.spy();
+
+            var p1 = new playerSocket('1');
+            var p2 = new playerSocket('2');
+
+            io.sockets.emit('connection', p1);
+            io.sockets.emit('connection', p2);
+
+            p1.on('server_move_fence', spy);
+
+            p2.emit('client_move_fence', {x: 4, y: 7, type: 'H'});
+
+            sinon.assert.notCalled(spy);
+        });
+
+        // валидация координат на сервере
+        // восстановление координат после перезапуска
 
     })
 });

@@ -87,6 +87,21 @@ var PlayersCollection = Backbone.Collection.extend({
         });
     },
 
+    initPlayerPositions: function() {
+        var me = this;
+        this.each(function(player, i) {
+            var position = me.playersPositions[i];
+            var fences = Math.round(me.fencesCount / me.length);
+            player.set({
+                x              : position.x,
+                prev_x         : position.x,
+                y              : position.y,
+                prev_y         : position.y,
+                fencesRemaining: fences
+            });
+        });
+    },
+
     isFieldNotBusy: function (pos) {
         return !this.isFieldBusy(pos);
     },
