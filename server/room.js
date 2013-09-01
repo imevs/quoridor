@@ -41,9 +41,8 @@ var Room = Backbone.Model.extend({
         socket.on('client_move_player', _(this.onMovePlayer).partial(player).bind(this));
         socket.on('client_move_fence', _(this.onMoveFence).partial(player).bind(this));
 
-        var playersData = this.players.toJSON();
-        _(playersData).each(function(item) {
-            delete item.socket;
+        var playersData = this.players.map(function(item) {
+            return item.pick('x', 'y', 'fencesRemaining', 'active');
         });
         socket.emit('server_start', index, playersData, this.getFencesPositions());
 

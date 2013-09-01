@@ -154,8 +154,9 @@ describe('Game', function() {
 
         it('test start 3rd player', function(done) {
             var p = new playerSocket('3');
-            p.on('server_start', function(playerNumber, players) {
+            p.on('server_start', function(playerNumber, players, fences) {
                 assert.equal(0, playerNumber);
+                assert.equal(0, fences.length);
                 assert.ok(players[playerNumber].active);
                 done();
             });
@@ -266,7 +267,7 @@ describe('Game', function() {
             sinon.assert.notCalled(spy);
         });
 
-        it('restore players positions', function() {
+        it('restore players positions', function(done) {
             var p1 = new playerSocket('1');
             var p2 = new playerSocket('2');
 
@@ -278,13 +279,46 @@ describe('Game', function() {
             p1.emit('disconnect', p1);
 
             var p3 = new playerSocket('3');
-            io.sockets.emit('connection', p3);
 
-            var player3 = game.findPlayerRoom(p3).findPlayer(p3);
-            assert.equal(4, player3.get('x'));
-            assert.equal(1, player3.get('y'));
-            assert.equal(3, player3.get('id'));
-            assert.ok(!player3.get('active'));
+            p3.on('server_start', function(playerNumber, players, fences) {
+                assert.equal(0, playerNumber);
+                assert.deepEqual({
+                    x              : 4,
+                    y              : 1,
+                    active         : false,
+                    fencesRemaining: 10
+                }, players[playerNumber]);
+
+                done();
+            });
+            io.sockets.emit('connection', p3);
+        });
+
+        it('restore fences positions', function(done) {
+            var p1 = new playerSocket('1');
+            var p2 = new playerSocket('2');
+
+            io.sockets.emit('connection', p1);
+            io.sockets.emit('connection', p2);
+
+            p1.emit('client_move_fence', {x: 4, y: 1, type: 'H'});
+
+            p1.emit('disconnect', p1);
+
+            var p3 = new playerSocket('3');
+
+            p3.on('server_start', function(playerNumber, players, fences) {
+                assert.equal(0, playerNumber);
+                assert.equal(false, players[playerNumber].active);
+                assert.deepEqual([{
+                    x   : 4,
+                    y   : 1,
+                    type: 'H'
+                }], fences);
+
+                done();
+            });
+            io.sockets.emit('connection', p3);
         });
 
         // валидация координат на сервере
