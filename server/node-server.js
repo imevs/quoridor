@@ -3,7 +3,7 @@ var routes = require('./routes');
 var http = require('http');
 var path = require('path');
 var exphbs  = require('express3-handlebars');
-var Game = require('./game_');
+var Game = require('./game');
 var io = require('socket.io');
 
 var app = express();
