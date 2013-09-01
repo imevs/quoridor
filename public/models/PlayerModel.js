@@ -1,9 +1,7 @@
-/**
- * @type Backbone
- */
-var global = this;
-var Backbone = global.Backbone || require('backbone');
-var _ = global._ || require('underscore');
+if (module) {
+    var Backbone = require('backbone');
+    var _ = require('underscore');
+}
 
 var PlayerModel = Backbone.Model.extend({
     defaults: {
@@ -47,7 +45,7 @@ var PlayersCollection = Backbone.Collection.extend({
             'prev_y': current.get('y')
         });
 
-        var c = _.isUndefined(player) ? this.currentPlayer + 1 : player - 1;
+        var c = _.isUndefined(player) ? this.currentPlayer + 1 : player;
         this.currentPlayer = c < this.length ? c : 0;
         this.each(function(player) {
             player.trigger('resetstate');
@@ -196,4 +194,6 @@ var PlayersCollection = Backbone.Collection.extend({
 
 });
 
-module && (module.exports = PlayersCollection);
+if (module) {
+    module.exports = PlayersCollection;
+}

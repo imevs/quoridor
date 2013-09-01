@@ -165,7 +165,7 @@ describe('Game', function() {
             io.sockets.emit('connection', p);
         });
 
-        it('move player',  function(done) {
+        it('move player (check event params)',  function(done) {
             var p1 = new playerSocket('1');
             var p2 = new playerSocket('2');
 
@@ -182,7 +182,21 @@ describe('Game', function() {
             p1.emit('client_move_player', {x: 4,y: 1});
         });
 
-        it('player can`t move',  function() {
+        it('move player (change user position)',  function() {
+            var p1 = new playerSocket('1');
+            var p2 = new playerSocket('2');
+
+            io.sockets.emit('connection', p1);
+            io.sockets.emit('connection', p2);
+
+            p1.emit('client_move_player', {x: 4,y: 1});
+
+            var player = game.findPlayerRoom(p1).findPlayer(p1);
+            assert.equal(4, player.get('x'));
+            assert.equal(1, player.get('y'));
+        });
+
+        it('player can`t move (check that there`s no event)',  function() {
             var spy = sinon.spy();
 
             var p1 = new playerSocket('1');
@@ -195,6 +209,26 @@ describe('Game', function() {
 
             p2.emit('client_move_player', {x: 4, y: 7});
             sinon.assert.notCalled(spy);
+        });
+
+        it('player can`t move (check player position)',  function() {
+            var spy = sinon.spy();
+
+            var p1 = new playerSocket('1');
+            var p2 = new playerSocket('2');
+
+            io.sockets.emit('connection', p1);
+            io.sockets.emit('connection', p2);
+
+            p2.emit('client_move_player', {x: 4, y: 7});
+
+            var player1 = game.findPlayerRoom(p1).findPlayer(p1);
+            var player2 = game.findPlayerRoom(p1).findPlayer(p2);
+
+            assert.equal(4, player1.get('x'));
+            assert.equal(0, player1.get('y'));
+            assert.equal(4, player2.get('x'));
+            assert.equal(8, player2.get('y'));
         });
 
         it('player move fence', function(done) {
@@ -232,8 +266,28 @@ describe('Game', function() {
             sinon.assert.notCalled(spy);
         });
 
+        it('restore players positions', function() {
+            var p1 = new playerSocket('1');
+            var p2 = new playerSocket('2');
+
+            io.sockets.emit('connection', p1);
+            io.sockets.emit('connection', p2);
+
+            p1.emit('client_move_player', {x: 4, y: 1});
+
+            p1.emit('disconnect', p1);
+
+            var p3 = new playerSocket('3');
+            io.sockets.emit('connection', p3);
+
+            var player3 = game.findPlayerRoom(p3).findPlayer(p3);
+            assert.equal(4, player3.get('x'));
+            assert.equal(1, player3.get('y'));
+            assert.equal(3, player3.get('id'));
+            assert.ok(!player3.get('active'));
+        });
+
         // валидация координат на сервере
-        // восстановление координат после перезапуска
 
     })
 });

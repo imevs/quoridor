@@ -7,13 +7,20 @@ var PlayersCollection = require('../public/models/PlayerModel.js');
 var FencesCollection = require('../public/models/FenceModel.js');
 
 var Room = Backbone.Model.extend({
-    initialize: function() {
+
+    boardSize: 9,
+    playersCount: 2,
+
+    initialize: function(playersCount) {
+        this.playersCount = playersCount || this.playersCount;
+
         this.players = new PlayersCollection();
-        this.players.createPlayers(2);
+        this.players.createPlayers(this.playersCount);
         this.players.at(0).set('active', true);
 
-        this.fences = new FencesCollection();
-        this.fences.createFences(9);
+        this.fences = [];
+        //this.fences = new FencesCollection();
+        //this.fences.createFences(this.boardSize);
     },
     isFull: function() {
         return this.findBusyPlayersPlaces().length >= 2;
@@ -30,13 +37,33 @@ var Room = Backbone.Model.extend({
         player.set('socket', socket);
         var index = this.players.indexOf(player);
 
-        socket.on('disconnect', _(this.disconnectPlayer).bind(this));
+        socket.on('disconnect', _(this.disconnectPlayer).bind(this, socket));
         socket.on('client_move_player', _(this.onMovePlayer).partial(player).bind(this));
         socket.on('client_move_fence', _(this.onMoveFence).partial(player).bind(this));
 
-        socket.emit('server_start', index, this.players.toJSON());
+        var playersData = this.players.toJSON();
+        _(playersData).each(function(item) {
+            delete item.socket;
+        });
+        socket.emit('server_start', index, playersData, this.getFencesPositions());
 
         return true;
+    },
+    getFencesPositions: function() {
+        return this.fences;
+/*
+        var data = [];
+        this.fences.each(function(fence) {
+            if (fence.get('state') == 'busy') {
+                data.push({
+                    type: fence.get('type'),
+                    x: fence.get('x'),
+                    y: fence.get('y')
+                });
+            }
+        });
+        return data;
+*/
     },
     onMoveFence: function(player, eventInfo) {
         if (!player.get('active')) return;
@@ -46,6 +73,7 @@ var Room = Backbone.Model.extend({
 
         player.set('active', false);
         player.placeFence();
+        this.fences.push(eventInfo);
 
         this.players.switchPlayer();
         this.players.getCurrentPlayer().set('active', true);
@@ -89,9 +117,11 @@ var Room = Backbone.Model.extend({
     },
     disconnectPlayer: function(socket) {
         var player = this.findPlayer(socket);
-        player.set('state', '');
-        player.set('id', '');
-        player.set('socket', '');
+        player && player.set({
+            id    : '',
+            state : '',
+            socket: ''
+        });
     },
     findPlayer: function(socket) {
         var playerId = socket && socket.id && socket.id.toString();

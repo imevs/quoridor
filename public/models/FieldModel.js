@@ -1,3 +1,8 @@
+if (module) {
+    var Backbone = require('backbone');
+    var _ = require('underscore');
+}
+
 var FieldModel = Backbone.Model.extend({});
 
 var FieldsCollection = Backbone.Collection.extend({

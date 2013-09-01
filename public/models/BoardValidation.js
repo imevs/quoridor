@@ -1,10 +1,10 @@
 var BoardValidation = ({
-    isBetween: function(n1, n2, n3) {
+    isBetween                     : function (n1, n2, n3) {
         var min = Math.min(n1, n2);
         var max = Math.max(n1, n2);
         return min <= n3 && n3 < max;
     },
-    isOtherPlayerAndFenceBehindHim: function(pos1, pos2) {
+    isOtherPlayerAndFenceBehindHim: function (pos1, pos2) {
         var sibling1, sibling2;
         var playerX = pos1.x, playerY = pos1.y,
             x = pos2.x, y = pos2.y;
@@ -53,7 +53,7 @@ var BoardValidation = ({
 
         return false;
     },
-    noFenceBetweenPositions: function(pos1, pos2) {
+    noFenceBetweenPositions       : function (pos1, pos2) {
         var me = this;
         var playerX = pos1.x, playerY = pos1.y,
             x = pos2.x, y = pos2.y;
@@ -61,56 +61,56 @@ var BoardValidation = ({
         var busyFencesOnLine;
         if (playerX == x) {
             busyFencesOnLine = this.fences.where({
-                x: x,
-                type: 'H',
+                x    : x,
+                type : 'H',
                 state: 'busy'
             });
-            return !_(busyFencesOnLine).find(function(fence) {
+            return !_(busyFencesOnLine).find(function (fence) {
                 return me.isBetween(playerY, y, fence.get('y'));
             });
         }
         if (playerY == y) {
             busyFencesOnLine = this.fences.where({
-                y: y,
-                type: 'V',
+                y    : y,
+                type : 'V',
                 state: 'busy'
             });
-            return !_(busyFencesOnLine).find(function(fence) {
+            return !_(busyFencesOnLine).find(function (fence) {
                 return me.isBetween(playerX, x, fence.get('x'));
             });
         }
 
         return true;
     },
-    isNearestPosition: function (currentPos, pos) {
+    isNearestPosition             : function (currentPos, pos) {
         var prevX = currentPos.x, prevY = currentPos.y;
         return Math.abs(prevX - pos.x) == 1 && prevY == pos.y
             || Math.abs(prevY - pos.y) == 1 && prevX == pos.x;
     },
-    isValidPlayerPosition: function(currentPos, newPos) {
+    isValidPlayerPosition         : function (currentPos, newPos) {
         return this.isBetween(0, this.get('boardSize'), newPos.x)
             && this.isBetween(0, this.get('boardSize'), newPos.y)
             && this.players.isFieldNotBusy(newPos)
             && this.noFenceBetweenPositions(currentPos, newPos)
             && (
-                this.isNearestPosition(currentPos, newPos) ||
+            this.isNearestPosition(currentPos, newPos) ||
                 this.players.isFieldBehindOtherPlayer(currentPos, newPos) ||
                 this.players.isFieldNearOtherPlayer(currentPos, newPos) ||
                 this.isOtherPlayerAndFenceBehindHim(currentPos, newPos)
             );
     },
-    isCurrentPlayerTurn            : function () {
+    isCurrentPlayerTurn           : function () {
         return this.auto || this.get('playerNumber') === this.players.currentPlayer;
     },
-    isValidCurrentPlayerPosition: function (x, y) {
+    isValidCurrentPlayerPosition  : function (x, y) {
         var current = this.players.getCurrentPlayer();
 
         if (!this.isCurrentPlayerTurn()) return false;
 
         var currentPos = {x: current.get('prev_x'), y: current.get('prev_y')};
-        return this.isValidPlayerPosition(currentPos, {x:x, y:y});
+        return this.isValidPlayerPosition(currentPos, {x: x, y: y});
     },
-    canSelectFences: function() {
+    canSelectFences               : function () {
         return this.players.getCurrentPlayer().hasFences() && this.isCurrentPlayerTurn();
     }
 });

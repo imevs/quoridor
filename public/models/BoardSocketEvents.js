@@ -64,7 +64,7 @@ var BoardSocketEvents = {
         var me = this;
 
         _(players).each(function(playerInfo, i) {
-            var player = me.players.at(i - 1);
+            var player = me.players.at(i);
             if (playerInfo.x && playerInfo.y) {
                 player.set({
                     x: playerInfo.x,
@@ -89,7 +89,7 @@ var BoardSocketEvents = {
         me.fences.setBusy();
 
         _(players).each(function(player, i) {
-            player.isActive && me.run(i, playerNumber);
+            player.active && me.run(i, playerNumber);
         });
     }
 };

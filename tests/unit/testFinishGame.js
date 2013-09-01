@@ -3,8 +3,8 @@ TestCase("Test Finish game", {
         this.board = new BoardModel({
             playersCount: 2
         });
-        this.board.run(1);
-        this.board.set('playerNumber', 1 - 1);
+        this.board.run(0);
+        this.board.set('playerNumber', 0);
     },
 
     testWin: function() {

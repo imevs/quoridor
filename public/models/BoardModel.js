@@ -98,7 +98,7 @@ var BoardModel = Backbone.Model.extend({
         });
     },
     run: function(activePlayer, currentPlayer) {
-        this.set('playerNumber', currentPlayer - 1);
+        this.set('playerNumber', currentPlayer);
         activePlayer = _.isUndefined(activePlayer) ? 1 : activePlayer;
         this.players.switchPlayer(activePlayer);
     },

@@ -3,7 +3,8 @@ var routes = require('./routes');
 var http = require('http');
 var path = require('path');
 var exphbs  = require('express3-handlebars');
-var game = require('./game');
+var Game = require('./game_');
+var io = require('socket.io');
 
 var app = express();
 
@@ -35,4 +36,10 @@ server.listen(app.get('port'), function(){
 
 app.use(express.static(path.join(__dirname, '/../public')));
 
-game.start(server);
+
+io = io.listen(server);
+io.set('log level', 1);
+io.set('resource', '/api');
+
+var game = new Game();
+game.start(io);

@@ -21,10 +21,14 @@ require.config({
             deps: ['libs/underscore']
         },
         'models/FenceModel': {
-            deps: ['libs/backbone']
+            deps: ['libs/backbone', 'utils']
         },
         'models/FieldModel': {
-            deps: ['libs/backbone']
+            deps: [
+                'libs/underscore',
+                'utils',
+                'libs/backbone'
+            ]
         },
         'models/PlayerModel': {
             deps: ['libs/backbone']
@@ -93,5 +97,5 @@ require.config({
         }
     }
 });
-
+window.module = false;
 require(['app']);

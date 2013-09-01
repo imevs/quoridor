@@ -1,6 +1,7 @@
-var global = this;
-var Backbone = global.Backbone || require('backbone');
-var _ = require('../utils.js');
+if (module) {
+    var Backbone = require('backbone');
+    var _ = require('../utils.js');
+}
 
 var FenceModel = Backbone.Model.extend({
 
@@ -205,4 +206,6 @@ var FencesCollection = Backbone.Collection.extend({
 
 });
 
-module.exports = FencesCollection;
+if (module) {
+    module.exports = FencesCollection;
+}
