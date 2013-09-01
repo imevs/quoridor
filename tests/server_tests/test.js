@@ -1,6 +1,6 @@
 var assert = require("assert");
 var Backbone = require('backbone');
-var Game = require('../server/game_.js');
+var Game = require('../../server/game.js');
 var sinon = require('sinon');
 
 function extend(Child, Parent) {
