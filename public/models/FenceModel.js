@@ -47,7 +47,6 @@ var FenceModel = Backbone.Model.extend({
                 prevcolor: this.get('color')
             });
         }
-
     }
 
 });
@@ -84,17 +83,15 @@ var FencesCollection = Backbone.Collection.extend({
     initialize: function() {
         this.on('premarkasselected', this.clearBusy, this);
     },
-
     createFences: function(boardSize) {
         var me = this;
         _([boardSize, boardSize - 1]).iter(function (i, j) {
-            me.addHorizontal({x: i, y: j});
+            me.add(new FenceHModel({x: i, y: j}));
         });
         _([boardSize - 1, boardSize]).iter(function (i, j) {
-            me.addVertical({x: i, y: j});
+            me.add(new FenceVModel({x: i, y: j}));
         });
     },
-
     clearBusy: function() {
         _(this.where({
             state: 'prebusy'
@@ -195,13 +192,6 @@ var FencesCollection = Backbone.Collection.extend({
             return model.get(j) == item.get(j) + 1
         });
         return !(f1 && f2);
-    },
-
-    addHorizontal: function(attrs) {
-        this.add(new FenceHModel(attrs));
-    },
-    addVertical: function(attrs) {
-        this.add(new FenceVModel(attrs));
     }
 
 });

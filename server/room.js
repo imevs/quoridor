@@ -18,9 +18,8 @@ var Room = Backbone.Model.extend({
         this.players.createPlayers(this.playersCount);
         this.players.at(0).set('active', true);
 
-        this.fences = [];
-        //this.fences = new FencesCollection();
-        //this.fences.createFences(this.boardSize);
+        this.fences = new FencesCollection();
+        this.fences.createFences(this.boardSize);
     },
     isFull: function() {
         return this.findBusyPlayersPlaces().length >= 2;
@@ -49,20 +48,11 @@ var Room = Backbone.Model.extend({
         return true;
     },
     getFencesPositions: function() {
-        return this.fences;
-/*
-        var data = [];
-        this.fences.each(function(fence) {
-            if (fence.get('state') == 'busy') {
-                data.push({
-                    type: fence.get('type'),
-                    x: fence.get('x'),
-                    y: fence.get('y')
-                });
-            }
+        return this.fences.filter(function(fence) {
+            return fence.get('state') == 'busy'
+        }).map(function(fence) {
+            return fence.pick('x', 'y', 'type');
         });
-        return data;
-*/
     },
     onMoveFence: function(player, eventInfo) {
         if (!player.get('active')) return;
@@ -72,7 +62,8 @@ var Room = Backbone.Model.extend({
 
         player.set('active', false);
         player.placeFence();
-        this.fences.push(eventInfo);
+        var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
+        fence.set({state: 'busy'});
 
         this.players.switchPlayer();
         this.players.getCurrentPlayer().set('active', true);
