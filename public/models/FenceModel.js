@@ -133,19 +133,23 @@ var FencesCollection = Backbone.Collection.extend({
             item.trigger(event);
         }
     },
-    validateAndTriggerEventOnFenceAndSibling: function (item, event) {
+    validateFenceAndSibling: function (item) {
+        if (!item) return false;
         if (this.isBusy(item)) return false;
         if (!this.isFencePlaceable(item)) return false;
 
         var sibling = this.getSibling(item);
 
-        var shouldTriggerEvent = sibling
+        return sibling
             && !this.isBusy(sibling)
             && this.hasPassForPlayer(sibling, item);
-
+    },
+    validateAndTriggerEventOnFenceAndSibling: function (item, event) {
+        var shouldTriggerEvent = this.validateFenceAndSibling(item);
         if (shouldTriggerEvent && event) {
             item.trigger('pre' + event);
             item.trigger(event);
+            var sibling = this.getSibling(item);
             sibling.trigger(event);
         }
         return shouldTriggerEvent;

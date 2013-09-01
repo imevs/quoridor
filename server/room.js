@@ -62,11 +62,13 @@ var Room = Backbone.Model.extend({
         if (!player.get('active')) return;
         if (!player.hasFences()) return;
 
+        var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
+        if (!this.fences.validateFenceAndSibling(fence)) return;
+
         var index = this.players.indexOf(player);
 
         player.set('active', false);
         player.placeFence();
-        var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
         fence.set({state: 'busy'});
 
         this.players.switchPlayer();
