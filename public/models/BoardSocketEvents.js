@@ -1,11 +1,24 @@
 /**
  * Describes client-server communications
  */
+io.myconnect = function(host, options, your_info){
+    var socket = io.connect.apply(this, [host, options]);
+    socket.on('connect', function(){
+        socket.emit('myconnection', your_info);
+    });
+    return socket;
+};
+io.util.inherit(io.myconnect, io.connect);
+
 var BoardSocketEvents = {
 
     initSocket: function() {
         var host = 'http://localhost:3000';
-        return this.get('socket') || window.io && this.set('socket', io.connect(host, {resource: 'api'}));
+        return this.get('socket') || window.io && this.set('socket', io.myconnect(host, {
+            resource: 'api'
+        }, {
+            roomId: this.get('roomId')
+        }));
     },
 
     socketEvents: function() {

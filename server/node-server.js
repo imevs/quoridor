@@ -1,5 +1,5 @@
 var express = require('express');
-var routes = require('./routes');
+var routes = require('./routes').index;
 var http = require('http');
 var path = require('path');
 var exphbs  = require('express3-handlebars');
@@ -27,7 +27,9 @@ if ('development' == app.get('env')) {
     app.use(express.errorHandler());
 }
 
-app.get('/test', routes.index);
+app.get('/', routes.index);
+app.get('/create', routes.create);
+app.get('/play', routes.play);
 
 var server = http.createServer(app);
 server.listen(app.get('port'), function(){
@@ -40,6 +42,10 @@ app.use(express.static(path.join(__dirname, '/../public')));
 io = io.listen(server);
 io.set('log level', 1);
 io.set('resource', '/api');
+/*io.configure(function () {
+    io.set("transports", ["xhr-polling"]);
+    io.set("polling duration", 10);
+});*/
 
-var game = new Game();
+var game = global.game = new Game();
 game.start(io);

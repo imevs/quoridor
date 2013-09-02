@@ -1,0 +1,14 @@
+<h1>Games count {{games.length}}</h1>
+
+<div id="games">
+    {{#each games}}
+        <h2><a href="/play?id={{id}}">{{title}}</a></h2>
+        <div>Players count: {{players.length}}</div>
+    {{/each}}
+</div>
+
+<a href="/create?playersCount=2">Create new game (2 players)</a><br>
+<a href="/create?playersCount=4">Create new game (4 players)</a><br>
+
+<a href="/create?playersCount=2&multiplayer=1">Create new multiplayer game (2 players)</a><br>
+<a href="/create?playersCount=4&multiplayer=1">Create new multiplayer game (4 players)</a>

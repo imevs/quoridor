@@ -14,8 +14,8 @@ var Room = Backbone.Model.extend({
         playersCount: 2
     },
 
-    initialize: function(playersCount) {
-        this.set('playersCount', playersCount || this.get('playersCount'));
+    initialize: function() {
+        this.set('title', 'Game created at ' + new Date());
         this.set('playerNumber', 0);
 
         this.players = new PlayersCollection();
@@ -73,6 +73,7 @@ var Room = Backbone.Model.extend({
 
         this.players.switchPlayer();
         this.players.getCurrentPlayer().set('active', true);
+        this.set('playerNumber', this.players.currentPlayer);
 
         this.players.each(function(p) {
             var socket = p.get('socket');
@@ -95,6 +96,8 @@ var Room = Backbone.Model.extend({
         var index = this.players.indexOf(player);
         this.players.switchPlayer();
         this.players.getCurrentPlayer().set('active', true);
+        this.set('playerNumber', this.players.currentPlayer);
+
         this.players.each(function(player) {
             var socket = player.get('socket');
             socket && socket.emit('server_move_player', {
