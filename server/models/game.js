@@ -1,17 +1,17 @@
 var io = require('socket.io');
 var _ = require('underscore');
-var Backbone = require('backbone');
+var Backbone = require("../backbone.mongoose");
 var Room = require('./room.js');
 
 var Game = Backbone.Collection.extend({
     model: Room,
-    initialize: function() {
+    mongooseModel: "Room",
 
+    initialize: function() {
+        this.fetch();
     },
     start: function(io) {
         var self = this;
-        var room = self.createNewRoom();
-
         self.io = io;
         io.sockets.on('connection', function(client){
             client.on('myconnection', _(self.addPlayer).partial(client).bind(self));

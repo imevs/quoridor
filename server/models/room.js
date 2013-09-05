@@ -1,20 +1,22 @@
 var _ = require('underscore');
-var Backbone = require('backbone');
-/**
- * @type PlayersCollection
- */
-var PlayersCollection = require('../public/models/PlayerModel.js');
-var FencesCollection = require('../public/models/FenceModel.js');
-var BoardValidation = require('../public/models/BoardValidation.js');
+var Backbone = require("../backbone.mongoose");
+
+var PlayersCollection = require('../../public/models/PlayerModel.js');
+var FencesCollection = require('../../public/models/FenceModel.js');
+var BoardValidation = require('../../public/models/BoardValidation.js');
 
 var Room = Backbone.Model.extend({
+
+    idAttribute: "_id",
 
     defaults: {
         boardSize: 9,
         playersCount: 2
     },
 
-    initialize: function() {
+    mongooseModel: "Room",
+
+    initialize: function(model, options) {
         this.set('title', 'Game created at ' + new Date());
         this.set('playerNumber', 0);
 

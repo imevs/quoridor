@@ -3,7 +3,8 @@ var routes = require('./routes').index;
 var http = require('http');
 var path = require('path');
 var exphbs  = require('express3-handlebars');
-var Game = require('./game');
+var Backbone = require("./backbone.mongoose");
+var Game = require('./models/game');
 var io = require('socket.io');
 
 var app = express();
