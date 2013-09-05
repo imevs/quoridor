@@ -20,18 +20,36 @@ var Room = Backbone.Model.extend({
     mongooseModel: "Room",
 
     parse: function(data, options) {
-        //this.books.reset(data.books);
-        return data._doc;
+        var room = this;
+        var doc = data && data._doc;
+        if (doc && doc.players && doc.players.length) {
+            room.players = new PlayersCollection(doc.players);
+        }
+        if (doc && doc.fences && doc.fences.length ) {
+            room.fences = new FencesCollection(doc.fences);
+        }
+        return doc;
+    },
+
+    toJSON: function() {
+        var result = Backbone.Model.prototype.toJSON.call(this);
+        result.players = this.players.toJSON && this.players.toJSON();
+        result.fences = this.fences.toJSON && this.fences.toJSON();
+        return result;
     },
 
     initialize: function(model, options) {
         var room = this;
-        room.players = new PlayersCollection();
-        room.fences = new FencesCollection();
 
-        room.fences.createFences(this.get('boardSize'));
-        room.players.createPlayers(this.get('playersCount'));
-        room.players.at(0).set('active', true);
+        if (!room.players) {
+            room.players = new PlayersCollection();
+            room.players.createPlayers(this.get('playersCount'));
+            room.players.at(0).set('active', true);
+        }
+        if (!room.fences) {
+            room.fences = new FencesCollection();
+            room.fences.createFences(this.get('boardSize'));
+        }
     },
     isFull: function() {
         return this.findBusyPlayersPlaces().length >= 2;
@@ -43,6 +61,10 @@ var Room = Backbone.Model.extend({
         var player = this.players.find(function(player) {
             return player.get('state') != 'busy';
         });
+        if (!player) {
+            console.log('player not found');
+            return false;
+        }
         player.set('id', playerId);
         player.set('state', 'busy');
         player.set('socket', socket);
@@ -82,6 +104,7 @@ var Room = Backbone.Model.extend({
         this.players.switchPlayer();
         this.players.getCurrentPlayer().set('active', true);
         this.set('playerNumber', this.players.currentPlayer);
+        this.save();
 
         this.players.each(function(p) {
             var socket = p.get('socket');
@@ -105,6 +128,7 @@ var Room = Backbone.Model.extend({
         this.players.switchPlayer();
         this.players.getCurrentPlayer().set('active', true);
         this.set('playerNumber', this.players.currentPlayer);
+        this.save();
 
         this.players.each(function(player) {
             var socket = player.get('socket');
