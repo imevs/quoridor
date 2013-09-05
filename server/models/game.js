@@ -32,7 +32,8 @@ var Game = Backbone.Collection.extend({
             id: this.length
         };
         playersCount && (params.playersCount = playersCount);
-        var room = new Room(params);
+        var room = Room.createRoom(params);
+
         this.add(room);
         return room;
     },

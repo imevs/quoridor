@@ -4,6 +4,7 @@ var RoomSchema = new mongoose.Schema({
     id: { 'type': Number },
     title: { 'type': String, 'default': '' },
     boardSize: { 'type': Number },
-    playersCount: { 'type': Number }
+    playersCount: { 'type': Number },
+    playerNumber: { 'type': Number }
 });
 var RoomStore = mongoose.model('Room', RoomSchema);

@@ -10,22 +10,28 @@ var Room = Backbone.Model.extend({
     idAttribute: "_id",
 
     defaults: {
+        id: 0,
+        playerNumber: 0,
+        title: '',
         boardSize: 9,
         playersCount: 2
     },
 
     mongooseModel: "Room",
 
+    parse: function(data, options) {
+        //this.books.reset(data.books);
+        return data._doc;
+    },
+
     initialize: function(model, options) {
-        this.set('title', 'Game created at ' + new Date());
-        this.set('playerNumber', 0);
+        var room = this;
+        room.players = new PlayersCollection();
+        room.fences = new FencesCollection();
 
-        this.players = new PlayersCollection();
-        this.fences = new FencesCollection();
-
-        this.fences.createFences(this.get('boardSize'));
-        this.players.createPlayers(this.get('playersCount'));
-        this.players.at(0).set('active', true);
+        room.fences.createFences(this.get('boardSize'));
+        room.players.createPlayers(this.get('playersCount'));
+        room.players.at(0).set('active', true);
     },
     isFull: function() {
         return this.findBusyPlayersPlaces().length >= 2;
@@ -125,6 +131,15 @@ var Room = Backbone.Model.extend({
     findPlayer: function(socket) {
         var playerId = socket && socket.id && socket.id.toString();
         return this.players.findWhere({id: playerId});
+    }
+}, {
+    createRoom: function(params) {
+        var room = new Room(params);
+
+        room.set('title', 'Game created at ' + new Date());
+        room.set('playerNumber', 0);
+
+        return room;
     }
 });
 _.extend(Room.prototype, BoardValidation);

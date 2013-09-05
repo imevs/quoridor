@@ -6,7 +6,8 @@ exports.play = function(req, res) {
 
     if (room) {
         res.render('play', {
-            roomId: room.get('id')
+            roomId: room.get('id'),
+            playersCount: room.get('playersCount')
         });
     } else {
         res.render('notfound');

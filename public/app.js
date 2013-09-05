@@ -2,7 +2,7 @@ $(function () {
 
     var params = parseUrl(document.location.search);
     var boardModel = new BoardModel({
-        playersCount: params['playersCount'],
+        playersCount: window.playersCount || params['playersCount'],
         roomId: window.roomId
     });
     new BoardView({
