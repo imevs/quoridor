@@ -33,6 +33,7 @@ var Room = Backbone.Model.extend({
 
     toJSON: function() {
         var result = Backbone.Model.prototype.toJSON.call(this);
+        delete result._id;
         result.players = this.players.toJSON && this.players.toJSON();
         result.fences = this.fences.toJSON && this.fences.toJSON();
         return result;
@@ -67,7 +68,7 @@ var Room = Backbone.Model.extend({
         }
         player.set('id', playerId);
         player.set('state', 'busy');
-        player.set('socket', socket);
+        player.socket = socket;
         var index = this.players.indexOf(player);
 
         socket.on('disconnect', _(this.disconnectPlayer).bind(this, socket));
@@ -107,7 +108,7 @@ var Room = Backbone.Model.extend({
         this.save();
 
         this.players.each(function(p) {
-            var socket = p.get('socket');
+            var socket = p.socket;
             socket && socket.emit('server_move_fence', {
                 x: eventInfo.x,
                 y: eventInfo.y,
@@ -131,7 +132,7 @@ var Room = Backbone.Model.extend({
         this.save();
 
         this.players.each(function(player) {
-            var socket = player.get('socket');
+            var socket = player.socket;
             socket && socket.emit('server_move_player', {
                 x: eventInfo.x,
                 y: eventInfo.y,

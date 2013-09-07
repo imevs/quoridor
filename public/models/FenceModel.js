@@ -6,7 +6,8 @@ if (module) {
 var FenceModel = Backbone.Model.extend({
 
     defaults: {
-        color: '#c75'
+        color: '#c75',
+        state: ''
     },
 
     initialize: function() {
@@ -78,7 +79,12 @@ var FenceVModel = FenceModel.extend({
 _.defaults(FenceVModel.prototype.defaults, FenceModel.prototype.defaults);
 
 var FencesCollection = Backbone.Collection.extend({
-    model     : FenceModel,
+
+    model     : function(attrs, options) {
+        return attrs.type == 'H'
+            ? new FenceHModel(attrs, options)
+            : new FenceVModel(attrs, options);
+    },
 
     initialize: function() {
         this.on('premarkasselected', this.clearBusy, this);
@@ -86,10 +92,10 @@ var FencesCollection = Backbone.Collection.extend({
     createFences: function(boardSize) {
         var me = this;
         _([boardSize, boardSize - 1]).iter(function (i, j) {
-            me.add(new FenceHModel({x: i, y: j}));
+            me.add({x: i, y: j, type: 'H'});
         });
         _([boardSize - 1, boardSize]).iter(function (i, j) {
-            me.add(new FenceVModel({x: i, y: j}));
+            me.add({x: i, y: j, type: 'V'});
         });
     },
     clearBusy: function() {
