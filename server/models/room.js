@@ -1,23 +1,24 @@
 var _ = require('underscore');
-var Backbone = require("../backbone.mongoose");
+var Backbone = require('../backbone.mongoose');
 
 var PlayersCollection = require('../../public/models/PlayerModel.js');
 var FencesCollection = require('../../public/models/FenceModel.js');
 var BoardValidation = require('../../public/models/BoardValidation.js');
+var uuid = require('uuid');
 
 var Room = Backbone.Model.extend({
 
-    idAttribute: "_id",
+    idAttribute: '_id',
 
     defaults: {
-        id: 0,
+        id: '',
         playerNumber: 0,
         title: '',
         boardSize: 9,
         playersCount: 2
     },
 
-    mongooseModel: "Room",
+    mongooseModel: 'Room',
 
     parse: function(data, options) {
         var room = this;
@@ -159,6 +160,7 @@ var Room = Backbone.Model.extend({
     }
 }, {
     createRoom: function(params) {
+        params.id = uuid.v4();
         var room = new Room(params);
 
         room.set('title', 'Game created at ' + new Date());

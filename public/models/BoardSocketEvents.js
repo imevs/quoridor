@@ -1,5 +1,5 @@
 /**
- * Describes client-server communications
+ * add to standard io.connect function extra params
  */
 io.myconnect = function(host, options, your_info){
     var socket = io.connect.apply(this, [host, options]);

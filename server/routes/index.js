@@ -16,5 +16,6 @@ var index = function(req, res){
 exports.index = {
     index : index,
     create: require('./create.js').create,
-    play  : require('./play.js').play
+    play  : require('./play.js').play,
+    playLocal  : require('./playLocal.js').playLocal
 };

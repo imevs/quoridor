@@ -31,6 +31,7 @@ if ('development' == app.get('env')) {
 app.get('/', routes.index);
 app.get('/create', routes.create);
 app.get('/play', routes.play);
+app.get('/playLocal', routes.playLocal);
 
 var server = http.createServer(app);
 server.listen(app.get('port'), function(){

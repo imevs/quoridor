@@ -109,7 +109,11 @@ var BoardModel = Backbone.Model.extend({
         this.createModels();
         this.initEvents();
         this.initModels();
-        this.socketEvents();
+        if (this.get('roomId')) {
+            this.socketEvents();
+        } else {
+            this.run(0, 0);
+        }
     }
 });
 _.extend(BoardModel.prototype, window.BoardValidation);
