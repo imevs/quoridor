@@ -13,9 +13,9 @@ var index = function(req, res){
   });
 };
 
-exports.index = {
-    index : index,
-    create: require('./create.js').create,
-    play  : require('./play.js').play,
-    playLocal  : require('./playLocal.js').playLocal
+exports.init = function(app) {
+    app.get('/', index);
+    app.get('/create', require('./create.js'));
+    app.get('/play', require('./play.js'));
+    app.get('/playLocal', require('./playLocal.js'));
 };

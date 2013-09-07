@@ -1,5 +1,5 @@
 var express = require('express');
-var routes = require('./routes').index;
+var routes = require('./routes');
 var http = require('http');
 var path = require('path');
 var exphbs  = require('express3-handlebars');
@@ -28,10 +28,7 @@ if ('development' == app.get('env')) {
     app.use(express.errorHandler());
 }
 
-app.get('/', routes.index);
-app.get('/create', routes.create);
-app.get('/play', routes.play);
-app.get('/playLocal', routes.playLocal);
+routes.init(app);
 
 var server = http.createServer(app);
 server.listen(app.get('port'), function(){

@@ -1,4 +1,4 @@
-exports.create = function(req, res) {
+module.exports = function(req, res) {
 
     var playersCount = req.query.playersCount;
 

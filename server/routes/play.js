@@ -1,4 +1,4 @@
-exports.play = function(req, res) {
+module.exports = function(req, res) {
 
     var id = req.query.id;
 
