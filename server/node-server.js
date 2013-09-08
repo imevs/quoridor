@@ -10,7 +10,7 @@ var io = require('socket.io');
 var app = express();
 
 app.set('port', process.env.PORT || 3000);
-app.set('views', __dirname + '\\views');
+app.set('views', __dirname + '/views');
 app.engine('handlebars', exphbs({
     //    extname: ".hbs",
     layoutsDir: "server/views/layouts/",
