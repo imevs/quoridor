@@ -55,7 +55,7 @@ var backboneMongoose = function(config) {
 };
 
 var config = {
-    db_url: process.env.DB_URL || 'mongodb://localhost:27017/quoridor',
+    db_url: 'mongodb://imevs:' + process.env.DB_PASS +'@ds043368.mongolab.com:43368/quoridor',
     schema_dir: __dirname + "/schema"
 };
 

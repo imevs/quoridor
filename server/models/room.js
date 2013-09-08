@@ -11,11 +11,12 @@ var Room = Backbone.Model.extend({
     idAttribute: '_id',
 
     defaults: {
-        id: '',
+        id          : '',
         playerNumber: 0,
-        title: '',
-        boardSize: 9,
-        playersCount: 2
+        title       : '',
+        boardSize   : 9,
+        playersCount: 2,
+        createDate  : ''
     },
 
     mongooseModel: 'Room',
@@ -158,12 +159,14 @@ var Room = Backbone.Model.extend({
         var playerId = socket && socket.id && socket.id.toString();
         return this.players.findWhere({id: playerId});
     }
+
 }, {
     createRoom: function(params) {
         params.id = uuid.v4();
         var room = new Room(params);
 
-        room.set('title', 'Game created at ' + new Date());
+        var date = new Date();
+        room.set('createDate', date);
         room.set('playerNumber', 0);
 
         return room;
