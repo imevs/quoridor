@@ -1,14 +1,14 @@
 /**
  * add to standard io.connect function extra params
  */
-io.myconnect = function(host, options, your_info){
+window.io && (io.myconnect = function(host, options, your_info){
     var socket = io.connect.apply(this, [host, options]);
     socket.on('connect', function(){
         socket.emit('myconnection', your_info);
     });
     return socket;
-};
-io.util.inherit(io.myconnect, io.connect);
+});
+window.io && io.util.inherit(io.myconnect, io.connect);
 
 var BoardSocketEvents = {
 
