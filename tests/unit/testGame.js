@@ -3,6 +3,8 @@ TestCase("Test game", {
         this.board = new BoardModel({
             playersCount: 2
         });
+        this.board.run(0);
+        this.board.set('playerNumber', 0);
     },
     testPlayersPositionsBeforeGame: function() {
         var players = this.board.players;
@@ -13,7 +15,7 @@ TestCase("Test game", {
     },
     testFirstTurnValid: function() {
         this.board.fields.trigger('moveplayer', 4, 1);
-        this.board.trigger('turn');
+        this.board.trigger('maketurn');
         var players = this.board.players;
         var pos1 = players.at(0).pick('x', 'y');
         var pos2 = players.at(1).pick('x', 'y');

@@ -3,6 +3,8 @@ TestCase("Test Finish game", {
         this.board = new BoardModel({
             playersCount: 2
         });
+        this.board.run(0);
+        this.board.set('playerNumber', 0);
     },
 
     testWin: function() {
@@ -12,7 +14,7 @@ TestCase("Test Finish game", {
         this.board.players.at(0).set({prev_x: 5, prev_y: 7});
         this.board.players.on('win', function() { isWin = true;});
         this.board.fields.trigger('moveplayer', 5, 8);
-        this.board.trigger('turn');
+        this.board.trigger('maketurn');
         assertTrue(isWin);
     },
 
@@ -24,7 +26,7 @@ TestCase("Test Finish game", {
         player.set({x: 5, y: 7});
         this.board.players.at(0).set({prev_x: 5, prev_y: 7});
         this.board.fields.trigger('moveplayer', 5, 8);
-        this.board.trigger('turn');
+        this.board.trigger('maketurn');
         assertEquals(player.pick('x', 'y'), {x: 4, y: 0 });
     },
 
@@ -36,7 +38,7 @@ TestCase("Test Finish game", {
         player.set({x: 5, y: 7});
         this.board.players.at(0).set({prev_x: 5, prev_y: 7});
         this.board.fields.trigger('moveplayer', 5, 8);
-        this.board.trigger('turn');
+        this.board.trigger('maketurn');
         assertEquals(player.pick('x', 'y'), {x: 5, y: 8 });
     }
 });

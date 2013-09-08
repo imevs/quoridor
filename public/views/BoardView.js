@@ -4,15 +4,21 @@ var BoardView = GameObject.extend({
         'click': 'move'
     },
     move: function() {
-        this.model.trigger('turn');
+        this.model.trigger('confirmturn', true);
     },
-    render: function() {
+    render: function(callback) {
+        var me = this;
         this.$el = $(this.selector);
-        this.template = require('board').replace(/\/\*\*.+\*\*\//, '');
-        this.$el.html(_.template(this.template, this.model.attributes,  {variable: 'data'}));
+        this.template = require(["text!templates/board.html"], function(tmpl) {
+            me.template = tmpl;
+            me.$el.html(_.template(me.template, me.model.attributes,  {variable: 'data'}));
+            callback.call(me);
+        });
     },
     initialize: function () {
-        this.render();
+        this.render(this.afterRender);
+    },
+    afterRender: function () {
         this.$el.find('.move').click(_.bind(this.move, this));
 
         var me = this.model,
@@ -47,7 +53,5 @@ var BoardView = GameObject.extend({
             el   : $("#game-info"),
             model: me.infoModel
         });
-
-
     }
 });

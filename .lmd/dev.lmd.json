@@ -1,7 +1,7 @@
 {
     "name"   : "dev build",
-    "root"   : "../",
-    "output" : "dev.lmd.js",
+    "root"   : "../public",
+    "output" : "../build/dev.lmd.js",
     "modules": {
         "underscore"       : {
             "path"   : "libs/underscore.js",
@@ -21,34 +21,34 @@
             "require": "jQuery"
         },
         "backbone.raphael" : "libs/backbone.raphael.js",
-        "utils"            : "js/utils.js",
+        "utils"            : "utils.js",
         "FieldModel"       : {
-            "path"   : "js/models/FieldModel.js",
+            "path"   : "models/FieldModel.js",
             "exports": "FieldModel"
         },
         "FenceHModel"      : {
-            "path"   : "js/models/FenceModel.js",
+            "path"   : "models/FenceModel.js",
             "exports": "FenceHModel"
         },
         "FenceVModel"      : {
-            "path"   : "js/models/FenceModel.js",
+            "path"   : "models/FenceModel.js",
             "exports": "FenceVModel"
         },
         "FieldsCollection" : {
-            "path"   : "js/models/FieldModel.js",
+            "path"   : "models/FieldModel.js",
             "exports": "FieldsCollection"
         },
         "FencesCollection" : {
             "require": {"FieldModel": "FieldModel"},
-            "path"   : "js/models/FenceModel.js",
+            "path"   : "models/FenceModel.js",
             "exports": "FencesCollection"
         },
         "PlayerModel"      : {
-            "path"   : "js/models/PlayerModel.js",
+            "path"   : "models/PlayerModel.js",
             "exports": "PlayerModel"
         },
         "PlayersCollection": {
-            "path"   : "js/models/PlayerModel.js",
+            "path"   : "models/PlayerModel.js",
             "exports": "PlayersCollection"
         },
         "BoardModel"       : {
@@ -60,7 +60,7 @@
                 "FencesCollection": "FencesCollection",
                 "PlayersCollection": "PlayersCollection"
             },
-            "path"   : "js/models/BoardModel.js",
+            "path"   : "models/BoardModel.js",
             "exports": "BoardModel"
         },
         "BoardView" : {
@@ -69,22 +69,22 @@
                 "FieldView": "FieldView", "FenceView": "FenceView",
                 "PlayerView": "PlayerView"
             },
-            "path"   : "js/views/BoardView.js",
+            "path"   : "views/BoardView.js",
             "exports": "BoardView"
         },
         "GameObject": {
             "require": ["backbone.raphael", "raphael"],
-            "path"   : "js/views/GameObject.js",
+            "path"   : "views/GameObject.js",
             "exports": "GameObject"
         },
         "InfoView"  : {
-            "path"   : "js/views/InfoView.js",
+            "path"   : "views/InfoView.js",
             "exports": "InfoView",
             "require": "game-info"
         },
         "FieldView" : {
             "require": {"GameObject":"GameObject"},
-            "path"   : "js/views/FieldView.js",
+            "path"   : "views/FieldView.js",
             "exports": "FieldView"
         },
         "FenceView" : {
@@ -93,12 +93,12 @@
                 "FenceHModel": "FenceHModel",
                 "FenceVModel": "FenceVModel"
             },
-            "path"   : "js/views/FenceView.js",
+            "path"   : "views/FenceView.js",
             "exports": "FenceView"
         },
         "PlayerView": {
             "require": {"GameObject":"GameObject"},
-            "path"   : "js/views/PlayerView.js",
+            "path"   : "views/PlayerView.js",
             "exports": "PlayerView"
         },
 
@@ -106,7 +106,7 @@
         "board": "templates/board.html",
 
         "main": {
-            "path"   : "js/app.js",
+            "path"   : "app.js",
             "require": {
                 "Backbone": "Backbone",
                 "underscore": "_",
@@ -117,10 +117,10 @@
         }
     },
 
-    "www_root"        : ".",
-    "sourcemap"       : "dev.lmd.map",
-    "sourcemap_inline": true,
-    "sourcemap_www"   : "",
+    "www_root"        : "../build/",
+    "sourcemap"       : "../build/dev.lmd.map",
+    "sourcemap_inline": false,
+    "sourcemap_www"   : "/",
 
     "main": "main"
 }
