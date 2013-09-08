@@ -7,6 +7,7 @@ var RoomSchema = new mongoose.Schema({
     fences: {'type': Array },
     boardSize: { 'type': Number },
     playersCount: { 'type': Number },
+    createDate: { 'type': Date },
     playerNumber: { 'type': Number }
 });
 var RoomStore = mongoose.model('Room', RoomSchema);

@@ -27,7 +27,23 @@ var Game = Backbone.Collection.extend({
             return room.get('id') === roomId && !room.isFull();
         });
     },
+    removeOld: function () {
+        var me = this;
+        var twoHours = 2 * 60 * 60 * 1000;
+        var currentTime = (new Date()).getTime();
+        var d = new Date(currentTime - twoHours);
+
+        var filter = this.filter(function (item) {
+            return item.get('createDate') < d;
+        });
+        _(filter).each(function (item) {
+            me.remove(item);
+            item.destroy();
+        });
+    },
     createNewRoom: function (playersCount) {
+        this.removeOld();
+
         var params = {};
         playersCount && (params.playersCount = playersCount);
         var room = Room.createRoom(params);
