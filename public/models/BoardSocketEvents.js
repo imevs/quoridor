@@ -13,7 +13,8 @@ window.io && io.util.inherit(io.myconnect, io.connect);
 var BoardSocketEvents = {
 
     initSocket: function() {
-        var host = 'http://localhost:3000';
+
+        var host = 'http://' + document.location.host + ':3000';
         return this.get('socket') || window.io && this.set('socket', io.myconnect(host, {
             resource: 'api'
         }, {
