@@ -1,3 +1,7 @@
+if (module) {
+    var _ = require('underscore');
+}
+
 _.mixin({iter: function(params, callback, ctx) {
     var i = 0, j = 0, i_max = params[0], j_max = params[1];
     _(i_max).times(function() {
@@ -9,3 +13,7 @@ _.mixin({iter: function(params, callback, ctx) {
         i++;
     });
 }});
+
+if (module) {
+    module.exports = _;
+}

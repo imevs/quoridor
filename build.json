@@ -1,0 +1,15 @@
+{
+    "baseUrl" : "public",
+    "dir"     : "./build",
+    "optimize": "uglify2",
+    "preserveLicenseComments": false,
+
+    "mainConfigFile": "public/main.js",
+    "removeCombined": true,
+    "generateSourceMaps": true,
+    "modules": [
+        {
+            "name": "main"
+        }
+    ]
+}

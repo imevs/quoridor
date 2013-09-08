@@ -1,21 +1,53 @@
+if (module) {
+    var Backbone = require('backbone');
+    var _ = require('../utils.js');
+}
+
 var FenceModel = Backbone.Model.extend({
+
+    defaults: {
+        color: '#c75',
+        state: ''
+    },
 
     initialize: function() {
         this.on({
-            'markasselected': function() {
+            'movefence': function() {
                 this.set('state', 'prebusy');
             },
-            'highlight': function() {
+            'markfence': function() {
                 if (!this.get('state')) {
                     this.set('state', 'highlight');
                 }
             },
-            'dehighlight': function() {
+            'unmarkfence': function() {
                 if (this.get('state') == 'highlight') {
                     this.set('state', '');
                 }
-            }
+            },
+            'change:state': this.onChangeState
         });
+    },
+
+    onChangeState: function() {
+        if (this.get('state') == 'prebusy') {
+            this.set({
+                color: 'black',
+                prevcolor: 'black'
+            });
+        }
+        if (this.get('state') == '') {
+            this.set({
+                color: this.defaults.color,
+                prevcolor: ''
+            });
+        }
+        if (this.get('state') == 'highlight') {
+            this.set({
+                color: 'black',
+                prevcolor: this.get('color')
+            });
+        }
     }
 
 });
@@ -31,6 +63,7 @@ var FenceHModel = FenceModel.extend({
         };
     }
 });
+_.defaults(FenceHModel.prototype.defaults, FenceModel.prototype.defaults);
 
 var FenceVModel = FenceModel.extend({
     defaults                : {
@@ -43,14 +76,28 @@ var FenceVModel = FenceModel.extend({
         };
     }
 });
+_.defaults(FenceVModel.prototype.defaults, FenceModel.prototype.defaults);
 
 var FencesCollection = Backbone.Collection.extend({
-    model                        : FenceModel,
+
+    model     : function(attrs, options) {
+        return attrs.type == 'H'
+            ? new FenceHModel(attrs, options)
+            : new FenceVModel(attrs, options);
+    },
 
     initialize: function() {
         this.on('premarkasselected', this.clearBusy, this);
     },
-
+    createFences: function(boardSize) {
+        var me = this;
+        _([boardSize, boardSize - 1]).iter(function (i, j) {
+            me.add({x: i, y: j, type: 'H'});
+        });
+        _([boardSize - 1, boardSize]).iter(function (i, j) {
+            me.add({x: i, y: j, type: 'V'});
+        });
+    },
     clearBusy: function() {
         _(this.where({
             state: 'prebusy'
@@ -66,41 +113,52 @@ var FencesCollection = Backbone.Collection.extend({
         });
     },
 
-    triggerEventOnFenceAndSibling: function (item, event) {
+    getMovedFence: function() {
+        var fences = this.where({
+            state: 'prebusy'
+        });
+        return _.chain(fences)
+            .sortBy(function(i) { return i.get('x')})
+            .sortBy(function(i) { return i.get('y')})
+            .last().value();
+    },
+
+    getSibling                      : function (item) {
         var siblingPosition = item.getAdjacentFencePosition();
-        var sibling = this.findWhere({
+        return this.findWhere({
             x   : siblingPosition.x,
             y   : siblingPosition.y,
             type: item.get('type')
         });
+    },
 
+    triggerEventOnFenceAndSibling: function (item, event) {
+        var sibling = this.getSibling(item);
         if (sibling && event) {
             sibling.trigger(event);
             item.trigger(event);
         }
     },
-    validateAndTriggerEventOnFenceAndSibling: function (item, event) {
+    validateFenceAndSibling: function (item) {
+        if (!item) return false;
         if (this.isBusy(item)) return false;
         if (!this.isFencePlaceable(item)) return false;
 
-        var siblingPosition = item.getAdjacentFencePosition();
-        var sibling = this.findWhere({
-            x   : siblingPosition.x,
-            y   : siblingPosition.y,
-            type: item.get('type')
-        });
+        var sibling = this.getSibling(item);
 
-        if (!sibling) return false;
-        if (this.isBusy(sibling)) return false;
-
-        if (!this.hasPassForPlayer(sibling, item)) return false;
-
-        if (event) {
+        return sibling
+            && !this.isBusy(sibling)
+            && this.hasPassForPlayer(sibling, item);
+    },
+    validateAndTriggerEventOnFenceAndSibling: function (item, event) {
+        var shouldTriggerEvent = this.validateFenceAndSibling(item);
+        if (shouldTriggerEvent && event) {
             item.trigger('pre' + event);
-            sibling.trigger(event);
             item.trigger(event);
+            var sibling = this.getSibling(item);
+            sibling.trigger(event);
         }
-        return true;
+        return shouldTriggerEvent;
     },
     isBusy                       : function (item) {
         return item.get('state') == 'busy';
@@ -147,3 +205,7 @@ var FencesCollection = Backbone.Collection.extend({
     }
 
 });
+
+if (module) {
+    module.exports = FencesCollection;
+}
