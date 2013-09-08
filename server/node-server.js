@@ -41,10 +41,12 @@ app.use(express.static(path.join(__dirname, '/../public')));
 io = io.listen(server);
 io.set('log level', 1);
 io.set('resource', '/api');
+/*
 io.configure(function () {
     io.set("transports", ["xhr-polling"]);
     io.set("polling duration", 10);
 });
+*/
 
 var game = global.game = new Game();
 game.start(io);

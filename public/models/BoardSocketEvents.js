@@ -14,7 +14,7 @@ var BoardSocketEvents = {
 
     initSocket: function() {
 
-        var host = 'http://' + document.location.host + ':3000';
+        var host = 'http://' + document.location.host;
         return this.get('socket') || window.io && this.set('socket', io.myconnect(host, {
             resource: 'api'
         }, {
