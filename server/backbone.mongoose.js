@@ -59,7 +59,7 @@ var config = {
     schema_dir: __dirname + "/schema"
 };
 
-var Backbone = require("Backbone");
+var Backbone = require("backbone");
 Backbone.sync = backboneMongoose(config);
 
 backboneMongoose.VERSION = "0.1.1";
