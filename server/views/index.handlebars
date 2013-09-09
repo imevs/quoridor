@@ -1,14 +1,39 @@
-<h1>Games count {{games.length}}</h1>
-
-<div id="games">
-    {{#each games}}
-        <h2><a href="/play?id={{id}}">Game created at {{createDate}}</a></h2>
-        <div>Players count: {{players.length}}</div>
-    {{/each}}
+<div class="btn-group">
+    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+        Play local game
+        <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu">
+        <li>
+            <a href="/playLocal?playersCount=2">2 players</a>
+        </li>
+        <li>
+            <a href="/playLocal?playersCount=4">4 players</a>
+        </li>
+    </ul>
+</div>
+<div class="btn-group">
+    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+        Create new multiplayer game
+        <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu">
+        <li>
+            <a href="/create?playersCount=2">2 players</a>
+        </li>
+        <li>
+            <a href="/create?playersCount=4">4 players</a>
+        </li>
+    </ul>
 </div>
 
-<a href="/playLocal?playersCount=2">Play local game (2 players)</a><br>
-<a href="/playLocal?playersCount=4">Play local game (4 players)</a><br>
+<h1>Active games</h1>
 
-<a href="/create?playersCount=2&multiplayer=1">Create new multiplayer game (2 players)</a><br>
-<a href="/create?playersCount=4&multiplayer=1">Create new multiplayer game (4 players)</a>
+<ul id="games">
+    {{#each games}}
+    <hr>
+    <div><strong>Game created</strong>: {{createDate}}</div>
+    <div><strong>Players count (active/all)</strong>: {{players.length}} / {{playerNumber}}</div>
+    <a class="btn btn-large btn-primary " href="/play?id={{id}}">Join the game</a>
+    {{/each}}
+</ul>
