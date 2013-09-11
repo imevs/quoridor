@@ -112,6 +112,7 @@ var BoardModel = Backbone.Model.extend({
         if (this.get('roomId')) {
             this.socketEvents();
         } else {
+            this.on('confirmturn', this.makeTurn);
             this.run(0, 0);
         }
     }
