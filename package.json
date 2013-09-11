@@ -20,13 +20,13 @@
         "socket.io": "0.9.x"
     },
     "devDependencies": {
+        "sinon": "*",
         "phantomjs":     "0.2.x"
     },
     "analyze": false,
     "license": "MIT",
     "engines": {
         "node": "0.10.x",
-        "sinon": "*",
         "npm": "1.2.x"
     }
 }

@@ -55,13 +55,15 @@ var Room = Backbone.Model.extend({
         }
     },
     isFull: function() {
-        return this.findBusyPlayersPlaces().length >= 2;
+        return this.findBusyPlayersPlaces().length >= this.get('playersCount');
     },
     addPlayer: function(socket) {
         var playerId = socket && socket.id && socket.id.toString();
         if (this.isFull()) return false;
 
-        var player = this.players.find(function(player) {
+        var player = this.players.findWhere({id: playerId});
+
+        player = player || this.players.find(function(player) {
             return player.get('state') != 'busy';
         });
         if (!player) {
