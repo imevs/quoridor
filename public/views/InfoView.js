@@ -5,9 +5,14 @@ var InfoView = Backbone.View.extend({
             me.template = tmpl;
             me.listenTo(me.model, "change", me.render);
             me.render();
+/*
+            me.$el.find('.move').click(function () {
+                me.trigger('click');
+            });
+*/
         });
     },
     render: function() {
-        this.$el.html(_.template(this.template, this.model.attributes,  {variable: 'data'}));
+        this.$el.html(_.template(this.template, this.model.toJSON(),  {variable: 'data'}));
     }
 });

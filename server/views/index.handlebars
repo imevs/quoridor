@@ -1,8 +1,8 @@
 <div class="btn-group">
-    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
         Play local game
         <span class="caret"></span>
-    </a>
+    </button>
     <ul class="dropdown-menu">
         <li>
             <a href="/playLocal?playersCount=2">2 players</a>
@@ -13,10 +13,10 @@
     </ul>
 </div>
 <div class="btn-group">
-    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
         Create new multiplayer game
         <span class="caret"></span>
-    </a>
+    </button>
     <ul class="dropdown-menu">
         <li>
             <a href="/create?playersCount=2">2 players</a>
@@ -29,11 +29,13 @@
 
 <h1>Active games</h1>
 
-<ul id="games">
+<div id="games">
     {{#each games}}
-    <hr>
-    <div><strong>Game created</strong>: {{createDate}}</div>
-    <div><strong>Players count (active/all)</strong>: {{players.length}} / {{playerNumber}}</div>
-    <a class="btn btn-large btn-primary " href="/play?id={{id}}">Join the game</a>
+        <hr>
+        <div><strong>Game created</strong>: {{createDate}}</div>
+        <div><strong>Players count (active/all)</strong>: {{players.length}} / {{playersCount}}</div>
+        {{#if isNotBusy }}
+            <a class="btn btn-large btn-primary" href="/play?id={{id}}">Join the game</a>
+        {{/if}}
     {{/each}}
-</ul>
+</div>

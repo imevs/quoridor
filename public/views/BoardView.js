@@ -53,5 +53,6 @@ var BoardView = GameObject.extend({
             el   : $("#game-info"),
             model: me.infoModel
         });
+        //info.on('click', _.bind(this.move, this));
     }
 });

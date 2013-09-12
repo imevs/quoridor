@@ -6,6 +6,7 @@ var index = function(req, res){
         room.findBusyPlayersPlaces().forEach(function(player) {
             game.players.push(player.toJSON());
         });
+        game.isNotBusy = game.players.length != game.playersCount;
         games.push(game);
     });
     res.render('index', {
