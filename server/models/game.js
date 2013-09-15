@@ -22,6 +22,11 @@ var Game = Backbone.Collection.extend({
             return room.findPlayer(socket);
         });
     },
+    findRoomById: function(roomId) {
+        return this.find(function(room) {
+            return room.get('id') === roomId;
+        });
+    },
     findFreeRoom: function(roomId) {
         return this.find(function(room) {
             return room.get('id') === roomId && !room.isFull();
@@ -57,6 +62,7 @@ var Game = Backbone.Collection.extend({
         if (roomId) {
             room = this.findFreeRoom(roomId);
             result = room && room.addPlayer(socket);
+            !result && socket.emit('server_start', 'error');
         }
     }
 });

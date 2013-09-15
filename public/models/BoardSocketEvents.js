@@ -75,6 +75,10 @@ var BoardSocketEvents = {
         this.trigger('maketurn');
     },
     onStart: function(playerNumber, players, fences) {
+        if (playerNumber == 'error') {
+            alert('Game is busy');
+            return;
+        }
         var me = this;
 
         _(players).each(function(playerInfo, i) {
