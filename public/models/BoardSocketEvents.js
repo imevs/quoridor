@@ -102,8 +102,9 @@ var BoardSocketEvents = {
         });
         me.fences.setBusy();
 
-        _(players).each(function(player, i) {
+        _(players).find(function(player, i) {
             player.active && me.run(i, playerNumber);
+            return player.active;
         });
     }
 };

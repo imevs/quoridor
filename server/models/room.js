@@ -12,6 +12,9 @@ var Room = Backbone.Model.extend({
 
     defaults: {
         id          : '',
+        /**
+         * Номер игрока, который будет ходить первым (нумерация идет с 0)
+         */
         playerNumber: 0,
         title       : '',
         boardSize   : 9,
@@ -24,10 +27,17 @@ var Room = Backbone.Model.extend({
     parse: function(data, options) {
         var room = this;
         var doc = data && data._doc;
-        if (doc && doc.players && doc.players.length) {
+        var isPlayers = doc &&
+            (!room.players || !room.players.length) &&
+            doc.players && doc.players.length;
+        if (isPlayers) {
             room.players = new PlayersCollection(doc.players);
+            room.players.currentPlayer = doc.playerNumber;
         }
-        if (doc && doc.fences && doc.fences.length ) {
+        var isFences = doc &&
+            (!room.fences || !room.fences.length) &&
+            doc.fences && doc.fences.length;
+        if (isFences ) {
             room.fences = new FencesCollection(doc.fences);
         }
         return doc;
