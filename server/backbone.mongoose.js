@@ -7,6 +7,10 @@ var backboneMongoose = function(config) {
 		connection = mongoose.createConnection(config.db_url),
 		mongooseSync;
 
+    connection.on('error', function (err) {
+        console.log('connection error:', err && err.message);
+    });
+
 	files.forEach(function(fileName) {
 		require(config.schema_dir + '/' + fileName);
 	});
