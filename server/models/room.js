@@ -65,13 +65,11 @@ var Room = Backbone.Model.extend({
         }
 
         room.players.on('win', function(player) {
-            var index = this.players.indexOf(player);
+            var index = room.players.indexOf(player);
 
             room.players.each(function(p) {
                 var socket = p.socket;
-                socket && socket.emit('server_win', {
-                    winPlayer: index
-                });
+                socket && socket.emit('server_win', index);
                 p.set({
                     id    : '',
                     state : '',
