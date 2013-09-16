@@ -33,25 +33,31 @@ var BoardSocketEvents = {
         socket.on('server_move_fence', _(this.onSocketMoveFence).bind(this));
         socket.on('server_move_player', _(this.onSocketMovePlayer).bind(this));
         socket.on('server_start', _(this.onStart).bind(this));
+        socket.on('server_win', _(this.onWin).bind(this));
+    },
+    onWin: function(playerNumber) {
+        alert('Игрок номер ' + (playerNumber + 1) + ' выиграл, ' +
+            'вы можете создать новую игру или выбрать из списка');
+        document.location = '/';
     },
     onTurnSendSocketEvent: function() {
         if (!this.isPlayerMoved && !this.isFenceMoved) return;
 
         var socket = this.get('socket'), eventInfo = {};
 
-        var currentPlayer = this.players.getCurrentPlayer();
+        var activePlayer = this.getActivePlayer();
 
         if (this.isPlayerMoved) {
-            eventInfo = currentPlayer.pick('x', 'y');
-            eventInfo.playerIndex = this.players.currentPlayer;
+            eventInfo = activePlayer.pick('x', 'y');
+            eventInfo.playerIndex = this.get('activePlayer');
 
             socket.emit('client_move_player', eventInfo);
         }
 
         if (this.isFenceMoved) {
             eventInfo = this.fences.getMovedFence().pick('x', 'y', 'type');
-            eventInfo.playerIndex = this.players.currentPlayer;
-            eventInfo.fencesRemaining = currentPlayer.get('fencesRemaining');
+            eventInfo.playerIndex = this.players.activePlayer;
+            eventInfo.fencesRemaining = activePlayer.get('fencesRemaining');
 
             socket.emit('client_move_fence', eventInfo);
         }
@@ -74,8 +80,8 @@ var BoardSocketEvents = {
         this.auto = false;
         this.trigger('maketurn');
     },
-    onStart: function(playerNumber, players, fences) {
-        if (playerNumber == 'error') {
+    onStart: function(currentPlayer, activePlayer, players, fences) {
+        if (currentPlayer == 'error') {
             alert('Game is busy');
             return;
         }
@@ -105,10 +111,6 @@ var BoardSocketEvents = {
             me.fences.getSibling(fence).trigger('movefence');
         });
         me.fences.setBusy();
-
-        _(players).find(function(player, i) {
-            player.active && me.run(i, playerNumber);
-            return player.active;
-        });
+        me.run(activePlayer, currentPlayer);
     }
 };

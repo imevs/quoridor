@@ -4,7 +4,9 @@ var BoardModel = Backbone.Model.extend({
 
     defaults: {
         boardSize       : 9,
-        playersCount    : 2
+        playersCount    : 2,
+        currentPlayer   : null,
+        activePlayer    : null
     },
 
     resetModels: function() {
@@ -31,16 +33,22 @@ var BoardModel = Backbone.Model.extend({
         me.players.createPlayers(me.get('playersCount'));
     },
 
+    switchActivePlayer: function () {
+        this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
+    },
+
     makeTurn: function () {
         var me = this;
         if (me.isPlayerMoved || me.isFenceMoved) {
             if (me.isFenceMoved) {
-                me.players.getCurrentPlayer().placeFence();
+                me.getActivePlayer().placeFence();
                 me.fences.setBusy();
             }
-
-            me.players.switchPlayer();
-            me.get('socket') || me.set('playerNumber', me.players.currentPlayer);
+            me.switchActivePlayer();
+            /**
+             * if local mode game then automatic change currentPlayer
+             */
+            me.get('roomId') || me.set('currentPlayer', me.get('activePlayer'));
 
             me.isPlayerMoved = false;
             me.isFenceMoved = false;
@@ -50,12 +58,20 @@ var BoardModel = Backbone.Model.extend({
     onMovePlayer: function (x, y) {
         var me = this;
         if (me.isValidCurrentPlayerPosition(x, y)) {
-            var current = me.players.getCurrentPlayer();
+            var current = me.getActivePlayer();
             current.moveTo(x, y);
             me.fences.clearBusy();
             me.isFenceMoved = false;
             me.isPlayerMoved = true;
         }
+    },
+
+    updateInfo: function () {
+        this.infoModel.set({
+            currentplayer: this.get('currentPlayer'),
+            activeplayer : this.get('activePlayer'),
+            fences       : this.players.pluck('fencesRemaining')
+        });
     },
 
     initEvents: function () {
@@ -69,14 +85,11 @@ var BoardModel = Backbone.Model.extend({
                 this.selectField(x, y);
             }
         });
-        this.players.on('change setcurrent', function() {
-            me.infoModel.set({
-                currentplayer: me.get('playerNumber'),
-                activeplayer: this.currentPlayer,
-                fences: this.pluck('fencesRemaining')
-            });
-        });
-        this.players.on('win', function(player) {
+        this.on('change:activePlayer', this.updateInfo, this);
+        this.on('change:currentPlayer', this.updateInfo, this);
+        this.players.on('change', this.updateInfo, this);
+
+        this.get('roomId') || this.players.on('win', function(player) {
             if (window.confirm(player + ' выиграл. Начать сначала?')) {
                 me.resetModels();
             }
@@ -101,9 +114,10 @@ var BoardModel = Backbone.Model.extend({
         });
     },
     run: function(activePlayer, currentPlayer) {
-        this.set('playerNumber', currentPlayer);
-        activePlayer = _.isUndefined(activePlayer) ? 1 : activePlayer;
-        this.players.switchPlayer(activePlayer);
+        this.set({
+            activePlayer: activePlayer,
+            currentPlayer: currentPlayer || activePlayer
+        });
     },
     initialize: function () {
         this.createModels();

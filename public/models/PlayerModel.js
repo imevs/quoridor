@@ -20,7 +20,6 @@ var PlayerModel = Backbone.Model.extend({
 
 var PlayersCollection = Backbone.Collection.extend({
     model           : PlayerModel,
-    currentPlayer   : 0,
     fencesCount     : 20,
 
     initialize: function() {
@@ -32,30 +31,28 @@ var PlayersCollection = Backbone.Collection.extend({
         ];
     },
 
-    getCurrentPlayer: function () {
-        return this.at(this.currentPlayer);
-    },
+    getNextActivePlayer: function (currentPlayer) {
+        this.checkWin(currentPlayer);
 
-    switchPlayer: function (player) {
-        this.checkWin(this.currentPlayer);
-
-        var current = this.getCurrentPlayer();
+        var current = this.at(currentPlayer);
         current.set({
             'prev_x': current.get('x'),
             'prev_y': current.get('y')
         });
 
-        var c = _.isUndefined(player) ? this.currentPlayer + 1 : player;
-        this.currentPlayer = c < this.length ? c : 0;
+        var activePlayer = currentPlayer;
+        activePlayer++;
+        activePlayer = activePlayer < this.length ? activePlayer : 0;
         this.each(function(player) {
             player.trigger('resetstate');
         });
-        current = this.getCurrentPlayer();
-        current.trigger('setcurrent', this.currentPlayer);
+        current = this.at(activePlayer);
+        current.trigger('setcurrent', activePlayer);
+        return activePlayer;
     },
 
     checkWin: function(playerIndex) {
-        var pos = this.at(this.currentPlayer).pick('x', 'y'),
+        var pos = this.at(playerIndex).pick('x', 'y'),
             x = pos.x,
             y = pos.y;
         if (this.playersPositions[playerIndex].isWin(x, y) ) {
@@ -194,6 +191,4 @@ var PlayersCollection = Backbone.Collection.extend({
 
 });
 
-if (module) {
-    module.exports = PlayersCollection;
-}
+module && (module.exports = PlayersCollection);

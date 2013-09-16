@@ -165,9 +165,10 @@ describe('Game', function () {
             var p = new playerSocket('1');
             io.sockets.emit('connection', p);
 
-            p.on('server_start', function (playerNumber, players) {
-                assert.equal(0, playerNumber);
-                assert.ok(players[playerNumber].active);
+            p.on('server_start', function (currentPlayer, activePlayer, players) {
+                assert.equal(0, currentPlayer);
+                assert.equal(0, activePlayer);
+                assert.equal(2, players.length);
                 done();
             });
             p.emit('myconnection', {roomId: room1.get('id')});
@@ -182,10 +183,9 @@ describe('Game', function () {
             var p2 = new playerSocket('2');
             io.sockets.emit('connection', p2);
 
-            p2.on('server_start', function (playerNumber, players) {
-                assert.equal(1, playerNumber);
-                assert.ok(players[playerNumber - 1].active);
-                assert.ok(!players[playerNumber].active);
+            p2.on('server_start', function (currentPlayer, activePlayer, players) {
+                assert.equal(1, currentPlayer);
+                assert.equal(0, activePlayer);
                 done();
             });
             p1.emit('myconnection', {roomId: room1.get('id')});
@@ -205,10 +205,10 @@ describe('Game', function () {
             var p3 = new playerSocket('3');
             io.sockets.emit('connection', p3);
 
-            p3.on('server_start', function (playerNumber, players, fences) {
-                assert.equal(0, playerNumber);
+            p3.on('server_start', function (currentPlayer, activePlayer, players, fences) {
+                assert.equal(0, currentPlayer);
+                assert.equal(0, activePlayer);
                 assert.equal(0, fences.length);
-                assert.ok(players[playerNumber].active);
                 done();
             });
 
@@ -357,14 +357,13 @@ describe('Game', function () {
             var p3 = new playerSocket('3');
             io.sockets.emit('connection', p3);
 
-            p3.on('server_start', function (playerNumber, players, fences) {
-                assert.equal(0, playerNumber);
+            p3.on('server_start', function (currentPlayer, activePlayer, players, fences) {
+                assert.equal(0, currentPlayer);
                 assert.deepEqual({
                     x              : 4,
                     y              : 1,
-                    active         : false,
                     fencesRemaining: 10
-                }, players[playerNumber]);
+                }, players[currentPlayer]);
 
                 done();
             });
@@ -389,9 +388,9 @@ describe('Game', function () {
             var p3 = new playerSocket('3');
             io.sockets.emit('connection', p3);
 
-            p3.on('server_start', function (playerNumber, players, fences) {
-                assert.equal(0, playerNumber);
-                assert.equal(false, players[playerNumber].active);
+            p3.on('server_start', function (currentPlayer, activePlayer, players, fences) {
+                assert.equal(0, currentPlayer);
+                assert.equal(1, activePlayer);
                 assert.deepEqual([
                     {
                         x   : 4,

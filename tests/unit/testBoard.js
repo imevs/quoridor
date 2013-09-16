@@ -24,18 +24,18 @@ TestCase("Test Board", {
         assertEquals(this.board.players.length, 2);
     },
     testGetCurrentPlayer: function() {
-        assertEquals(this.board.players.getCurrentPlayer(), this.board.players.at(0));
-        assertNotEquals(this.board.players.getCurrentPlayer(), this.board.players.at(1));
+        assertEquals(this.board.getActivePlayer(), this.board.players.at(0));
+        assertNotEquals(this.board.getActivePlayer(), this.board.players.at(1));
     },
     testSwitchPlayer: function() {
-        this.board.players.switchPlayer();
-        assertEquals(this.board.players.getCurrentPlayer(), this.board.players.at(1));
+        this.board.switchActivePlayer();
+        assertEquals(this.board.getActivePlayer(), this.board.players.at(1));
     },
     testDoubleSwitchPlayer: function() {
-        this.board.players.switchPlayer();
-        this.board.players.switchPlayer();
-        assertEquals(this.board.players.getCurrentPlayer(), this.board.players.at(0));
-        assertNotEquals(this.board.players.getCurrentPlayer(), this.board.players.at(1));
+        this.board.switchActivePlayer();
+        this.board.switchActivePlayer();
+        assertEquals(this.board.getActivePlayer(), this.board.players.at(0));
+        assertNotEquals(this.board.getActivePlayer(), this.board.players.at(1));
     }
 
 });

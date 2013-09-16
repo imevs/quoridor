@@ -104,21 +104,24 @@ var BoardValidation = {
             );
     },
     isCurrentPlayerTurn           : function () {
-        return this.auto || this.get('playerNumber') === this.players.currentPlayer;
+        return this.auto || this.get('currentPlayer') === this.get('activePlayer');
     },
+
+    getActivePlayer: function() {
+        return this.players.at(this.get('activePlayer'));
+    },
+
     isValidCurrentPlayerPosition  : function (x, y) {
-        var current = this.players.getCurrentPlayer();
+        var activePlayer = this.getActivePlayer();
 
         if (!this.isCurrentPlayerTurn()) return false;
 
-        var currentPos = {x: current.get('prev_x'), y: current.get('prev_y')};
+        var currentPos = {x: activePlayer.get('prev_x'), y: activePlayer.get('prev_y')};
         return this.isValidPlayerPosition(currentPos, {x: x, y: y});
     },
     canSelectFences               : function () {
-        return this.players.getCurrentPlayer().hasFences() && this.isCurrentPlayerTurn();
+        return this.getActivePlayer().hasFences() && this.isCurrentPlayerTurn();
     }
 };
 
-if (module) {
-    module.exports = BoardValidation;
-}
+module && (module.exports = BoardValidation);

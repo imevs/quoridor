@@ -29,7 +29,7 @@ var Game = Backbone.Collection.extend({
     },
     findFreeRoom: function(roomId) {
         return this.find(function(room) {
-            return room.get('id') === roomId && !room.isFull();
+            return room.get('id') === roomId && !room.isFull() && room.get('state') != 'finished';
         });
     },
     removeOld: function () {

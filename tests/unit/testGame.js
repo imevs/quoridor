@@ -3,7 +3,7 @@ TestCase("Test game", {
         this.board = new BoardModel({
             playersCount: 2
         });
-        this.board.run(0);
+        this.board.run(0, 0);
         this.board.set('playerNumber', 0);
     },
     testPlayersPositionsBeforeGame: function() {
@@ -21,7 +21,7 @@ TestCase("Test game", {
         var pos2 = players.at(1).pick('x', 'y');
         assertEquals(pos1, {x: 4, y: 1});
         assertEquals(pos2, {x: 4, y: 8});
-        assertEquals(players.getCurrentPlayer(), players.at(1));
+        assertEquals(this.board.getActivePlayer(), players.at(1));
     },
     testNeedConfirmForMovingPlayer: function() {
         this.board.fields.trigger('moveplayer', 4, 1);
@@ -32,7 +32,7 @@ TestCase("Test game", {
 
         assertEquals(pos1, {prev_x: 4, prev_y: 0});
         assertEquals(pos2, {prev_x: 4, prev_y: 8});
-        assertEquals(players.getCurrentPlayer(), players.at(0));
+        assertEquals(this.board.getActivePlayer(), players.at(0));
     },
     testFirstTurnInvalid: function() {
         this.board.fields.trigger('moveplayer', 5, 1);
@@ -41,7 +41,7 @@ TestCase("Test game", {
         var pos2 = players.at(1).pick('x', 'y');
         assertEquals(pos1, {x: 4, y: 0});
         assertEquals(pos2, {x: 4, y: 8});
-        assertEquals(players.getCurrentPlayer(), players.at(0));
+        assertEquals(this.board.getActivePlayer(), players.at(0));
     },
     testFirstTurnSamePosition: function() {
         this.board.fields.trigger('moveplayer', 4, 0);
@@ -50,7 +50,7 @@ TestCase("Test game", {
         var pos2 = players.at(1).pick('x', 'y');
         assertEquals(pos1, {x: 4, y: 0});
         assertEquals(pos2, {x: 4, y: 8});
-        assertEquals(players.getCurrentPlayer(), players.at(0));
+        assertEquals(this.board.getActivePlayer(), players.at(0));
     },
     testFirstTurnOutOfBoard: function() {
         this.board.fields.trigger('moveplayer', 4, -1);
@@ -59,7 +59,7 @@ TestCase("Test game", {
         var pos2 = players.at(1).pick('x', 'y');
         assertEquals(pos1, {x: 4, y: 0});
         assertEquals(pos2, {x: 4, y: 8});
-        assertEquals(players.getCurrentPlayer(), players.at(0));
+        assertEquals(this.board.getActivePlayer(), players.at(0));
     }
 
 });

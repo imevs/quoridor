@@ -15,11 +15,12 @@ var Room = Backbone.Model.extend({
         /**
          * Номер игрока, который будет ходить первым (нумерация идет с 0)
          */
-        playerNumber: 0,
+        activePlayer: 0,
         title       : '',
         boardSize   : 9,
         playersCount: 2,
-        createDate  : ''
+        createDate  : '',
+        state       : ''
     },
 
     mongooseModel: 'Room',
@@ -32,7 +33,7 @@ var Room = Backbone.Model.extend({
             doc.players && doc.players.length;
         if (isPlayers) {
             room.players = new PlayersCollection(doc.players);
-            room.players.currentPlayer = doc.playerNumber;
+            room.players.activePlayer = doc.activePlayer;
         }
         var isFences = doc &&
             (!room.fences || !room.fences.length) &&
@@ -57,12 +58,30 @@ var Room = Backbone.Model.extend({
         if (!room.players) {
             room.players = new PlayersCollection();
             room.players.createPlayers(this.get('playersCount'));
-            room.players.at(0).set('active', true);
         }
         if (!room.fences) {
             room.fences = new FencesCollection();
             room.fences.createFences(this.get('boardSize'));
         }
+
+        room.players.on('win', function(player) {
+            var index = this.players.indexOf(player);
+
+            room.players.each(function(p) {
+                var socket = p.socket;
+                socket && socket.emit('server_win', {
+                    winPlayer: index
+                });
+                p.set({
+                    id    : '',
+                    state : '',
+                    socket: ''
+                });
+
+            });
+            room.set('title', 'Game over!');
+            room.set('state', 'finished');
+        });
     },
     isFull: function() {
         return this.findBusyPlayersPlaces().length >= this.get('playersCount');
@@ -90,9 +109,9 @@ var Room = Backbone.Model.extend({
         socket.on('client_move_fence', _(this.onMoveFence).partial(player).bind(this));
 
         var playersData = this.players.map(function(item) {
-            return item.pick('x', 'y', 'fencesRemaining', 'active');
+            return item.pick('x', 'y', 'fencesRemaining');
         });
-        socket.emit('server_start', index, playersData, this.getFencesPositions());
+        socket.emit('server_start', index, this.get('activePlayer'), playersData, this.getFencesPositions());
 
         return true;
     },
@@ -103,22 +122,22 @@ var Room = Backbone.Model.extend({
             return fence.pick('x', 'y', 'type');
         });
     },
+    switchActivePlayer: function () {
+        this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
+    },
     onMoveFence: function(player, eventInfo) {
-        if (!player.get('active')) return;
+        var index = this.players.indexOf(player);
+
+        if (index != this.get('activePlayer')) return;
         if (!player.hasFences()) return;
 
         var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
         if (!this.fences.validateFenceAndSibling(fence)) return;
 
-        var index = this.players.indexOf(player);
-
-        player.set('active', false);
         player.placeFence();
         fence.set({state: 'busy'});
 
-        this.players.switchPlayer();
-        this.players.getCurrentPlayer().set('active', true);
-        this.set('playerNumber', this.players.currentPlayer);
+        this.switchActivePlayer();
         this.save();
 
         this.players.each(function(p) {
@@ -133,16 +152,16 @@ var Room = Backbone.Model.extend({
         });
     },
     onMovePlayer: function(player, eventInfo) {
-        if (!player.get('active')) return;
+        var index = this.players.indexOf(player);
+
+        if (index != this.get('activePlayer')) return;
+
+        this.set('currentPlayer', index);
         if (!this.isValidCurrentPlayerPosition(eventInfo.x, eventInfo.y)) return;
 
-        player.set('active', false);
         player.moveTo(eventInfo.x, eventInfo.y);
 
-        var index = this.players.indexOf(player);
-        this.players.switchPlayer();
-        this.players.getCurrentPlayer().set('active', true);
-        this.set('playerNumber', this.players.currentPlayer);
+        this.switchActivePlayer();
         this.save();
 
         this.players.each(function(player) {
@@ -179,7 +198,6 @@ var Room = Backbone.Model.extend({
 
         var date = new Date();
         room.set('createDate', date);
-        room.set('playerNumber', 0);
 
         return room;
     }
