@@ -16,7 +16,7 @@ var index = function(req, res){
 
 exports.init = function(app) {
     app.get('/', index);
-    app.get('/create', require('./create.js'));
-    app.get('/play', require('./play.js'));
-    app.get('/playLocal', require('./playLocal.js'));
+    app.get('/create/playersCount/:playersCount', require('./create.js'));
+    app.get('/play/id/:id', require('./play.js'));
+    app.get('/playLocal/playersCount/:playersCount', require('./playLocal.js'));
 };

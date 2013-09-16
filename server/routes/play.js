@@ -1,11 +1,15 @@
 module.exports = function(req, res) {
 
-    var id = req.query.id;
+    var id = req.params.id;
 
     var room = global.game.findRoomById(id);
 
-    res.render('play', {
-        roomId: room.get('id'),
-        playersCount: room.get('playersCount')
-    });
+    if (room) {
+        res.render('play', {
+            roomId: room.get('id'),
+            playersCount: room.get('playersCount')
+        });
+    } else {
+        res.render('notfound');
+    }
 };

@@ -5,10 +5,10 @@
     </button>
     <ul class="dropdown-menu">
         <li>
-            <a href="/playLocal?playersCount=2">2 players</a>
+            <a href="/playLocal/playersCount/2">2 players</a>
         </li>
         <li>
-            <a href="/playLocal?playersCount=4">4 players</a>
+            <a href="/playLocal/playersCount/4">4 players</a>
         </li>
     </ul>
 </div>
@@ -19,10 +19,10 @@
     </button>
     <ul class="dropdown-menu">
         <li>
-            <a href="/create?playersCount=2">2 players</a>
+            <a href="/create/playersCount/2">2 players</a>
         </li>
         <li>
-            <a href="/create?playersCount=4">4 players</a>
+            <a href="/create/playersCount/4">4 players</a>
         </li>
     </ul>
 </div>
@@ -35,7 +35,7 @@
         <div><strong>Game created</strong>: {{createDate}}</div>
         <div><strong>Players count (active/all)</strong>: {{players.length}} / {{playersCount}}</div>
         {{#if isNotBusy }}
-            <a class="btn btn-large btn-primary" href="/play?id={{id}}">Join the game</a>
+            <a class="btn btn-large btn-primary" href="/play/id/{{id}}">Join the game</a>
         {{/if}}
     {{/each}}
 </div>
