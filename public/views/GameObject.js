@@ -5,6 +5,6 @@ var GameObject = Backbone.RaphaelView.extend({
     squareHeight  : 30,
     squareDistance: 10,
     getPaper      : function () {
-        return GameObject.paper || (GameObject.paper = Raphael('holder', 600, 600));
+        return GameObject.paper || (GameObject.paper = Raphael('holder', 600, 400));
     }
 });

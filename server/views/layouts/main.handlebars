@@ -4,12 +4,14 @@
     <title>Quoridor online game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/css/bootstrap.css" rel="stylesheet" media="screen">
+    <link href="/css/sticky-footer.css" rel="stylesheet" media="screen">
     <!--<link href="css/bootstrap-responsive.css" rel="stylesheet" media="screen">-->
     <style>
         body {padding-top: 60px; }
     </style>
 </head>
 <body>
+<div id="wrap">
 <div class="navbar navbar-inverse navbar-fixed-top">
     <div class="container">
         <div class="navbar-header">
@@ -23,8 +25,8 @@
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li class="active"><a href="/">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contacts">Contacts</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
                     <ul class="dropdown-menu">
@@ -44,6 +46,13 @@
 
 <div class="container">
     {{{body}}}
+</div>
+</div>
+
+<div id="footer">
+    <div class="container">
+        <p class="text-muted credit">© 2013 by Vitaly Medvedev. Quoridor is released under MIT license.</p>
+    </div>
 </div>
 <script src="/libs/jquery-1.10.2.js"></script>
 <script src="/libs/bootstrap.min.js"></script>
