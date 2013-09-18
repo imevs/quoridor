@@ -8,6 +8,10 @@ var BoardValidation = {
         var max = Math.max(n1, n2);
         return min <= n3 && n3 < max;
     },
+    intToChar: function(i) {
+        var a = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k'];
+        return a[i];
+    },
     isOtherPlayerAndFenceBehindHim: function (pos1, pos2) {
         var sibling1, sibling2;
         var playerX = pos1.x, playerY = pos1.y,

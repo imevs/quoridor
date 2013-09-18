@@ -56,16 +56,11 @@ var FenceHView = FenceView.extend({
             j = this.model.get('y'),
             color = this.model.get('color');
 
-        var x = (w + dw) * i + 10 - dw / 2;
-        var y = (h + dh) * j + 10 + dh;
+        var x = (w + dw) * i + cls.startX - dw / 2;
+        var y = (h + dh) * j + cls.startY + dh;
         var obj = cls.getPaper().rect(x, y, w + dw + 1, h);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
-/*
-        var value = this.model.get('x') + '-' + this.model.get('y');
-        var text = cls.getPaper().text(x + 30, y + 5, value);
-        text.attr('fill', 'white');
-*/
         return obj;
     }
 });
@@ -83,16 +78,11 @@ var FenceVView = FenceView.extend({
             h = cls.squareHeight,
             dh = cls.squareDistance,
             dw = cls.squareWidth;
-        var x = (w + dw) * i + 10 + dw;
-        var y = (h + dh) * j + 10 - dh / 2;
+        var x = (w + dw) * i + cls.startX + dw;
+        var y = (h + dh) * j + cls.startY - dh / 2;
         var obj = cls.getPaper().rect(x, y, w, h + dh + 1);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
-/*
-        var value = this.model.get('x') + '-' + this.model.get('y');
-        var text = cls.getPaper().text(x + 5, y + 20, value);
-        text.attr('fill', 'white');
-*/
         return obj;
     }
 });

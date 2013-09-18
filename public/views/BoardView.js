@@ -26,8 +26,8 @@ var BoardView = GameObject.extend({
             d = cls.squareDistance,
             w = me.get('boardSize') * (d + cls.squareWidth),
             h = me.get('boardSize') * (d + cls.squareHeight),
-            x = 10 - d / 2,
-            y = 10 - d / 2;
+            x = cls.startX - d / 2,
+            y = cls.startY - d / 2;
 
         var p = cls.getPaper();
         var borderLeft = p.rect(x, y, 7, h + 1);
@@ -40,6 +40,27 @@ var BoardView = GameObject.extend({
         borderTop.attr('fill', '#c75');
         borderBottom.attr('fill', '#c75');
 
+        _(_.range(me.get('boardSize'))).each(function(i) {
+            var _xv, _yh, text, value = i;
+            var _yv = y + (i + 0.5) * (cls.squareHeight + d);
+            var _xh = x + (i + 0.5) * (cls.squareWidth + d);
+
+            _xv = x - 10;
+            text = cls.getPaper().text(_xv, _yv, me.get('boardSize') - value);
+            text.attr('fill', 'black');
+
+            _xv = x + w + 10;
+            text = cls.getPaper().text(_xv, _yv, me.get('boardSize') - value);
+            text.attr('fill', 'black');
+
+            _yh = y - 10;
+            text = cls.getPaper().text(_xh, _yh, me.intToChar(value));
+            text.attr('fill', 'black');
+
+            _yh = y + h + 10;
+            text = cls.getPaper().text(_xh, _yh, me.intToChar(value));
+            text.attr('fill', 'black');
+        });
         me.fields.each(function (model) {
             new FieldView({model: model});
         });

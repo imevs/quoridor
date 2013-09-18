@@ -17,17 +17,11 @@ var FieldView = GameObject.extend({
             d = cls.squareDistance,
             color = model.get('color');
         var i = model.get('x'), j = model.get('y');
-        var x = (w + d) * i + 10;
-        var y = (h + d) * j + 10;
+        var x = (w + d) * i + cls.startX;
+        var y = (h + d) * j + cls.startY;
         var obj = cls.getPaper().rect(x, y, w, h);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
-
-/*
-        var value = this.model.get('x') + '-' + this.model.get('y');
-        var text = cls.getPaper().text(x + 25, y + 15, value);
-        text.attr('fill', 'white');
-*/
         this.setElement(obj);
     },
 

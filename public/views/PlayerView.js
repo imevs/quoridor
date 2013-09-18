@@ -32,14 +32,14 @@ var PlayerView = GameObject.extend({
         var cls = this.constructor,
             w = cls.squareWidth,
             d = cls.squareDistance;
-        return (w + d) * x + 10 + w / 2;
+        return (w + d) * x + cls.startX + w / 2;
     },
 
     getPosY: function (y) {
         var cls = this.constructor,
             h = cls.squareHeight,
             d = cls.squareDistance;
-        return (h + d) * y + 10 + h / 2;
+        return (h + d) * y + cls.startY + h / 2;
     },
 
     render: function () {
