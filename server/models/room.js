@@ -70,12 +70,7 @@ var Room = Backbone.Model.extend({
             room.players.each(function(p) {
                 var socket = p.socket;
                 socket && socket.emit('server_win', index);
-                p.set({
-                    id    : '',
-                    state : '',
-                    socket: ''
-                });
-
+                p.reset();
             });
             room.set('title', 'Game over!');
             room.set('state', 'finished');
@@ -83,6 +78,9 @@ var Room = Backbone.Model.extend({
     },
     isFull: function() {
         return this.findBusyPlayersPlaces().length >= this.get('playersCount');
+    },
+    isOver: function() {
+        return this.get('state') == 'finished';
     },
     addPlayer: function(socket) {
         var playerId = socket && socket.id && socket.id.toString();
@@ -178,11 +176,7 @@ var Room = Backbone.Model.extend({
     },
     disconnectPlayer: function(socket) {
         var player = this.findPlayer(socket);
-        player && player.set({
-            id    : '',
-            state : '',
-            socket: ''
-        });
+        player && player.reset();
     },
     findPlayer: function(socket) {
         var playerId = socket && socket.id && socket.id.toString();

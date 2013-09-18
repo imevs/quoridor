@@ -15,6 +15,10 @@ var PlayerModel = Backbone.Model.extend({
     },
     hasFences: function() {
         return this.get('fencesRemaining') > 0;
+    },
+    reset: function() {
+        this.socket = null;
+        this.set({id: '', state: ''});
     }
 });
 

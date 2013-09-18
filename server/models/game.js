@@ -8,7 +8,16 @@ var Game = Backbone.Collection.extend({
     mongooseModel: 'Room',
 
     initialize: function() {
-        this.fetch();
+        var game = this;
+        this.fetch({
+            success: function() {
+                game.each(function(room) {
+                    room.players.each(function(player) {
+                        player.reset();
+                    });
+                });
+            }
+        });
     },
     start: function(io) {
         var self = this;
