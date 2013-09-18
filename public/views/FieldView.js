@@ -4,10 +4,11 @@ var FieldView = GameObject.extend({
         color: '#742'
     },
 
-    initialize: function () {
+    initialize: function (options) {
         var cls = this.constructor;
         var model = this.model;
-        model.set('color', this.defaults.color);
+        this.defaultColor = options.defaultColor || this.defaults.color;
+        model.set('color', this.defaultColor);
 
         this.listenTo(model, 'change', this.render);
         this.listenTo(model, 'selectfield', this.selectCurrent);
@@ -36,7 +37,7 @@ var FieldView = GameObject.extend({
     },
 
     unSelectCurrent: function() {
-        this.model.set({color: this.defaults.color});
+        this.model.set({color: this.defaultColor});
         this.el.toBack();
     },
 

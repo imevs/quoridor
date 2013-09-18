@@ -62,7 +62,14 @@ var BoardView = GameObject.extend({
             text.attr('fill', 'black');
         });
         me.fields.each(function (model) {
-            new FieldView({model: model});
+            var params = {model: model};
+            if (model.get('y') == 0) {
+                params.defaultColor = 'lightgray';
+            }
+            if (model.get('y') == me.get('boardSize') - 1) {
+                params.defaultColor = 'red';
+            }
+            new FieldView(params);
         });
         me.fences.each(function (model) {
             FenceView.createFenceView(model);
