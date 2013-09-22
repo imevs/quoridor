@@ -4,7 +4,6 @@ TestCase("Test game", {
             playersCount: 2
         });
         this.board.run(0, 0);
-        this.board.set('playerNumber', 0);
     },
     testPlayersPositionsBeforeGame: function() {
         var players = this.board.players;

@@ -4,7 +4,6 @@ TestCase("Test Finish game", {
             playersCount: 2
         });
         this.board.run(0);
-        this.board.set('playerNumber', 0);
     },
 
     testWin: function() {
