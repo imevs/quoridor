@@ -17,7 +17,7 @@ extend(playerSocket, emitter);
 
 var io, game;
 
-exports['quoridor'] = nodeunit.testCase({
+exports['game'] = nodeunit.testCase({
 
     setUp   : function (test) {
         io = {
