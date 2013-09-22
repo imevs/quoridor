@@ -58,14 +58,12 @@ var backboneMongoose = function(config) {
 	return mongooseSync;
 };
 
-var config = {
-    db_url: 'mongodb://imevs:' + process.env.DB_PASS +'@ds043368.mongolab.com:43368/quoridor',
-    schema_dir: __dirname + "/schema"
+var Backbone = require('backbone');
+Backbone.initSync = function(config) {
+    Backbone.sync = backboneMongoose(config);
 };
-
-var Backbone = require("backbone");
-Backbone.sync = backboneMongoose(config);
 
 backboneMongoose.VERSION = "0.1.1";
 
-exports = module.exports = Backbone;
+global.Backbone = global.Backbone || Backbone;
+exports = module.exports = global.Backbone;

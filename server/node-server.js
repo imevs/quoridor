@@ -40,6 +40,10 @@ server.listen(app.get('port'), function(){
     console.log('Express server listening on port ' + app.get('port'));
 });
 
+Backbone.initSync({
+    db_url: 'mongodb://imevs:' + process.env.DB_PASS +'@ds043368.mongolab.com:43368/quoridor',
+    schema_dir: __dirname + "/schema"
+});
 
 io = io.listen(server);
 io.set('log level', 1);
