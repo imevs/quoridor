@@ -33,6 +33,9 @@ require.config({
         'models/PlayerModel': {
             deps: ['libs/backbone']
         },
+        'models/TurnModel': {
+            deps: ['libs/backbone']
+        },
         'models/BoardValidation': {
             deps: []
         },
@@ -45,6 +48,7 @@ require.config({
                 'libs/backbone',
                 'models/FenceModel',
                 'models/FieldModel',
+                'models/TurnModel',
                 'models/BoardValidation',
                 'models/BoardSocketEvents',
                 'models/PlayerModel',
@@ -77,11 +81,17 @@ require.config({
                 'libs/backbone'
             ]
         },
+        'views/GameHistoryView': {
+            deps: [
+                'libs/backbone'
+            ]
+        },
         'views/BoardView'  : {
             deps: [
                 'libs/underscore',
                 'views/GameObject',
                 'views/FieldView',
+                'views/GameHistoryView',
                 'views/FenceView',
                 'views/PlayerView',
                 'views/InfoView'

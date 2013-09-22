@@ -78,9 +78,12 @@ var BoardView = GameObject.extend({
             new PlayerView({model: model})
         });
         var info = new InfoView({
-            el   : $("#game-info"),
             model: me.infoModel
         });
+        var history = new GameHistoryView({
+            model: me.historyModel
+        });
+
         //info.on('click', _.bind(this.move, this));
     }
 });

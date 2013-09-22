@@ -105,10 +105,11 @@ var FencesCollection = Backbone.Collection.extend({
             fence.set({state: ''});
         });
     },
+    getPreBusy: function() {
+        return this.where({state: 'prebusy'});
+    },
     setBusy: function() {
-        _(this.where({
-            state: 'prebusy'
-        })).each(function(fence) {
+        _(this.getPreBusy()).each(function(fence) {
             fence.set({state: 'busy'});
         });
     },

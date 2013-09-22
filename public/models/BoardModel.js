@@ -21,6 +21,7 @@ var BoardModel = Backbone.Model.extend({
         this.fields = new FieldsCollection();
         this.players = new PlayersCollection();
         this.infoModel = new Backbone.Model();
+        this.historyModel = new GameHistoryModel();
     },
     initModels   : function () {
         var me = this;
@@ -42,7 +43,23 @@ var BoardModel = Backbone.Model.extend({
         if (me.isPlayerMoved || me.isFenceMoved) {
             if (me.isFenceMoved) {
                 me.getActivePlayer().placeFence();
+                var preBusy = me.fences.getPreBusy()[0];
+                me.historyModel.add({
+                    x: preBusy.get('x'),
+                    y: preBusy.get('y'),
+                    x2: preBusy.getAdjacentFencePosition().x,
+                    y2: preBusy.getAdjacentFencePosition().y,
+                    type: 'fence'
+                });
                 me.fences.setBusy();
+            }
+            if (me.isPlayerMoved) {
+                var active = me.getActivePlayer();
+                me.historyModel.add({
+                    x: active.get('x'),
+                    y: active.get('y'),
+                    type: 'player'
+                });
             }
             me.switchActivePlayer();
             /**
