@@ -7,7 +7,7 @@
     "scripts": {
         "postinstall": "node libs/r.js -o build.json",
         "test": "java -jar resources/JsTestDriver-1.3.5.jar --config tests/jsTestDriver.conf --tests all --reset",
-        "posttest": "mocha tests/server_tests"
+        "posttest": "nodeunit tests/serverSideTests"
     },
     "dependencies": {
         "connect": "2.7.x",
@@ -22,7 +22,7 @@
     },
     "devDependencies": {
         "sinon": "*",
-        "mocha": "*",
+        "nodeunit": "*",
         "phantomjs":     "0.2.x"
     },
     "analyze": false,
