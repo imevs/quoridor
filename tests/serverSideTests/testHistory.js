@@ -79,7 +79,7 @@ exports['quoridor'] = nodeunit.testCase({
             type: 'fence'
         });
 
-        test.equals(history.at(0), 'e8f8');
+        test.equals(history.at(0), 'e7f7');
 
         test.done();
     },
@@ -100,7 +100,7 @@ exports['quoridor'] = nodeunit.testCase({
             type: 'fence'
         });
 
-        test.equals(history.at(0), 'e8f8 e2f2');
+        test.equals(history.at(0), 'e7f7 e1f1');
 
         test.done();
     },
@@ -119,7 +119,7 @@ exports['quoridor'] = nodeunit.testCase({
             type: 'fence'
         });
 
-        test.equals(history.at(0), 'e7 e2f2');
+        test.equals(history.at(0), 'e7 e1f1');
 
         test.done();
     },

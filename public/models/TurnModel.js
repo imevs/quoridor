@@ -27,10 +27,11 @@ var TurnModel = Backbone.Model.extend({
     },
 
     toString: function() {
+        var dy = this.get('y') == this.get('y2') ? 1 : 0;
         return this.get('type') == 'player'
             ? this.getX(this.get('x')) + this.getY(this.get('y')) + ''
-            : this.getX(this.get('x')) + this.getY(this.get('y')) +
-                this.getX(this.get('x2')) + this.getY(this.get('y2')) + '';
+            : this.getX(this.get('x')) + this.getY(this.get('y') + dy ) +
+            this.getX(this.get('x2')) + this.getY(this.get('y2') + dy ) +  '';
     }
 
 });

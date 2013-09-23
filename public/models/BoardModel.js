@@ -43,12 +43,12 @@ var BoardModel = Backbone.Model.extend({
         if (me.isPlayerMoved || me.isFenceMoved) {
             if (me.isFenceMoved) {
                 me.getActivePlayer().placeFence();
-                var preBusy = me.fences.getPreBusy()[0];
+                var preBusy = me.fences.getPreBusy();
                 me.historyModel.add({
-                    x: preBusy.get('x'),
-                    y: preBusy.get('y'),
-                    x2: preBusy.getAdjacentFencePosition().x,
-                    y2: preBusy.getAdjacentFencePosition().y,
+                    x: preBusy[0].get('x'),
+                    y: preBusy[0].get('y'),
+                    x2: preBusy[1].get('x'),
+                    y2: preBusy[1].get('y'),
                     type: 'fence'
                 });
                 me.fences.setBusy();

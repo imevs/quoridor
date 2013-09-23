@@ -1,48 +1,48 @@
 require.config({
     paths: {
         'socket.io': 'libs/socket.io/socket.io',
-        'text'           : 'libs/text'
+        'text'     : 'libs/text'
     },
-    shim: {
-        'libs/jquery-1.10.2'           : {
+    shim : {
+        'libs/jquery-1.10.2'      : {
             exports: '$'
         },
-        'libs/underscore': {
+        'libs/underscore'         : {
             exports: '_'
         },
-        'libs/backbone': {
-            deps: ["libs/underscore", "libs/jquery-1.10.2"],
+        'libs/backbone'           : {
+            deps   : ["libs/underscore", "libs/jquery-1.10.2"],
             exports: 'Backbone'
         },
-        'libs/backbone.raphael': {
+        'libs/backbone.raphael'   : {
             deps: ["libs/underscore", 'libs/backbone']
         },
-        'utils': {
+        'utils'                   : {
             deps: ['libs/underscore']
         },
-        'models/FenceModel': {
+        'models/FenceModel'       : {
             deps: ['libs/backbone', 'utils']
         },
-        'models/FieldModel': {
+        'models/FieldModel'       : {
             deps: [
                 'libs/underscore',
                 'utils',
                 'libs/backbone'
             ]
         },
-        'models/PlayerModel': {
+        'models/PlayerModel'      : {
             deps: ['libs/backbone']
         },
-        'models/TurnModel': {
+        'models/TurnModel'        : {
             deps: ['libs/backbone']
         },
-        'models/BoardValidation': {
+        'models/BoardValidation'  : {
             deps: []
         },
         'models/BoardSocketEvents': {
             deps: ['socket.io']
         },
-        'models/BoardModel': {
+        'models/BoardModel'       : {
             deps: [
                 'libs/underscore',
                 'libs/backbone',
@@ -56,27 +56,27 @@ require.config({
             ]
         },
 
-        'views/GameObject': {
+        'views/GameObject'     : {
             deps: [
                 "libs/backbone.raphael", "libs/raphael"
             ]
         },
-        'views/FieldView': {
+        'views/FieldView'      : {
             deps: [
                 'views/GameObject'
             ]
         },
-        'views/PlayerView': {
+        'views/PlayerView'     : {
             deps: [
                 'views/GameObject'
             ]
         },
-        'views/FenceView': {
+        'views/FenceView'      : {
             deps: [
                 'views/GameObject'
             ]
         },
-        'views/InfoView': {
+        'views/InfoView'       : {
             deps: [
                 'libs/backbone'
             ]
@@ -86,7 +86,7 @@ require.config({
                 'libs/backbone'
             ]
         },
-        'views/BoardView'  : {
+        'views/BoardView'      : {
             deps: [
                 'libs/underscore',
                 'views/GameObject',
@@ -97,7 +97,7 @@ require.config({
                 'views/InfoView'
             ]
         },
-        'app': {
+        'app'                  : {
             deps: [
                 'urlParser',
                 'libs/jquery-1.10.2',

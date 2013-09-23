@@ -34,7 +34,7 @@ TestCase("Test History", {
 
         this.board.trigger('maketurn');
 
-        assertEquals('d5c5', this.board.historyModel.at(0));
+        assertEquals('d4e4', this.board.historyModel.at(0));
     }
 
 });
