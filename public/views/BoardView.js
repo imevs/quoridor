@@ -119,7 +119,7 @@ var BoardView = GameObject.extend({
             model: me.infoModel
         });
         var history = new GameHistoryView({
-            model: me.historyModel
+            model: me.history
         });
 
         //info.on('click', _.bind(this.move, this));
