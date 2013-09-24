@@ -26,7 +26,7 @@ TestCase("Test History", {
 
         this.board.trigger('maketurn');
 
-        assertEquals(1, this.board.historyModel.getLength());
+        assertEquals(1, this.board.history.getLength());
     },
     testHistoryTextAfterFirstFenceMove: function() {
         var fence2 = this.board.fences.findWhere({x: 4, y: 4, type: 'H'});
@@ -34,7 +34,7 @@ TestCase("Test History", {
 
         this.board.trigger('maketurn');
 
-        assertEquals('d4e4', this.board.historyModel.at(0));
+        assertEquals('d4e4', this.board.history.at(0));
     }
 
 });

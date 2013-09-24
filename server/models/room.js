@@ -4,6 +4,7 @@ var Backbone = require('../backbone.mongoose');
 var PlayersCollection = require('../../public/models/PlayerModel.js');
 var FencesCollection = require('../../public/models/FenceModel.js');
 var BoardValidation = require('../../public/models/BoardValidation.js');
+var History = require('../../public/models/TurnModel.js');
 var uuid = require('uuid');
 
 var Room = Backbone.Model.extend({
@@ -41,6 +42,13 @@ var Room = Backbone.Model.extend({
         if (isFences ) {
             room.fences = new FencesCollection(doc.fences);
         }
+        if (!room.history) {
+            room.history = new History({
+                boardSize: doc.boardSize,
+                playersCount: doc.playersCount
+            })
+        }
+        room.history.get('turns').reset(doc.history);
         return doc;
     },
 
@@ -49,6 +57,7 @@ var Room = Backbone.Model.extend({
         delete result._id;
         result.players = this.players.toJSON && this.players.toJSON();
         result.fences = this.fences.toJSON && this.fences.toJSON();
+        result.history = this.history.get('turns').toJSON && this.history.get('turns').toJSON();
         return result;
     },
 
@@ -62,6 +71,13 @@ var Room = Backbone.Model.extend({
         if (!room.fences) {
             room.fences = new FencesCollection();
             room.fences.createFences(this.get('boardSize'));
+        }
+
+        if (!room.history) {
+            room.history = new History({
+                boardSize: room.get('boardSize'),
+                playersCount: room.get('playersCount')
+            });
         }
 
         room.players.on('win', function(player) {
@@ -107,7 +123,8 @@ var Room = Backbone.Model.extend({
         var playersData = this.players.map(function(item) {
             return item.pick('x', 'y', 'fencesRemaining');
         });
-        socket.emit('server_start', index, this.get('activePlayer'), playersData, this.getFencesPositions());
+        socket.emit('server_start', index, this.get('activePlayer'),
+            playersData, this.getFencesPositions(), this.history.get('turns').toJSON());
 
         return true;
     },
@@ -128,10 +145,18 @@ var Room = Backbone.Model.extend({
         if (!player.hasFences()) return;
 
         var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
+        var siblingPosition = fence.getAdjacentFencePosition();
         if (!this.fences.validateFenceAndSibling(fence)) return;
 
         player.placeFence();
         fence.set({state: 'busy'});
+        this.history.add({
+            x: fence.get('x'),
+            y: fence.get('y'),
+            x2: siblingPosition.x,
+            y2: siblingPosition.y,
+            type: 'fence'
+        });
 
         this.switchActivePlayer();
         this.save();
@@ -139,11 +164,11 @@ var Room = Backbone.Model.extend({
         this.players.each(function(p) {
             var socket = p.socket;
             socket && socket.emit('server_move_fence', {
-                x: eventInfo.x,
-                y: eventInfo.y,
-                type: eventInfo.type,
+                x              : eventInfo.x,
+                y              : eventInfo.y,
+                type           : eventInfo.type,
                 fencesRemaining: player.get('fencesRemaining'),
-                playerIndex: index
+                playerIndex    : index
             });
         });
     },
@@ -157,14 +182,20 @@ var Room = Backbone.Model.extend({
 
         player.moveTo(eventInfo.x, eventInfo.y);
 
+        this.history.add({
+            x: player.get('x'),
+            y: player.get('y'),
+            type: 'player'
+        });
+
         this.switchActivePlayer();
         this.save();
 
         this.players.each(function(player) {
             var socket = player.socket;
             socket && socket.emit('server_move_player', {
-                x: eventInfo.x,
-                y: eventInfo.y,
+                x          : eventInfo.x,
+                y          : eventInfo.y,
                 playerIndex: index
             });
         });

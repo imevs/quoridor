@@ -140,6 +140,8 @@ var BoardModel = Backbone.Model.extend({
         });
     },
     initialize: function () {
+        this.set('playersCount', +this.get('playersCount'));
+        this.set('boardSize', +this.get('boardSize'));
         this.createModels();
         this.initEvents();
         this.initModels();

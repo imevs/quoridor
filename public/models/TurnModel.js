@@ -63,8 +63,9 @@ var GameHistoryModel = Backbone.Model.extend({
 
         var result = [];
         var startIndex = index * this.get('playersCount');
+        var playersCount = +self.get('playersCount');
         var turns = this.get('turns').filter(function (value, index) {
-            return index >= startIndex && index < startIndex + self.get('playersCount')
+            return index >= startIndex && index < startIndex + playersCount
         });
         _(turns).each(function(value, i) {
             result.push(value + '');
