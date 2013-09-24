@@ -21,7 +21,10 @@ var BoardModel = Backbone.Model.extend({
         this.fields = new FieldsCollection();
         this.players = new PlayersCollection();
         this.infoModel = new Backbone.Model();
-        this.historyModel = new GameHistoryModel();
+        this.historyModel = new GameHistoryModel({
+            boardSize: this.get('boardSize'),
+            playersCount: this.get('playersCount')
+        });
     },
     initModels   : function () {
         var me = this;
