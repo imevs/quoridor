@@ -80,7 +80,7 @@ var BoardSocketEvents = {
         this.auto = false;
         this.trigger('maketurn');
     },
-    onStart: function(currentPlayer, activePlayer, players, fences) {
+    onStart: function(currentPlayer, activePlayer, players, fences, history) {
         if (currentPlayer == 'error') {
             alert('Game is busy');
             return;
@@ -110,6 +110,7 @@ var BoardSocketEvents = {
             fence.trigger('movefence');
             me.fences.getSibling(fence).trigger('movefence');
         });
+        me.history.get('turns').reset(history);
         me.fences.setBusy();
         me.run(activePlayer, currentPlayer);
     }
