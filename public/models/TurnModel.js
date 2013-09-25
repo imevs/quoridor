@@ -47,6 +47,40 @@ var TurnsCollection = Backbone.Collection.extend({
 
 var GameHistoryModel = Backbone.Model.extend({
 
+    getPlayerPositions: function() {
+        var positions = [], self = this;
+
+        var playersCount = this.get('playersCount');
+        _(_.range(playersCount)).each(function(index) {
+            var playerPositions = self.get('turns').filter(function(v, i) {
+                var b = (i - index) % playersCount == 0;
+                return v.get('type') == 'player' && b;
+            });
+            var playerFences = self.get('turns').filter(function(v, i) {
+                var b = (i - index) % playersCount == 0;
+                return v.get('type') == 'fence' && b;
+            });
+            var playerInfo = _.last(playerPositions);
+            if (playerInfo) {
+                playerInfo = playerInfo.pick('x', 'y');
+                playerInfo.fencesRemaining = playerFences.length;
+            }
+            positions[index] = playerInfo;
+        });
+        return positions;
+    },
+
+    getFencesPositions: function() {
+        var filter = this.get('turns').filter(function (val) {
+            return val.get('type') == 'fence';
+        });
+        return _(filter).map(function(item) {
+            item = item.pick('x', 'x2', 'y', 'y2');
+            item.type = item.x == item.x2 ? 'V' : (item.y == item.y2 ? 'H' : (''));
+            return item;
+        });
+    },
+
     add: function(turnInfo) {
         turnInfo['boardSize'] = this.get('boardSize');
         var turn = new TurnModel(turnInfo);
@@ -77,12 +111,32 @@ var GameHistoryModel = Backbone.Model.extend({
         return Math.ceil(this.get('turns').length / this.get('playersCount'));
     },
 
+    initPlayers  : function () {
+        var playersCount = this.get('playersCount');
+        var self = this;
+        if (playersCount == 2 && self.playersPositions.length != 2) {
+            self.playersPositions.splice(3,1);
+            self.playersPositions.splice(1,1);
+        }
+        _(_.range(playersCount)).each(function (index) {
+            var playersPosition = self.playersPositions[index];
+            playersPosition.type = 'player';
+            self.add(playersPosition);
+        });
+    },
+
     initialize: function(params) {
         params = params || {};
         this.set('boardSize', params.boardSize || 9);
         this.set('playersCount', params.playersCount || 2);
         this.set('turns', new TurnsCollection());
+
+        this.playersPositions = [
+            {x: 4, y: 0 },
+            {x: 8, y: 4 },
+            {x: 4, y: 8 },
+            {x: 0, y: 4 }
+        ];
     }
 });
-
 module && (module.exports = GameHistoryModel);

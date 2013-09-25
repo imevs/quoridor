@@ -80,16 +80,20 @@ var BoardSocketEvents = {
         this.auto = false;
         this.trigger('maketurn');
     },
-    onStart: function(currentPlayer, activePlayer, players, fences, history) {
+    onStart: function(currentPlayer, activePlayer, history) {
         if (currentPlayer == 'error') {
             alert('Game is busy');
             return;
         }
         var me = this;
+        me.history.get('turns').reset(history);
+
+        var players = me.history.getPlayerPositions(),
+            fences = me.history.getFencesPositions();
 
         _(players).each(function(playerInfo, i) {
             var player = me.players.at(i);
-            if (playerInfo.x && playerInfo.y) {
+            if (!_.isUndefined(playerInfo.x) && !_.isUndefined(playerInfo.y)) {
                 player.set({
                     x: playerInfo.x,
                     prev_x: playerInfo.x,
@@ -110,7 +114,6 @@ var BoardSocketEvents = {
             fence.trigger('movefence');
             me.fences.getSibling(fence).trigger('movefence');
         });
-        me.history.get('turns').reset(history);
         me.fences.setBusy();
         me.run(activePlayer, currentPlayer);
     }

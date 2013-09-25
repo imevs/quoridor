@@ -29,6 +29,20 @@ var Room = Backbone.Model.extend({
     parse: function(data, options) {
         var room = this;
         var doc = data && data._doc;
+
+        if (!room.history) {
+            room.history = new History({
+                boardSize: doc.boardSize,
+                playersCount: doc.playersCount
+            });
+            room.history.initPlayers();
+        }
+        room.history.get('turns').reset(doc.history);
+        if (doc.history && doc.history.length) {
+            doc.players = room.history.getPlayerPositions();
+            doc.fences = room.history.getFencesPositions();
+        }
+
         var isPlayers = doc &&
             (!room.players || !room.players.length) &&
             doc.players && doc.players.length;
@@ -42,21 +56,12 @@ var Room = Backbone.Model.extend({
         if (isFences ) {
             room.fences = new FencesCollection(doc.fences);
         }
-        if (!room.history) {
-            room.history = new History({
-                boardSize: doc.boardSize,
-                playersCount: doc.playersCount
-            })
-        }
-        room.history.get('turns').reset(doc.history);
         return doc;
     },
 
     toJSON: function() {
         var result = Backbone.Model.prototype.toJSON.call(this);
         delete result._id;
-        result.players = this.players.toJSON && this.players.toJSON();
-        result.fences = this.fences.toJSON && this.fences.toJSON();
         result.history = this.history.get('turns').toJSON && this.history.get('turns').toJSON();
         return result;
     },
@@ -78,6 +83,7 @@ var Room = Backbone.Model.extend({
                 boardSize: room.get('boardSize'),
                 playersCount: room.get('playersCount')
             });
+            room.history.initPlayers();
         }
 
         room.players.on('win', function(player) {
@@ -120,11 +126,7 @@ var Room = Backbone.Model.extend({
         socket.on('client_move_player', _(this.onMovePlayer).partial(player).bind(this));
         socket.on('client_move_fence', _(this.onMoveFence).partial(player).bind(this));
 
-        var playersData = this.players.map(function(item) {
-            return item.pick('x', 'y', 'fencesRemaining');
-        });
-        socket.emit('server_start', index, this.get('activePlayer'),
-            playersData, this.getFencesPositions(), this.history.get('turns').toJSON());
+        socket.emit('server_start', index, this.get('activePlayer'), this.history.get('turns').toJSON());
 
         return true;
     },

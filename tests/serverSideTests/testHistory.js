@@ -170,6 +170,145 @@ exports['quoridor'] = nodeunit.testCase({
         test.equals(history.getLength(), 2);
 
         test.done();
+    },
+
+    'getPlayersPositions getLength of array': function(test) {
+        history.add({
+            x: 4,
+            y: 2,
+            type: 'player'
+        });
+        history.add({
+            x: 4,
+            y: 2,
+            type: 'player'
+        });
+        history.add({
+            x: 4,
+            y: 2,
+            type: 'player'
+        });
+
+        test.equals(2, history.getPlayerPositions().length);
+
+        test.done();
+    },
+
+    'getPlayersPositions getLength of array (4)': function(test) {
+        var history = new TurnModel({playersCount: 4});
+        history.add({
+            x: 4,
+            y: 2,
+            type: 'player'
+        });
+        history.add({
+            x: 4,
+            y: 2,
+            type: 'player'
+        });
+        history.add({
+            x: 4,
+            y: 2,
+            type: 'player'
+        });
+
+        test.equals(4, history.getPlayerPositions().length);
+
+        test.done();
+    },
+
+    'getFencesPositions getLength of array': function(test) {
+        history.add({
+            x: 4,
+            x2: 5,
+            y: 7,
+            y2: 7,
+            type: 'fence'
+        });
+        history.add({
+            x: 4,
+            x2: 5,
+            y: 7,
+            y2: 7,
+            type: 'fence'
+        });
+        history.add({
+            x: 4,
+            x2: 5,
+            y: 7,
+            y2: 7,
+            type: 'fence'
+        });
+
+        test.equals(3, history.getFencesPositions().length);
+
+        test.done();
+    },
+
+    'getFencesPositions check data': function(test) {
+        history.add({
+            x: 4,
+            x2: 5,
+            y: 7,
+            y2: 7,
+            type: 'fence'
+        });
+        history.add({
+            x: 4,
+            x2: 5,
+            y: 7,
+            y2: 7,
+            type: 'fence'
+        });
+        history.add({
+            x: 7,
+            x2: 7,
+            y: 4,
+            y2: 5,
+            type: 'fence'
+        });
+
+        var expected = [
+            { x: 4, x2: 5, y: 7, y2: 7, type: 'H' },
+            { x: 4, x2: 5, y: 7, y2: 7, type: 'H' },
+            { x: 7, x2: 7, y: 4, y2: 5, type: 'V' }
+        ];
+        test.deepEqual(expected, history.getFencesPositions());
+
+        test.done();
+    },
+
+    'getPlayersPositions check positions': function(test) {
+        history.add({
+            x: 4,
+            y: 2,
+            type: 'player'
+        });
+        history.add({
+            x: 5,
+            y: 1,
+            type: 'player'
+        });
+        history.add({
+            x: 4,
+            y: 3,
+            type: 'player'
+        });
+        history.add({
+            x: 4,
+            x2: 5,
+            y: 7,
+            y2: 7,
+            type: 'fence'
+        });
+
+        var expected = [
+            { x: 4, y: 3, fencesRemaining: 0 },
+            { x: 5, y: 1, fencesRemaining: 1 }
+        ];
+        test.deepEqual(expected, history.getPlayerPositions());
+
+        test.done();
     }
 
 });
