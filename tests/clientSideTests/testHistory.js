@@ -6,19 +6,19 @@ TestCase("Test History", {
         this.board.run(0, 0);
     },
     testNoHistoryOnGameStart: function() {
-        assertEquals(0, this.board.historyModel.getLength());
+        assertEquals(0, this.board.history.getLength());
     },
     testHistoryCountAfterFirstTurn: function() {
         this.board.fields.trigger('moveplayer', 4, 1);
         this.board.trigger('maketurn');
 
-        assertEquals(1, this.board.historyModel.getLength());
+        assertEquals(1, this.board.history.getLength());
     },
     testHistoryTextAfterFirstTurn: function() {
         this.board.fields.trigger('moveplayer', 4, 1);
         this.board.trigger('maketurn');
 
-        assertEquals('e8', this.board.historyModel.at(0));
+        assertEquals('e8', this.board.history.at(0));
     },
     testHistoryCountAfterFirstFenceMove: function() {
         var fence2 = this.board.fences.findWhere({x: 1, y: 0, type: 'H'});

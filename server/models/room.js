@@ -145,8 +145,8 @@ var Room = Backbone.Model.extend({
         if (!player.hasFences()) return;
 
         var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
-        var siblingPosition = fence.getAdjacentFencePosition();
         if (!this.fences.validateFenceAndSibling(fence)) return;
+        var siblingPosition = fence.getAdjacentFencePosition();
 
         player.placeFence();
         fence.set({state: 'busy'});
