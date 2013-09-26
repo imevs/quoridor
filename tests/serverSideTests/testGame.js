@@ -178,10 +178,10 @@ exports['game'] = nodeunit.testCase({
         var p = new playerSocket('1');
         io.sockets.emit('connection', p);
 
-        p.on('server_start', function (currentPlayer, activePlayer, players) {
+        p.on('server_start', function (currentPlayer, activePlayer, history) {
             test.equal(0, currentPlayer);
             test.equal(0, activePlayer);
-            test.equal(2, players.length);
+            test.equal(2, history.length);
             test.done();
         });
         p.emit('myconnection', {roomId: room1.get('id')});
@@ -196,7 +196,7 @@ exports['game'] = nodeunit.testCase({
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
 
-        p2.on('server_start', function (currentPlayer, activePlayer, players) {
+        p2.on('server_start', function (currentPlayer, activePlayer, history) {
             test.equal(1, currentPlayer);
             test.equal(0, activePlayer);
             test.done();
@@ -218,10 +218,10 @@ exports['game'] = nodeunit.testCase({
         var p3 = new playerSocket('3');
         io.sockets.emit('connection', p3);
 
-        p3.on('server_start', function (currentPlayer, activePlayer, players, fences) {
+        p3.on('server_start', function (currentPlayer, activePlayer, history) {
             test.equal(0, currentPlayer);
             test.equal(0, activePlayer);
-            test.equal(0, fences.length);
+            test.equal(2, history.length);
             test.done();
         });
 
@@ -373,13 +373,12 @@ exports['game'] = nodeunit.testCase({
         var p3 = new playerSocket('3');
         io.sockets.emit('connection', p3);
 
-        p3.on('server_start', function (currentPlayer, activePlayer, players, fences) {
+        p3.on('server_start', function (currentPlayer, activePlayer, history) {
             test.equal(0, currentPlayer);
             test.deepEqual({
                 x              : 4,
-                y              : 1,
-                fencesRemaining: 10
-            }, players[currentPlayer]);
+                y              : 1
+            }, history[3]);
 
             test.done();
         });
@@ -404,17 +403,17 @@ exports['game'] = nodeunit.testCase({
         var p3 = new playerSocket('3');
         io.sockets.emit('connection', p3);
 
-        p3.on('server_start', function (currentPlayer, activePlayer, players, fences) {
+        p3.on('server_start', function (currentPlayer, activePlayer, history) {
             test.equal(0, currentPlayer);
             test.equal(1, activePlayer);
-            test.deepEqual([
+/*            test.deepEqual([
                 {
                     x   : 4,
                     y   : 1,
-                    type: 'H'
+                    type: 'fence'
                 }
-            ], fences);
-
+            ], history[3]);
+*/
             test.done();
         });
         p3.emit('myconnection', {roomId: room1.get('id')});
