@@ -49,24 +49,19 @@ var BoardSocketEvents = {
 
         if (this.isPlayerMoved) {
             eventInfo = activePlayer.pick('x', 'y');
-            eventInfo.playerIndex = this.get('activePlayer');
-
             socket.emit('client_move_player', eventInfo);
         }
 
         if (this.isFenceMoved) {
             eventInfo = this.fences.getMovedFence().pick('x', 'y', 'type');
-            eventInfo.playerIndex = this.players.activePlayer;
-            eventInfo.fencesRemaining = activePlayer.get('fencesRemaining');
-
             socket.emit('client_move_fence', eventInfo);
         }
     },
     onSocketMoveFence: function(pos) {
         pos = {
             type: pos.type,
-            x: pos.x,
-            y: pos.y
+            x   : pos.x,
+            y   : pos.y
         };
         var fence = this.fences.findWhere(pos);
         this.auto = true;
@@ -95,9 +90,9 @@ var BoardSocketEvents = {
             var player = me.players.at(i);
             if (!_.isUndefined(playerInfo.x) && !_.isUndefined(playerInfo.y)) {
                 player.set({
-                    x: playerInfo.x,
+                    x     : playerInfo.x,
                     prev_x: playerInfo.x,
-                    y: playerInfo.y,
+                    y     : playerInfo.y,
                     prev_y: playerInfo.y
                 });
             }
@@ -106,8 +101,8 @@ var BoardSocketEvents = {
         });
         _(fences).each(function(fencePos) {
             fencePos = {
-                x: fencePos.x,
-                y: fencePos.y,
+                x   : fencePos.x,
+                y   : fencePos.y,
                 type: fencePos.type
             };
             var fence = me.fences.findWhere(fencePos);
