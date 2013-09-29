@@ -124,7 +124,8 @@ var BoardValidation = {
         return this.isValidPlayerPosition(currentPos, {x: x, y: y});
     },
     canSelectFences               : function () {
-        return this.getActivePlayer().hasFences() && this.isCurrentPlayerTurn();
+        var activePlayer = this.getActivePlayer();
+        return activePlayer && activePlayer.hasFences() && this.isCurrentPlayerTurn();
     }
 };
 

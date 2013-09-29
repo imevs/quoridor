@@ -19,8 +19,7 @@ Bot.prototype.onStart = function(currentPlayer, activePlayer, history) {
     this.x = position.x;
     this.y = position.y;
     if (currentPlayer == activePlayer) {
-        this.attemptsCount = 0;
-        this.makeTurn();
+        this.turn();
     }
 };
 
@@ -41,8 +40,7 @@ Bot.prototype.onMovePlayer = function(params) {
         this.y = params.y;
     }
     if (this.isCurrent(params.playerIndex)) {
-        this.attemptsCount = 0;
-        this.makeTurn();
+        this.turn();
     }
 };
 
@@ -51,39 +49,56 @@ Bot.prototype.onMoveFence = function(params) {
 
     }
     if (this.isCurrent(params.playerIndex)) {
-        this.attemptsCount = 0;
-        this.makeTurn();
+        this.turn();
     }
+};
+
+Bot.prototype.turn = function() {
+    this.attemptsCount = 0;
+    this.newPositions = this.getPositions();
+    this.makeTurn();
 };
 
 Bot.prototype.makeTurn = function() {
     this.attemptsCount++;
-    if (this.attemptsCount > 20) {
+    console.log('attemptsCount', this.attemptsCount);
+    if (this.attemptsCount > 10) {
         console.log('bot can`t make a turn');
         return;
     }
 
-    this.emit('client_move_player', this.getPossiblePosition());
+    var position = this.getPossiblePosition();
+    this.emit('client_move_player', position);
     //this.emit('client_move_fence');
 };
 
-Bot.prototype.getPossiblePosition = function() {
-    var newPositions = [{
-        x: this.x + 1,
-        y: this.y
-    }, {
-        x: this.x - 1,
-        y: this.y
-    }, {
-        x: this.x,
-        y: this.y + 1
-    }, {
-        x: this.x,
-        y: this.y - 1
-    }];
+Bot.prototype.getPositions = function() {
+    var newPositions = [
+        {
+            x: this.x + 1,
+            y: this.y
+        },
+        {
+            x: this.x - 1,
+            y: this.y
+        },
+        {
+            x: this.x,
+            y: this.y + 1
+        },
+        {
+            x: this.x,
+            y: this.y - 1
+        }
+    ];
+    return newPositions;
+};
 
-    var random = _.random(0, 3);
-    return newPositions[random];
+Bot.prototype.getPossiblePosition = function() {
+    var random = _.random(0, this.newPositions.length - 1);
+    var position = this.newPositions[random];
+    this.newPositions.splice(random, 1);
+    return position;
 };
 
 module.exports = Bot;
