@@ -25,7 +25,7 @@ app.use(app.router);
 app.use(express.static(path.join(__dirname, '/../public')));
 app.use(function(err, req, res, next){
     res.status(err.status || 500);
-    console.log.error('Internal error(%d): %s',res.statusCode,err.message);
+    console.log('Internal error(%d): %s',res.statusCode,err.message);
     res.send({ error: err.message });
 });
 // development only
