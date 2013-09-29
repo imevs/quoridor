@@ -108,7 +108,7 @@ var BoardValidation = {
             );
     },
     isCurrentPlayerTurn           : function () {
-        return this.auto || this.get('currentPlayer') === this.get('activePlayer');
+        return this.auto || (this.get('currentPlayer') === this.get('activePlayer') && !!this.getActivePlayer());
     },
 
     getActivePlayer: function() {

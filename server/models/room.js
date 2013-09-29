@@ -141,13 +141,18 @@ var Room = Backbone.Model.extend({
         this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
     },
     onMoveFence: function(player, eventInfo) {
+        var room = this;
         var index = this.players.indexOf(player);
-
-        if (index != this.get('activePlayer')) return;
-        if (!player.hasFences()) return;
-
         var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
-        if (!this.fences.validateFenceAndSibling(fence)) return;
+
+        if (!(index == this.get('activePlayer')) ||
+            !player.hasFences() ||
+            !this.fences.validateFenceAndSibling(fence)) {
+
+            player.socket.emit('server_turn_fail');
+            return;
+        }
+
         var siblingPosition = fence.getAdjacentFencePosition();
 
         player.placeFence();
@@ -163,24 +168,33 @@ var Room = Backbone.Model.extend({
         this.switchActivePlayer();
         this.save();
 
-        this.players.each(function(p) {
-            var socket = p.socket;
-            socket && socket.emit('server_move_fence', {
-                x              : eventInfo.x,
-                y              : eventInfo.y,
-                type           : eventInfo.type,
-                fencesRemaining: player.get('fencesRemaining'),
-                playerIndex    : index
-            });
+        eventInfo = {
+            x   : eventInfo.x,
+            y   : eventInfo.y,
+            type: eventInfo.type,
+            playerIndex: index
+        };
+        this.players.each(function(player) {
+            var index = room.players.indexOf(player);
+            if (room.get('activePlayer') == index) return;
+            var socket = player.socket;
+            socket && socket.emit('server_move_fence', eventInfo);
         });
+        var activePlayer = room.players.at(room.get('activePlayer'));
+        var socket = activePlayer.socket;
+        socket && socket.emit('server_move_fence', eventInfo);
     },
     onMovePlayer: function(player, eventInfo) {
+        var room = this;
         var index = this.players.indexOf(player);
-
-        if (index != this.get('activePlayer')) return;
-
         this.set('currentPlayer', index);
-        if (!this.isValidCurrentPlayerPosition(eventInfo.x, eventInfo.y)) return;
+
+        if (!(index == this.get('activePlayer')) ||
+            !this.isValidCurrentPlayerPosition(eventInfo.x, eventInfo.y)) {
+
+            player.socket.emit('server_turn_fail');
+            return;
+        }
 
         player.moveTo(eventInfo.x, eventInfo.y);
 
@@ -193,14 +207,21 @@ var Room = Backbone.Model.extend({
         this.switchActivePlayer();
         this.save();
 
+        eventInfo = {
+            x: eventInfo.x,
+            y: eventInfo.y,
+            playerIndex: index
+        };
+
         this.players.each(function(player) {
+            var index = room.players.indexOf(player);
+            if (room.get('activePlayer') == index) return;
             var socket = player.socket;
-            socket && socket.emit('server_move_player', {
-                x          : eventInfo.x,
-                y          : eventInfo.y,
-                playerIndex: index
-            });
+            socket && socket.emit('server_move_player', eventInfo);
         });
+        var activePlayer = room.players.at(room.get('activePlayer'));
+        var socket = activePlayer.socket;
+        socket && socket.emit('server_move_player', eventInfo);
     },
     findBusyPlayersPlaces: function() {
         return this.players.filter(function(player) {
