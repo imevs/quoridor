@@ -7,6 +7,7 @@ exports.init = function(app) {
         res.render('contacts');
     });
     app.get('/create/playersCount/:playersCount', require('./create.js'));
+    app.get('/createGameWithBots/playersCount/:playersCount', require('./bots.js'));
     app.get('/play/id/:id', require('./play.js'));
     app.get('/playLocal/playersCount/:playersCount', require('./playLocal.js'));
 };
