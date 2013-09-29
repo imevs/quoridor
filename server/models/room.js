@@ -153,15 +153,16 @@ var Room = Backbone.Model.extend({
             return;
         }
 
-        var siblingPosition = fence.getAdjacentFencePosition();
+        var sibling = room.fences.getSibling(fence);
 
         player.placeFence();
         fence.set({state: 'busy'});
+        sibling.set({state: 'busy'});
         this.history.add({
             x: fence.get('x'),
             y: fence.get('y'),
-            x2: siblingPosition.x,
-            y2: siblingPosition.y,
+            x2: sibling.get('x'),
+            y2: sibling.get('y'),
             type: 'fence'
         });
 

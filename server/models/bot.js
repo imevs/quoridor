@@ -19,6 +19,7 @@ Bot.prototype.onStart = function(currentPlayer, activePlayer, history) {
     this.x = position.x;
     this.y = position.y;
     if (currentPlayer == activePlayer) {
+        this.attemptsCount = 0;
         this.makeTurn();
     }
 };
@@ -40,7 +41,7 @@ Bot.prototype.onMovePlayer = function(params) {
         this.y = params.y;
     }
     if (this.isCurrent(params.playerIndex)) {
-        this.attemptsCount = this.attemptsCount || 0;
+        this.attemptsCount = 0;
         this.makeTurn();
     }
 };
@@ -50,14 +51,14 @@ Bot.prototype.onMoveFence = function(params) {
 
     }
     if (this.isCurrent(params.playerIndex)) {
-        this.attemptsCount = this.attemptsCount || 0;
+        this.attemptsCount = 0;
         this.makeTurn();
     }
 };
 
 Bot.prototype.makeTurn = function() {
     this.attemptsCount++;
-    if (this.attemptsCount > 10) {
+    if (this.attemptsCount > 20) {
         console.log('bot can`t make a turn');
         return;
     }
@@ -67,10 +68,22 @@ Bot.prototype.makeTurn = function() {
 };
 
 Bot.prototype.getPossiblePosition = function() {
-    return {
+    var newPositions = [{
         x: this.x + 1,
-        y: this.y + 0
-    }
+        y: this.y
+    }, {
+        x: this.x - 1,
+        y: this.y
+    }, {
+        x: this.x,
+        y: this.y + 1
+    }, {
+        x: this.x,
+        y: this.y - 1
+    }];
+
+    var random = _.random(0, 3);
+    return newPositions[random];
 };
 
 module.exports = Bot;
