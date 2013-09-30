@@ -22,7 +22,7 @@ exports['quoridor'] = nodeunit.testCase({
         history.add({
             x: 4,
             y: 1,
-            type: 'player'
+            t: 'p'
         });
         test.equals(history.at(0), 'e8');
 
@@ -33,13 +33,13 @@ exports['quoridor'] = nodeunit.testCase({
         history.add({
             x: 4,
             y: 1,
-            type: 'player'
+            t: 'p'
         });
 
         history.add({
             x: 4,
             y: 7,
-            type: 'player'
+            t: 'p'
         });
         test.equals(history.at(0), 'e8 e2');
 
@@ -50,19 +50,19 @@ exports['quoridor'] = nodeunit.testCase({
         history.add({
             x: 4,
             y: 1,
-            type: 'player'
+            t: 'p'
         });
 
         history.add({
             x: 4,
             y: 7,
-            type: 'player'
+            t: 'p'
         });
 
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         test.equals(history.at(0), 'e8 e2');
         test.equals(history.at(1), 'e7');
@@ -76,7 +76,7 @@ exports['quoridor'] = nodeunit.testCase({
             x2: 5,
             y: 1,
             y2: 1,
-            type: 'fence'
+            t: 'f'
         });
 
         test.equals(history.at(0), 'e7f7');
@@ -90,14 +90,14 @@ exports['quoridor'] = nodeunit.testCase({
             x2: 5,
             y: 1,
             y2: 1,
-            type: 'fence'
+            t: 'f'
         });
         history.add({
             x: 4,
             x2: 5,
             y: 7,
             y2: 7,
-            type: 'fence'
+            t: 'f'
         });
 
         test.equals(history.at(0), 'e7f7 e1f1');
@@ -109,14 +109,14 @@ exports['quoridor'] = nodeunit.testCase({
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 4,
             x2: 5,
             y: 7,
             y2: 7,
-            type: 'fence'
+            t: 'f'
         });
 
         test.equals(history.at(0), 'e7 e1f1');
@@ -128,7 +128,7 @@ exports['quoridor'] = nodeunit.testCase({
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         test.equals(history.getLength(), 1);
 
@@ -139,12 +139,12 @@ exports['quoridor'] = nodeunit.testCase({
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         test.equals(history.getLength(), 1);
 
@@ -155,17 +155,17 @@ exports['quoridor'] = nodeunit.testCase({
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         test.equals(history.getLength(), 2);
 
@@ -176,17 +176,17 @@ exports['quoridor'] = nodeunit.testCase({
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
 
         test.equals(2, history.getPlayerPositions().length);
@@ -199,17 +199,17 @@ exports['quoridor'] = nodeunit.testCase({
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
 
         test.equals(4, history.getPlayerPositions().length);
@@ -223,21 +223,21 @@ exports['quoridor'] = nodeunit.testCase({
             x2: 5,
             y: 7,
             y2: 7,
-            type: 'fence'
+            t: 'f'
         });
         history.add({
             x: 4,
             x2: 5,
             y: 7,
             y2: 7,
-            type: 'fence'
+            t: 'f'
         });
         history.add({
             x: 4,
             x2: 5,
             y: 7,
             y2: 7,
-            type: 'fence'
+            t: 'f'
         });
 
         test.equals(3, history.getFencesPositions().length);
@@ -251,27 +251,27 @@ exports['quoridor'] = nodeunit.testCase({
             x2: 5,
             y: 7,
             y2: 7,
-            type: 'fence'
+            t: 'f'
         });
         history.add({
             x: 4,
             x2: 5,
             y: 7,
             y2: 7,
-            type: 'fence'
+            t: 'f'
         });
         history.add({
             x: 7,
             x2: 7,
             y: 4,
             y2: 5,
-            type: 'fence'
+            t: 'f'
         });
 
         var expected = [
-            { x: 4, x2: 5, y: 7, y2: 7, type: 'H' },
-            { x: 4, x2: 5, y: 7, y2: 7, type: 'H' },
-            { x: 7, x2: 7, y: 4, y2: 5, type: 'V' }
+            { x: 4, x2: 5, y: 7, y2: 7, t: 'H' },
+            { x: 4, x2: 5, y: 7, y2: 7, t: 'H' },
+            { x: 7, x2: 7, y: 4, y2: 5, t: 'V' }
         ];
         test.deepEqual(expected, history.getFencesPositions());
 
@@ -282,24 +282,24 @@ exports['quoridor'] = nodeunit.testCase({
         history.add({
             x: 4,
             y: 2,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 5,
             y: 1,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 4,
             y: 3,
-            type: 'player'
+            t: 'p'
         });
         history.add({
             x: 4,
             x2: 5,
             y: 7,
             y2: 7,
-            type: 'fence'
+            t: 'f'
         });
 
         var expected = [
