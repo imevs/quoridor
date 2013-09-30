@@ -1,4 +1,4 @@
-if (module) {
+if ((typeof module != "undefined")) {
     var _ = require('../utils.js');
 }
 
@@ -129,4 +129,4 @@ var BoardValidation = {
     }
 };
 
-module && (module.exports = BoardValidation);
+(typeof module != "undefined") && (module.exports = BoardValidation);

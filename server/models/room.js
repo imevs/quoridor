@@ -175,15 +175,7 @@ var Room = Backbone.Model.extend({
             type: eventInfo.type,
             playerIndex: index
         };
-        this.players.each(function(player) {
-            var index = room.players.indexOf(player);
-            if (room.get('activePlayer') == index) return;
-            var socket = player.socket;
-            socket && socket.emit('server_move_fence', eventInfo);
-        });
-        var activePlayer = room.players.at(room.get('activePlayer'));
-        var socket = activePlayer.socket;
-        socket && socket.emit('server_move_fence', eventInfo);
+        this.emitEventToAllPlayers(eventInfo, 'server_move_fence');
     },
     onMovePlayer: function(player, eventInfo) {
         var room = this;
@@ -213,17 +205,22 @@ var Room = Backbone.Model.extend({
             y: eventInfo.y,
             playerIndex: index
         };
-
-        this.players.each(function(player) {
+        this.emitEventToAllPlayers(eventInfo, 'server_move_player');
+    },
+    emitEventToAllPlayers: function (eventInfo, eventName) {
+        var room = this;
+        this.players.each(function (player) {
             var index = room.players.indexOf(player);
             if (room.get('activePlayer') == index) return;
             var socket = player.socket;
-            socket && socket.emit('server_move_player', eventInfo);
+            socket && socket.emit(eventName, eventInfo);
         });
         var activePlayer = room.players.at(room.get('activePlayer'));
         var socket = activePlayer.socket;
-        socket && socket.emit('server_move_player', eventInfo);
+        socket && socket.emit(eventName, eventInfo);
+        return activePlayer;
     },
+
     findBusyPlayersPlaces: function() {
         return this.players.filter(function(player) {
             return player.get('state') == 'busy';

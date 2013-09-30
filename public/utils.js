@@ -1,4 +1,4 @@
-if (module) {
+if ((typeof module != "undefined")) {
     var _ = require('underscore');
 }
 
@@ -14,6 +14,6 @@ _.mixin({iter: function(params, callback, ctx) {
     });
 }});
 
-if (module) {
+if ((typeof module != "undefined")) {
     module.exports = _;
 }

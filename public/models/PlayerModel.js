@@ -1,4 +1,4 @@
-if (module) {
+if ((typeof module != "undefined")) {
     var Backbone = require('backbone');
     var _ = require('underscore');
 }
@@ -195,4 +195,4 @@ var PlayersCollection = Backbone.Collection.extend({
 
 });
 
-module && (module.exports = PlayersCollection);
+(typeof module != "undefined") && (module.exports = PlayersCollection);

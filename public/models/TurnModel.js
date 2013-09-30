@@ -1,4 +1,4 @@
-if (module) {
+if ((typeof module != "undefined")) {
     var Backbone = require('backbone');
     var _ = require('underscore');
 }
@@ -139,4 +139,4 @@ var GameHistoryModel = Backbone.Model.extend({
         ];
     }
 });
-module && (module.exports = GameHistoryModel);
+(typeof module != "undefined") && (module.exports = GameHistoryModel);

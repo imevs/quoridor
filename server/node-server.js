@@ -22,7 +22,13 @@ app.use(express.favicon());
 app.use(express.bodyParser());
 app.use(express.methodOverride());
 app.use(app.router);
-app.use(express.static(path.join(__dirname, '/../public')));
+if ('development' == app.get('env')) {
+    app.use(express.static(path.join(__dirname, '/../build')));
+}
+if ('production' == app.get('env')) {
+    app.use(express.static(path.join(__dirname, '/../public')));
+}
+
 app.use(function(err, req, res, next){
     res.status(err.status || 500);
     console.log('Internal error(%d): %s',res.statusCode,err.message);

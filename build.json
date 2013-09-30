@@ -5,7 +5,7 @@
     "preserveLicenseComments": false,
 
     "mainConfigFile": "public/main.js",
-    "removeCombined": true,
+    "removeCombined": false,
     "generateSourceMaps": true,
     "modules": [
         {

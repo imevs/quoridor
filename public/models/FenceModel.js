@@ -1,4 +1,4 @@
-if (module) {
+if ((typeof module != "undefined")) {
     var Backbone = require('backbone');
     var _ = require('../utils.js');
 }
@@ -207,6 +207,6 @@ var FencesCollection = Backbone.Collection.extend({
 
 });
 
-if (module) {
+if ((typeof module != "undefined")) {
     module.exports = FencesCollection;
 }
