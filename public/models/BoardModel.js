@@ -52,7 +52,7 @@ var BoardModel = Backbone.Model.extend({
                     y: preBusy[0].get('y'),
                     x2: preBusy[1].get('x'),
                     y2: preBusy[1].get('y'),
-                    type: 'fence'
+                    type: 'f'
                 });
                 me.fences.setBusy();
             }
@@ -61,7 +61,7 @@ var BoardModel = Backbone.Model.extend({
                 me.history.add({
                     x: active.get('x'),
                     y: active.get('y'),
-                    type: 'player'
+                    type: 'p'
                 });
             }
             me.switchActivePlayer();

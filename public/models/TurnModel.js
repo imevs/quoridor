@@ -5,7 +5,6 @@ if ((typeof module != "undefined")) {
 
 var TurnModel = Backbone.Model.extend({
     defaults: {
-        player: '',
         x: '',
         y: '',
         x2: '',
@@ -28,7 +27,7 @@ var TurnModel = Backbone.Model.extend({
 
     toString: function() {
         var dy = this.get('y') == this.get('y2') ? 1 : 0;
-        return this.get('type') == 'player'
+        return this.get('type') == 'p'
             ? this.getX(this.get('x')) + this.getY(this.get('y')) + ''
             : this.getX(this.get('x')) + this.getY(this.get('y') + dy ) +
             this.getX(this.get('x2')) + this.getY(this.get('y2') + dy ) +  '';
@@ -54,11 +53,11 @@ var GameHistoryModel = Backbone.Model.extend({
         _(_.range(playersCount)).each(function(index) {
             var playerPositions = self.get('turns').filter(function(v, i) {
                 var b = (i - index) % playersCount == 0;
-                return v.get('type') == 'player' && b;
+                return v.get('type') == 'p' && b;
             });
             var playerFences = self.get('turns').filter(function(v, i) {
                 var b = (i - index) % playersCount == 0;
-                return v.get('type') == 'fence' && b;
+                return v.get('type') == 'f' && b;
             });
             var playerInfo = _.last(playerPositions);
             if (playerInfo) {
@@ -72,7 +71,7 @@ var GameHistoryModel = Backbone.Model.extend({
 
     getFencesPositions: function() {
         var filter = this.get('turns').filter(function (val) {
-            return val.get('type') == 'fence';
+            return val.get('type') == 'f';
         });
         return _(filter).map(function(item) {
             item = item.pick('x', 'x2', 'y', 'y2');
@@ -120,7 +119,7 @@ var GameHistoryModel = Backbone.Model.extend({
         }
         _(_.range(playersCount)).each(function (index) {
             var playersPosition = self.playersPositions[index];
-            playersPosition.type = 'player';
+            playersPosition.type = 'p';
             self.add(playersPosition);
         });
     },

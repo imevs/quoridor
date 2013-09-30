@@ -141,7 +141,6 @@ var Room = Backbone.Model.extend({
         this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
     },
     onMoveFence: function(player, eventInfo) {
-        var room = this;
         var index = this.players.indexOf(player);
         var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
 
@@ -153,7 +152,7 @@ var Room = Backbone.Model.extend({
             return;
         }
 
-        var sibling = room.fences.getSibling(fence);
+        var sibling = this.fences.getSibling(fence);
 
         player.placeFence();
         fence.set({state: 'busy'});
@@ -163,7 +162,7 @@ var Room = Backbone.Model.extend({
             y: fence.get('y'),
             x2: sibling.get('x'),
             y2: sibling.get('y'),
-            type: 'fence'
+            type: 'f'
         });
 
         this.switchActivePlayer();
@@ -178,7 +177,6 @@ var Room = Backbone.Model.extend({
         this.emitEventToAllPlayers(eventInfo, 'server_move_fence');
     },
     onMovePlayer: function(player, eventInfo) {
-        var room = this;
         var index = this.players.indexOf(player);
         this.set('currentPlayer', index);
 
@@ -194,7 +192,7 @@ var Room = Backbone.Model.extend({
         this.history.add({
             x: player.get('x'),
             y: player.get('y'),
-            type: 'player'
+            type: 'p'
         });
 
         this.switchActivePlayer();
