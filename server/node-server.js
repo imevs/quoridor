@@ -23,10 +23,10 @@ app.use(express.bodyParser());
 app.use(express.methodOverride());
 app.use(app.router);
 if ('development' == app.get('env')) {
-    app.use(express.static(path.join(__dirname, '/../build')));
+    app.use(express.static(path.join(__dirname, '/../public')));
 }
 if ('production' == app.get('env')) {
-    app.use(express.static(path.join(__dirname, '/../public')));
+    app.use(express.static(path.join(__dirname, '/../build')));
 }
 
 app.use(function(err, req, res, next){
