@@ -107,5 +107,4 @@ require.config({
         }
     }
 });
-window.module = false;
 require(['app']);
