@@ -328,7 +328,7 @@ exports['game'] = nodeunit.testCase({
             test.equal(eventInfo.y, 7);
             test.equal(eventInfo.type, 'H');
             test.equal(eventInfo.playerIndex, 0);
-            test.equal(eventInfo.fencesRemaining, 9);
+            //test.equal(eventInfo.fencesRemaining, 9);
             test.done();
         });
 
