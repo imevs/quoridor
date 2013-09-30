@@ -7,9 +7,7 @@ var TurnModel = Backbone.Model.extend({
     defaults: {
         x: '',
         y: '',
-        x2: '',
-        y2: '',
-        type: ''
+        t: ''
     },
     alpha: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k'],
 
@@ -22,12 +20,12 @@ var TurnModel = Backbone.Model.extend({
     },
 
     getY: function(y) {
-        return this.get('boardSize') - y;
+        return TurnModel.boardSize - y;
     },
 
     toString: function() {
         var dy = this.get('y') == this.get('y2') ? 1 : 0;
-        return this.get('type') == 'p'
+        return this.get('t') == 'p'
             ? this.getX(this.get('x')) + this.getY(this.get('y')) + ''
             : this.getX(this.get('x')) + this.getY(this.get('y') + dy ) +
             this.getX(this.get('x2')) + this.getY(this.get('y2') + dy ) +  '';
@@ -53,11 +51,11 @@ var GameHistoryModel = Backbone.Model.extend({
         _(_.range(playersCount)).each(function(index) {
             var playerPositions = self.get('turns').filter(function(v, i) {
                 var b = (i - index) % playersCount == 0;
-                return v.get('type') == 'p' && b;
+                return v.get('t') == 'p' && b;
             });
             var playerFences = self.get('turns').filter(function(v, i) {
                 var b = (i - index) % playersCount == 0;
-                return v.get('type') == 'f' && b;
+                return v.get('t') == 'f' && b;
             });
             var playerInfo = _.last(playerPositions);
             if (playerInfo) {
@@ -71,17 +69,16 @@ var GameHistoryModel = Backbone.Model.extend({
 
     getFencesPositions: function() {
         var filter = this.get('turns').filter(function (val) {
-            return val.get('type') == 'f';
+            return val.get('t') == 'f';
         });
         return _(filter).map(function(item) {
             item = item.pick('x', 'x2', 'y', 'y2');
-            item.type = item.x == item.x2 ? 'V' : (item.y == item.y2 ? 'H' : (''));
+            item.t = item.x == item.x2 ? 'V' : (item.y == item.y2 ? 'H' : (''));
             return item;
         });
     },
 
     add: function(turnInfo) {
-        turnInfo['boardSize'] = this.get('boardSize');
         var turn = new TurnModel(turnInfo);
         this.get('turns').add(turn);
 
@@ -119,7 +116,7 @@ var GameHistoryModel = Backbone.Model.extend({
         }
         _(_.range(playersCount)).each(function (index) {
             var playersPosition = self.playersPositions[index];
-            playersPosition.type = 'p';
+            playersPosition.t = 'p';
             self.add(playersPosition);
         });
     },
@@ -130,6 +127,7 @@ var GameHistoryModel = Backbone.Model.extend({
         this.set('playersCount', params.playersCount || 2);
         this.set('turns', new TurnsCollection());
 
+        TurnModel.boardSize = this.get('boardSize');
         this.playersPositions = [
             {x: 4, y: 0 },
             {x: 8, y: 4 },

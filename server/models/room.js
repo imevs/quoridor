@@ -37,10 +37,12 @@ var Room = Backbone.Model.extend({
             });
             room.history.initPlayers();
         }
-        room.history.get('turns').reset(doc.history);
-        if (doc.history && doc.history.length) {
+        if (doc && doc.history && doc.history.length) {
+            room.history.get('turns').reset(doc.history);
             doc.players = room.history.getPlayerPositions();
             doc.fences = room.history.getFencesPositions();
+        } else {
+            console.log('parse error');
         }
 
         var isPlayers = doc &&
@@ -162,15 +164,15 @@ var Room = Backbone.Model.extend({
             y: fence.get('y'),
             x2: sibling.get('x'),
             y2: sibling.get('y'),
-            type: 'f'
+            t: 'f'
         });
 
         this.switchActivePlayer();
         this.save();
 
         eventInfo = {
-            x   : eventInfo.x,
-            y   : eventInfo.y,
+            x : eventInfo.x,
+            y : eventInfo.y,
             type: eventInfo.type,
             playerIndex: index
         };
@@ -192,7 +194,7 @@ var Room = Backbone.Model.extend({
         this.history.add({
             x: player.get('x'),
             y: player.get('y'),
-            type: 'p'
+            t: 'p'
         });
 
         this.switchActivePlayer();
@@ -211,10 +213,12 @@ var Room = Backbone.Model.extend({
             var index = room.players.indexOf(player);
             if (room.get('activePlayer') == index) return;
             var socket = player.socket;
+            console.log(eventInfo);
             socket && socket.emit(eventName, eventInfo);
         });
         var activePlayer = room.players.at(room.get('activePlayer'));
         var socket = activePlayer.socket;
+        console.log(eventInfo);
         socket && socket.emit(eventName, eventInfo);
         return activePlayer;
     },
