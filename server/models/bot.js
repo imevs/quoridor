@@ -4,8 +4,9 @@ var _ = require('underscore');
 var util = require("util");
 var emitter = require('events').EventEmitter;
 
-var Bot = function (game) {
+var Bot = function (game, id) {
     this.game = game;
+    this.id = id;
     this.initEvents();
 };
 util.inherits(Bot, emitter);
@@ -60,6 +61,7 @@ _.extend(Bot.prototype, {
     },
 
     makeTurn: function () {
+        var bot = this;
         this.attemptsCount++;
         console.log('attemptsCount', this.attemptsCount);
         if (this.attemptsCount > 10) {
@@ -67,9 +69,25 @@ _.extend(Bot.prototype, {
             return;
         }
 
-        var position = this.getPossiblePosition();
-        this.emit('client_move_player', position);
-        //this.emit('client_move_fence');
+        setTimeout(function() {
+            var random = _.random(0, 1);
+            if (random) {
+                var playerPosition = bot.getPossiblePosition();
+                bot.emit('client_move_player', playerPosition);
+            } else {
+                var y = _.random(0, 8);
+                var x = _.random(0, 8);
+                var type = _.random(0, 1) ? 'H' : 'V';
+                var eventInfo = {
+                    x : x,
+                    y : y,
+                    type: type,
+                    playerIndex: bot.id
+                };
+
+                bot.emit('client_move_fence', eventInfo);
+            }
+        }, 1000);
     },
 
     getPositions: function () {

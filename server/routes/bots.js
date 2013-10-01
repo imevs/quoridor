@@ -10,7 +10,7 @@ module.exports = function(req, res) {
     var botsCount = playersCount - 1;
 
     _(_.range(botsCount)).each(function(index){
-        var bot = new Bot(room);
+        var bot = new Bot(room, index);
         room.addPlayer(bot);
     });
 
