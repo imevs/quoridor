@@ -70,6 +70,9 @@ var BoardSocketEvents = {
         this.trigger('maketurn');
     },
     onSocketMovePlayer: function(pos) {
+        if (pos.timeout) {
+            this.isPlayerMoved = true;
+        }
         this.auto = true;
         this.fields.trigger('moveplayer', pos.x, pos.y);
         this.auto = false;

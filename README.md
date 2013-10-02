@@ -20,7 +20,7 @@ Road map
 TODO (current version)
 =
 * проверка возможности прохода при установки заграждения
-* простой рандомный бот
+
 =
 TODO for next version
 =

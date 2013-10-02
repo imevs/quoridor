@@ -153,6 +153,7 @@ var Room = Backbone.Model.extend({
             player.socket.emit('server_turn_fail');
             return;
         }
+        this.onTimeoutCount = 0;
 
         var sibling = this.fences.getSibling(fence);
 
@@ -188,6 +189,7 @@ var Room = Backbone.Model.extend({
             player.socket.emit('server_turn_fail');
             return;
         }
+        this.onTimeoutCount = 0;
 
         player.moveTo(eventInfo.x, eventInfo.y);
 
@@ -209,6 +211,7 @@ var Room = Backbone.Model.extend({
     },
     emitEventToAllPlayers: function (eventInfo, eventName) {
         var room = this;
+        clearTimeout(room.turnTimeout);
         this.players.each(function (player) {
             var index = room.players.indexOf(player);
             if (room.get('activePlayer') == index) return;
@@ -219,8 +222,35 @@ var Room = Backbone.Model.extend({
         var activePlayer = room.players.at(room.get('activePlayer'));
         var socket = activePlayer.socket;
         console.log(eventInfo);
+        if (this.onTimeoutCount < 10) {
+            room.turnTimeout = setTimeout(_(room.onTimeout).bind(room), 10 * 1000);
+        } else {
+            // сообщение о приостановке игры
+        }
         socket && socket.emit(eventName, eventInfo);
         return activePlayer;
+    },
+
+    onTimeout: function() {
+        this.onTimeoutCount = this.onTimeoutCount || 0;
+        this.onTimeoutCount++;
+        var activePlayer = this.players.at(this.get('activePlayer'));
+
+        this.history.add({
+            x: activePlayer.get('x'),
+            y: activePlayer.get('y'),
+            t: 'p'
+        });
+
+        this.switchActivePlayer();
+        this.save();
+        var eventInfo = {
+            x: activePlayer.get('x'),
+            y: activePlayer.get('y'),
+            timeout: 1,
+            playerIndex: this.get('activePlayer')
+        };
+        this.emitEventToAllPlayers(eventInfo, 'server_move_player');
     },
 
     findBusyPlayersPlaces: function() {

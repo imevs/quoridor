@@ -7,6 +7,10 @@ var PlayerModel = Backbone.Model.extend({
     defaults: {
         fencesRemaining: 0
     },
+    initialize: function() {
+        this.set('prev_x', this.get('x'));
+        this.set('prev_y', this.get('y'));
+    },
     moveTo: function (x, y) {
         this.set({x: x, y: y});
     },

@@ -165,7 +165,7 @@ var FencesCollection = Backbone.Collection.extend({
         return item.get('state') == 'busy';
     },
     /**
-     * @todo Расчитать наличие прохода по ломанной лмнии
+     * todo: Расчитать наличие прохода по ломанной лмнии
      * @param item1
      * @param item2
      * @returns {boolean}
