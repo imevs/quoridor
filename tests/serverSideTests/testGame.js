@@ -15,6 +15,8 @@ var playerSocket = function (id) {
 };
 extend(playerSocket, emitter);
 
+global.setTimeout = function() {};
+
 var io, game;
 
 exports['game'] = nodeunit.testCase({
