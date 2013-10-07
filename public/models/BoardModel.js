@@ -116,8 +116,13 @@ var BoardModel = Backbone.Model.extend({
         });
         this.fences.on({
             'selected'                     : function (model) {
-                if (me.canSelectFences()
-                    && me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'movefence')) {
+                if (me.canSelectFences() &&
+                    me.fences.validateFenceAndSibling(model) &&
+                    me.notBreakSomePlayerPath(model)) {
+
+                    me.fences.clearBusy();
+                    me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'movefence');
+
                     me.players.updatePlayersPositions();
                     me.isPlayerMoved = false;
                     me.isFenceMoved = true;

@@ -147,9 +147,7 @@ var FencesCollection = Backbone.Collection.extend({
 
         var sibling = this.getSibling(item);
 
-        return sibling
-            && !this.isBusy(sibling)
-            && this.hasPassForPlayer(sibling, item);
+        return sibling && !this.isBusy(sibling);
     },
     validateAndTriggerEventOnFenceAndSibling: function (item, event) {
         var shouldTriggerEvent = this.validateFenceAndSibling(item);
@@ -163,30 +161,6 @@ var FencesCollection = Backbone.Collection.extend({
     },
     isBusy                       : function (item) {
         return item.get('state') == 'busy';
-    },
-    /**
-     * todo: Расчитать наличие прохода по ломанной лмнии
-     * @param item1
-     * @param item2
-     * @returns {boolean}
-     */
-    hasPassForPlayer             : function (item1, item2) {
-        var type, i, j;
-        item1.get('type') == 'H'
-            ? (type = 'H', i = 'y', j = 'x')
-            : (type = 'V', i = 'x', j = 'y');
-
-        var attrs = {type: item1.get('type')};
-
-        attrs[i] = item1.get(i);
-        var fencesLengthOnLine = this.where(attrs).length;
-
-        attrs.state = 'busy';
-        var busyCount = this.where(attrs).length;
-
-        busyCount += 2;
-
-        return busyCount < fencesLengthOnLine;
     },
     isFencePlaceable             : function (item) {
         var type, i, j;

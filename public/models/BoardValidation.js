@@ -1,5 +1,7 @@
 if ((typeof module != "undefined")) {
     var _ = require('../utils.js');
+    var FencesCollection = require('./FenceModel');
+    var PlayersCollection = require('./PlayerModel');
 }
 
 var BoardValidation = {
@@ -126,6 +128,91 @@ var BoardValidation = {
     canSelectFences               : function () {
         var activePlayer = this.getActivePlayer();
         return activePlayer && activePlayer.hasFences() && this.isCurrentPlayerTurn();
+    },
+
+    getValidPositions: function(pawn) {
+        var positions = [
+            {x: pawn.x - 1, y: pawn.y - 1},
+            {x: pawn.x - 1, y: pawn.y},
+            {x: pawn.x - 1, y: pawn.y + 1},
+
+            {x: pawn.x + 1, y: pawn.y - 1},
+            {x: pawn.x + 1, y: pawn.y},
+            {x: pawn.x + 1, y: pawn.y + 1},
+
+            {x: pawn.x, y: pawn.y - 1},
+            {x: pawn.x, y: pawn.y + 1},
+
+            {x: pawn.x - 2, y: pawn.y},
+            {x: pawn.x + 2, y: pawn.y},
+            {x: pawn.x, y: pawn.y - 2},
+            {x: pawn.x, y: pawn.y + 2}
+        ];
+
+        return _.filter(positions, function(pos) {
+           return this.isValidPlayerPosition(pawn, pos);
+        }, this);
+    },
+
+    doesFenceBreakPlayerPath: function(pawn, coordinate) {
+        var open = [pawn.pick('x', 'y')], closed = [];
+        var board = this.copy();
+        var indexPlayer = this.players.indexOf(pawn);
+        var player = board.players.at(indexPlayer);
+        var fence = board.fences.findWhere(coordinate.pick('x', 'y', 'type'));
+        var sibling = board.fences.getSibling(fence);
+        fence.set('state', 'busy');
+        sibling.set('state', 'busy');
+
+        while (open.length) {
+            var currentCoordinate = open.pop();
+            closed.push(currentCoordinate);
+
+            player.set({
+                x: currentCoordinate.x,
+                y: currentCoordinate.y,
+                prev_x: currentCoordinate.x,
+                prev_y: currentCoordinate.y
+            });
+
+            var temporaryCoordinateList = board.getValidPositions(currentCoordinate);
+
+            _(temporaryCoordinateList).each(function(validMoveCoordinate) {
+                if (!_(closed).findWhere(validMoveCoordinate)) {
+                    open.push(validMoveCoordinate);
+                }
+            });
+        }
+
+        var canWin = _.some(closed, function(item) {
+            return this.players.playersPositions[indexPlayer].isWin(item.x, item.y);
+        }, this);
+        return !canWin;
+    },
+
+    notBreakSomePlayerPath: function(model) {
+        return !this.breakSomePlayerPath(model);
+    },
+
+    breakSomePlayerPath: function(model) {
+        var me = this;
+        return me.players.some(function(player) {
+            return me.doesFenceBreakPlayerPath(player, model);
+        });
+    },
+
+    copy: function() {
+        var board = new Backbone.Model({
+            boardSize    : this.get('boardSize'),
+            playersCount : this.get('playersCount'),
+            currentPlayer: this.get('currentPlayer'),
+            activePlayer : this.get('activePlayer')
+        });
+        _.extend(board, BoardValidation);
+        board.fences = new FencesCollection(this.fences.toJSON());
+        board.players = new PlayersCollection(this.players.toJSON());
+
+        return board;
     }
 };
 

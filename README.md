@@ -17,10 +17,6 @@ Road map
 4. rewrite app on another framework (derbyjs or lycheejs) / 11.2013
 5. android mobile version / 12.2013
 
-TODO (current version)
-=
-* проверка возможности прохода при установки заграждения
-
 =
 TODO for next version
 =

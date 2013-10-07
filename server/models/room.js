@@ -148,7 +148,9 @@ var Room = Backbone.Model.extend({
 
         if (!(index == this.get('activePlayer')) ||
             !player.hasFences() ||
-            !this.fences.validateFenceAndSibling(fence)) {
+            !this.fences.validateFenceAndSibling(fence) ||
+            this.breakSomePlayerPath(fence)
+            ) {
 
             player.socket.emit('server_turn_fail');
             return;
@@ -184,6 +186,7 @@ var Room = Backbone.Model.extend({
         this.set('currentPlayer', index);
 
         if (!(index == this.get('activePlayer')) ||
+            !eventInfo ||
             !this.isValidCurrentPlayerPosition(eventInfo.x, eventInfo.y)) {
 
             player.socket.emit('server_turn_fail');
