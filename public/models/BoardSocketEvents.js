@@ -103,12 +103,11 @@ var BoardSocketEvents = {
             fencesRemaining && player.set('fencesRemaining', fencesRemaining);
         });
         _(fences).each(function(fencePos) {
-            fencePos = {
+            var fence = me.fences.findWhere({
                 x   : fencePos.x,
                 y   : fencePos.y,
-                type: fencePos.type
-            };
-            var fence = me.fences.findWhere(fencePos);
+                type: fencePos.t
+            });
             fence.trigger('movefence');
             me.fences.getSibling(fence).trigger('movefence');
         });
