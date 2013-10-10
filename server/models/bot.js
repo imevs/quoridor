@@ -1,11 +1,10 @@
 var Backbone = require('backbone');
 var Game = require('../../server/models/game.js');
 var _ = require('underscore');
-var util = require("util");
+var util = require('util');
 var emitter = require('events').EventEmitter;
 
-var Bot = function (game, id) {
-    this.game = game;
+var Bot = function (id) {
     this.id = id;
     this.initEvents();
 };
@@ -13,15 +12,26 @@ util.inherits(Bot, emitter);
 
 _.extend(Bot.prototype, {
 
+    fencesCount: 20,
+
     onStart: function (currentPlayer, activePlayer, history) {
-        this.currentPlayer = currentPlayer;
-        var position = this.game.history.getPlayerPositions()[currentPlayer];
+        var position = history.getPlayerPositions()[currentPlayer];
+
         this.x = position.x;
         this.y = position.y;
-        this.fencesRemaining = Math.round(20 / this.game.get('playersCount'));
+        this.newPositions = [];
+        this.currentPlayer = currentPlayer;
+        this.playersCount = history.get('turns').length;
+        this.fencesRemaining = Math.round(this.fencesCount / this.playersCount);
+
         if (currentPlayer == activePlayer) {
             this.turn();
         }
+    },
+
+    getNextActivePlayer: function(currentPlayer) {
+        currentPlayer++;
+        return currentPlayer < this.playersCount ? currentPlayer : 0;
     },
 
     initEvents: function () {
@@ -32,7 +42,7 @@ _.extend(Bot.prototype, {
     },
 
     isCurrent: function (playerIndex) {
-        return this.currentPlayer == this.game.players.getNextActivePlayer(playerIndex);
+        return this.currentPlayer == this.getNextActivePlayer(playerIndex);
     },
 
     onMovePlayer: function (params) {

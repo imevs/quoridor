@@ -1,7 +1,7 @@
 var nodeunit = require('nodeunit');
 var Backbone = require('backbone');
-var Game = require('../../server/models/game.js');
 var sinon = require('sinon');
+var Game = require('../../server/models/game.js');
 
 Backbone.sync = function() {};
 
