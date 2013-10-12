@@ -41,7 +41,7 @@ _.extend(Bot.prototype, {
         this.on('server_turn_fail', _(this.makeTurn).bind(this));
     },
 
-    isCurrent: function (playerIndex) {
+    isPlayerCanMakeTurn: function (playerIndex) {
         return this.currentPlayer == this.getNextActivePlayer(playerIndex);
     },
 
@@ -50,7 +50,7 @@ _.extend(Bot.prototype, {
             this.x = params.x;
             this.y = params.y;
         }
-        if (this.isCurrent(params.playerIndex)) {
+        if (this.isPlayerCanMakeTurn(params.playerIndex)) {
             this.turn();
         }
     },
@@ -59,7 +59,7 @@ _.extend(Bot.prototype, {
         if (this.currentPlayer == params.playerIndex) {
             this.fencesRemaining--;
         }
-        if (this.isCurrent(params.playerIndex)) {
+        if (this.isPlayerCanMakeTurn(params.playerIndex)) {
             this.turn();
         }
     },
@@ -74,7 +74,7 @@ _.extend(Bot.prototype, {
         var bot = this;
         var random = _.random(0, 1);
         var playerPosition;
-        if (random && bot.canMovePlayer()) {
+        if (bot.canMovePlayer() && (random || !bot.canMoveFence())) {
             playerPosition = bot.getPossiblePosition();
             playerPosition && bot.emit('client_move_player', playerPosition);
             return;
