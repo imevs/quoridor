@@ -3,7 +3,6 @@ var Game = require('../../server/models/game.js');
 var _ = require('underscore');
 var util = require('util');
 var emitter = require('events').EventEmitter;
-var History = require('../../public/models/TurnModel.js');
 
 var Bot = function (id) {
     this.id = id;
@@ -16,12 +15,7 @@ _.extend(Bot.prototype, {
     fencesCount: 20,
 
     onStart: function (currentPlayer, activePlayer, history) {
-        var historyModel = new History({
-            boardSize: 9,
-            playersCount: history.length
-        });
-        historyModel.get('turns').reset(history);
-        var position = historyModel.getPlayerPositions()[currentPlayer];
+        var position = history[currentPlayer];
 
         this.x = position.x;
         this.y = position.y;
