@@ -3,6 +3,7 @@ var Game = require('../../server/models/game.js');
 var _ = require('underscore');
 var util = require('util');
 var emitter = require('events').EventEmitter;
+var History = require('../../public/models/TurnModel.js');
 
 var Bot = function (id) {
     this.id = id;
@@ -15,13 +16,18 @@ _.extend(Bot.prototype, {
     fencesCount: 20,
 
     onStart: function (currentPlayer, activePlayer, history) {
-        var position = history.getPlayerPositions()[currentPlayer];
+        var historyModel = new History({
+            boardSize: 9,
+            playersCount: history.length
+        });
+        historyModel.get('turns').reset(history);
+        var position = historyModel.getPlayerPositions()[currentPlayer];
 
         this.x = position.x;
         this.y = position.y;
         this.newPositions = [];
         this.currentPlayer = currentPlayer;
-        this.playersCount = history.get('turns').length;
+        this.playersCount = history.length;
         this.fencesRemaining = Math.round(this.fencesCount / this.playersCount);
 
         if (currentPlayer == activePlayer) {
@@ -70,6 +76,17 @@ _.extend(Bot.prototype, {
         this.makeTurn();
     },
 
+    makeTurn: function () {
+        var bot = this;
+        this.attemptsCount++;
+        console.log('attemptsCount', this.attemptsCount);
+        if (this.attemptsCount > 10) {
+            console.log('bot can`t make a turn');
+            return;
+        }
+        setTimeout(_(bot.doTurn).bind(bot), 1000);
+    },
+
     doTurn     : function () {
         var bot = this;
         var random = _.random(0, 1);
@@ -95,17 +112,6 @@ _.extend(Bot.prototype, {
             return;
         }
         console.log('something going wrong');
-    },
-
-    makeTurn: function () {
-        var bot = this;
-        this.attemptsCount++;
-        console.log('attemptsCount', this.attemptsCount);
-        if (this.attemptsCount > 10) {
-            console.log('bot can`t make a turn');
-            return;
-        }
-        setTimeout(_(bot.doTurn).bind(bot), 1000);
     },
 
     getPositions: function () {

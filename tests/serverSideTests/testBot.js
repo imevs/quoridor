@@ -4,7 +4,6 @@ var _ = require('underscore');
 var sinon = require('sinon');
 var Game = require('../../server/models/game.js');
 var Bot = require('../../server/models/bot.js');
-var TurnModel = require('../../public/models/TurnModel.js');
 var history;
 
 var bot, game, originSettimeout;
@@ -13,17 +12,18 @@ exports['bot'] = nodeunit.testCase({
 
     setUp   : function (test) {
         bot = new Bot(1);
-        history = new TurnModel();
-        history.add({
-            x: 4,
-            y: 2,
-            t: 'p'
-        });
-        history.add({
-            x: 5,
-            y: 1,
-            t: 'p'
-        });
+        history = [
+            {
+                x: 4,
+                y: 2,
+                t: 'p'
+            },
+            {
+                x: 5,
+                y: 1,
+                t: 'p'
+            }
+        ];
 
         originSettimeout = global.setTimeout;
         global.setTimeout = function(callback) {
@@ -67,8 +67,37 @@ exports['bot'] = nodeunit.testCase({
         test.done();
     },
 
+    'start 4players game': function(test) {
+        history = [
+            {
+                x: 4,
+                y: 2,
+                t: 'p'
+            },
+            {
+                x: 5,
+                y: 1,
+                t: 'p'
+            }, {
+                x: 2,
+                y: 3,
+                t: 'p'
+            }, {
+                x: 3,
+                y: 2,
+                t: 'p'
+            }];
+
+        bot.onStart(3, 0, history);
+
+        test.equal(bot.fencesRemaining, 5);
+        test.equal(bot.x, 3);
+        test.equal(bot.y, 2);
+        test.done();
+    },
+
     'first:getPositions': function(test) {
-        bot.onStart(0, 0, history);
+        bot.onStart(0, 1, history);
 
         test.deepEqual(bot.getPositions(), [
             { x: 5, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 1 }
@@ -141,7 +170,7 @@ exports['bot'] = nodeunit.testCase({
     },
 
     'isCurrent - ok': function(test) {
-        bot.onStart(0, 0, history);
+        bot.onStart(0, 1, history);
         test.ok(!bot.isPlayerCanMakeTurn(0));
         test.ok(bot.isPlayerCanMakeTurn(1));
         test.done();
@@ -154,44 +183,35 @@ exports['bot'] = nodeunit.testCase({
         test.done();
     },
 
-    'isCurrent - not ok 2': function(test) {
-        bot.onStart(1, 1, history);
-        test.ok(bot.isPlayerCanMakeTurn(0));
-        test.ok(!bot.isPlayerCanMakeTurn(1));
-        test.done();
-    },
-
     'getNextActivePlayer - two players game': function(test) {
-        bot.onStart(1, 1, history);
+        bot.onStart(0, 1, history);
         test.equal(bot.getNextActivePlayer(0), 1);
         test.equal(bot.getNextActivePlayer(1), 0);
         test.done();
     },
 
     'getNextActivePlayer - four players game': function(test) {
-        history = new TurnModel();
-        history.add({
+        history = [
+        {
             x: 4,
             y: 2,
             t: 'p'
-        });
-        history.add({
+        },
+        {
             x: 5,
             y: 1,
             t: 'p'
-        });
-        history.add({
+        }, {
             x: 2,
             y: 3,
             t: 'p'
-        });
-        history.add({
+        }, {
             x: 3,
             y: 2,
             t: 'p'
-        });
+        }];
 
-        bot.onStart(1, 1, history);
+        bot.onStart(0, 1, history);
         test.equal(bot.getNextActivePlayer(0), 1);
         test.equal(bot.getNextActivePlayer(1), 2);
         test.equal(bot.getNextActivePlayer(2), 3);
@@ -205,6 +225,7 @@ exports['bot'] = nodeunit.testCase({
 
         bot.on('client_move_player', function(params) {
             test.ok(!!params);
+            test.equal(bot.attemptsCount, 1);
             test.done();
         });
 
@@ -213,18 +234,43 @@ exports['bot'] = nodeunit.testCase({
         });
     },
 
-    'moveFence': function(test) {
+    'test moveFence': function(test) {
         bot.onStart(0, 1, history);
-        bot.newPositions = [];
+        bot.getPositions = function() { return []};
+        test.ok(!bot.canMovePlayer());
+        test.ok(bot.canMoveFence());
 
         bot.on('client_move_fence', function(params) {
             test.ok(!!params);
+            test.equal(bot.attemptsCount, 1);
             test.done();
         });
 
         bot.onMovePlayer({
             playerIndex: 1
         });
+    },
+
+    'attemptsCount - 1': function(test) {
+        bot.onStart(0, 1, history);
+        bot.getPositions = function() { return []};
+
+        bot.onMovePlayer({playerIndex: 1});
+
+        test.equal(bot.attemptsCount, 1);
+        test.done();
+    },
+
+    'attemptsCount - 2': function(test) {
+        bot.onStart(0, 1, history);
+        bot.getPositions = function() { return []};
+
+        bot.onMovePlayer({playerIndex: 1});
+        bot.makeTurn();
+
+        test.equal(bot.attemptsCount, 2);
+
+        test.done();
     }
 
 });

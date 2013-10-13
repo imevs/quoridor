@@ -134,7 +134,7 @@ var Room = Backbone.Model.extend({
     },
     getFencesPositions: function() {
         return this.fences.filter(function(fence) {
-            return fence.get('state') == 'busy'
+            return fence.get('state') == 'busy';
         }).map(function(fence) {
             return fence.pick('x', 'y', 'type');
         });
