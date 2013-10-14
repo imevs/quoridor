@@ -3,10 +3,12 @@ var Game = require('../../server/models/game.js');
 var _ = require('underscore');
 var util = require('util');
 var emitter = require('events').EventEmitter;
+var History = require('../../public/models/TurnModel.js');
 
-var Bot = function (id) {
+var Bot = function (id, playersCount) {
     this.id = id;
     this.initEvents();
+    this.playersCount = playersCount;
 };
 util.inherits(Bot, emitter);
 
@@ -15,14 +17,19 @@ _.extend(Bot.prototype, {
     fencesCount: 20,
 
     onStart: function (currentPlayer, activePlayer, history) {
-        var position = history[currentPlayer];
+        var historyModel = new History({
+            boardSize: 9,
+            playersCount: this.playersCount
+        });
+        historyModel.get('turns').reset(history);
+        var position = historyModel.getPlayerPositions()[currentPlayer];
 
         this.x = position.x;
         this.y = position.y;
         this.newPositions = [];
+        this.fencesPositions = [];
         this.currentPlayer = currentPlayer;
-        this.playersCount = history.length;
-        this.fencesRemaining = Math.round(this.fencesCount / this.playersCount);
+        this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
 
         if (currentPlayer == activePlayer) {
             this.turn();
@@ -74,11 +81,23 @@ _.extend(Bot.prototype, {
         var bot = this;
         this.attemptsCount++;
         console.log('attemptsCount', this.attemptsCount);
-        if (this.attemptsCount > 10) {
+        if (this.attemptsCount > 50) {
             console.log('bot can`t make a turn');
             return;
         }
-        setTimeout(_(bot.doTurn).bind(bot), 1000);
+        setTimeout(_(bot.doTurn).bind(bot), 100);
+    },
+
+    getFencePosition: function () {
+        var y = _.random(0, 8);
+        var x = _.random(0, 8);
+        var type = _.random(0, 1) ? 'H' : 'V';
+        var res = {y: y, x: x, type: type};
+        if (_(this.fencesPositions).contains(res)) {
+            return this.getFencePosition();
+        }
+        this.fencesPositions.push(res);
+        return res;
     },
 
     doTurn     : function () {
@@ -92,13 +111,11 @@ _.extend(Bot.prototype, {
         }
 
         if (bot.canMoveFence()) {
-            var y = _.random(0, 8);
-            var x = _.random(0, 8);
-            var type = _.random(0, 1) ? 'H' : 'V';
+            var res = this.getFencePosition();
             var eventInfo = {
-                x          : x,
-                y          : y,
-                type       : type,
+                x          : res.x,
+                y          : res.y,
+                type       : res.type,
                 playerIndex: bot.id
             };
 

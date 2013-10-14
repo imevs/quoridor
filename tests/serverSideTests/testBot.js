@@ -11,7 +11,7 @@ var bot, game, originSettimeout;
 exports['bot'] = nodeunit.testCase({
 
     setUp   : function (test) {
-        bot = new Bot(1);
+        bot = new Bot(1, 2);
         history = [
             {
                 x: 4,
@@ -67,7 +67,37 @@ exports['bot'] = nodeunit.testCase({
         test.done();
     },
 
+    'start 2players game': function(test) {
+        history = [
+            {
+                x: 4,
+                y: 2,
+                t: 'p'
+            },
+            {
+                x: 5,
+                y: 1,
+                t: 'p'
+            }, {
+                x: 2,
+                y: 3,
+                t: 'p'
+            }, {
+                x: 3,
+                y: 2,
+                t: 'p'
+            }];
+
+        bot.onStart(1, 0, history);
+
+        test.equal(bot.fencesRemaining, 10);
+        test.equal(bot.x, 3);
+        test.equal(bot.y, 2);
+        test.done();
+    },
+
     'start 4players game': function(test) {
+        bot = new Bot(1, 4);
         history = [
             {
                 x: 4,
@@ -191,6 +221,7 @@ exports['bot'] = nodeunit.testCase({
     },
 
     'getNextActivePlayer - four players game': function(test) {
+        bot = new Bot(1, 4);
         history = [
         {
             x: 4,
@@ -269,6 +300,59 @@ exports['bot'] = nodeunit.testCase({
         bot.makeTurn();
 
         test.equal(bot.attemptsCount, 2);
+
+        test.done();
+    },
+
+    'check fences count after start': function(test) {
+        history = [
+            {
+                x: 4,
+                y: 2,
+                t: 'p'
+            }, {
+                x: 5,
+                y: 1,
+                t: 'p'
+            }, {
+                x: 4,
+                x2: 5,
+                y: 7,
+                y2: 7,
+                t: 'f'
+            }, {
+                x: 4,
+                x2: 5,
+                y: 7,
+                y2: 7,
+                t: 'f'
+            }, {
+                x: 4,
+                x2: 5,
+                y: 7,
+                y2: 7,
+                t: 'f'
+            }
+        ];
+        bot.onStart(0, 1, history);
+        test.equals(bot.fencesRemaining, 8);
+
+        bot.onStart(1, 0, history);
+        test.equals(bot.fencesRemaining, 9);
+
+        test.equals(bot.fencesPositions.length, 0);
+
+        test.done();
+    },
+
+    'test fencesPositions': function(test) {
+        bot.onStart(0, 1, history);
+        bot.getPositions = function() { return []};
+
+        bot.onMovePlayer({playerIndex: 1});
+        bot.onMovePlayer({playerIndex: 1});
+
+        test.equals(bot.fencesPositions.length, 2);
 
         test.done();
     }

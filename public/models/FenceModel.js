@@ -89,13 +89,24 @@ var FencesCollection = Backbone.Collection.extend({
     initialize: function() {
         this.on('premarkasselected', this.clearBusy, this);
     },
-    createFences: function(boardSize) {
+    createFences: function(boardSize, fences) {
         var me = this;
         _([boardSize, boardSize - 1]).iter(function (i, j) {
             me.add({x: i, y: j, type: 'H'});
         });
         _([boardSize - 1, boardSize]).iter(function (i, j) {
             me.add({x: i, y: j, type: 'V'});
+        });
+
+        _(fences).each(function(fence) {
+            var find = me.findWhere({
+                x: fence.x,
+                y: fence.y,
+                type: fence.t
+            });
+            var sibling = me.getSibling(find);
+            find.set('state', 'busy');
+            sibling.set('state', 'busy');
         });
     },
     clearBusy: function() {

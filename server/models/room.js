@@ -55,8 +55,9 @@ var Room = Backbone.Model.extend({
         var isFences = doc &&
             (!room.fences || !room.fences.length) &&
             doc.fences && doc.fences.length;
-        if (isFences ) {
-            room.fences = new FencesCollection(doc.fences);
+        if (isFences) {
+            room.fences = new FencesCollection();
+            room.fences.createFences(doc.boardSize, doc.fences);
         }
         return doc;
     },
@@ -146,8 +147,11 @@ var Room = Backbone.Model.extend({
         var index = this.players.indexOf(player);
         var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
 
-        if (!(index == this.get('activePlayer')) ||
-            !player.hasFences() ||
+        if (index !== this.get('activePlayer')) {
+            return;
+        }
+
+        if (!player.hasFences() ||
             !this.fences.validateFenceAndSibling(fence) ||
             this.breakSomePlayerPath(fence)
             ) {
@@ -185,10 +189,11 @@ var Room = Backbone.Model.extend({
         var index = this.players.indexOf(player);
         this.set('currentPlayer', index);
 
-        if (!(index == this.get('activePlayer')) ||
-            !eventInfo ||
-            !this.isValidCurrentPlayerPosition(eventInfo.x, eventInfo.y)) {
+        if (index !== this.get('activePlayer')) {
+            return;
+        }
 
+        if (!eventInfo || !this.isValidCurrentPlayerPosition(eventInfo.x, eventInfo.y)) {
             player.socket.emit('server_turn_fail');
             return;
         }
@@ -214,7 +219,7 @@ var Room = Backbone.Model.extend({
     },
     emitEventToAllPlayers: function (eventInfo, eventName) {
         var room = this;
-        clearTimeout(room.turnTimeout);
+        //clearTimeout(room.turnTimeout);
         this.players.each(function (player) {
             var index = room.players.indexOf(player);
             if (room.get('activePlayer') == index) return;
@@ -226,7 +231,7 @@ var Room = Backbone.Model.extend({
         var socket = activePlayer.socket;
         console.log(eventInfo);
         if (this.onTimeoutCount < 10) {
-            room.turnTimeout = setTimeout(_(room.onTimeout).bind(room), 10 * 1000);
+            //room.turnTimeout = setTimeout(_(room.onTimeout).bind(room), 10 * 1000);
         } else {
             // сообщение о приостановке игры
         }

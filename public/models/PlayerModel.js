@@ -30,7 +30,14 @@ var PlayersCollection = Backbone.Collection.extend({
     model           : PlayerModel,
     fencesCount     : 20,
 
-    initialize: function() {
+    initialize: function(players) {
+        var me = this;
+        _(players).each(function(player) {
+            if (!_.isUndefined(player.movedFences)) {
+                var fences = Math.round(me.fencesCount / players.length);
+                player.fencesRemaining = fences - player.movedFences;
+            }
+        });
         this.playersPositions = [
             {x: 4, y: 0, color: 'red', isWin: function(x,y) { return y == 8; } },
             {x: 8, y: 4, color: 'blue', isWin: function(x,y) { return x == 0; } },

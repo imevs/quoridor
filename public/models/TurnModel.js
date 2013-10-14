@@ -60,7 +60,7 @@ var GameHistoryModel = Backbone.Model.extend({
             var playerInfo = _.last(playerPositions);
             if (playerInfo) {
                 playerInfo = playerInfo.pick('x', 'y');
-                playerInfo.fencesRemaining = playerFences.length;
+                playerInfo.movedFences = playerFences.length;
             }
             positions[index] = playerInfo;
         });

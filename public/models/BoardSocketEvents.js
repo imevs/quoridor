@@ -13,7 +13,6 @@ window.io && io.util.inherit(io.myconnect, io.connect);
 var BoardSocketEvents = {
 
     initSocket: function() {
-
         var host = 'http://' + document.location.host;
         return this.get('socket') || window.io && this.set('socket', io.myconnect(host, {
             resource: 'api'
@@ -96,11 +95,10 @@ var BoardSocketEvents = {
                     x     : playerInfo.x,
                     prev_x: playerInfo.x,
                     y     : playerInfo.y,
-                    prev_y: playerInfo.y
+                    prev_y: playerInfo.y,
+                    fencesRemaining: player.get('fencesRemaining') - playerInfo.movedFences
                 });
             }
-            var fencesRemaining = playerInfo.fencesRemaining;
-            fencesRemaining && player.set('fencesRemaining', fencesRemaining);
         });
         _(fences).each(function(fencePos) {
             var fence = me.fences.findWhere({
