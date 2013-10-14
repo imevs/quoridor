@@ -59,6 +59,10 @@ var Room = Backbone.Model.extend({
             room.fences = new FencesCollection();
             room.fences.createFences(doc.boardSize, doc.fences);
         }
+        delete doc.activePlayer;
+        delete doc.players;
+        delete doc.history;
+        delete doc.fences;
         return doc;
     },
 
@@ -141,11 +145,16 @@ var Room = Backbone.Model.extend({
         });
     },
     switchActivePlayer: function () {
+        console.log('switchActivePlayer', this.get('activePlayer'));
         this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
+        this.save();
+        console.log('switchActivePlayer', this.get('activePlayer'));
+        console.log('----------------');
     },
     onMoveFence: function(player, eventInfo) {
         var index = this.players.indexOf(player);
         var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
+        console.log('room:activePlayer', this.get('activePlayer'));
 
         if (index !== this.get('activePlayer')) {
             return;
@@ -175,7 +184,6 @@ var Room = Backbone.Model.extend({
         });
 
         this.switchActivePlayer();
-        this.save();
 
         eventInfo = {
             x : eventInfo.x,
@@ -189,6 +197,7 @@ var Room = Backbone.Model.extend({
         var index = this.players.indexOf(player);
         this.set('currentPlayer', index);
 
+        console.log('room:activePlayer', this.get('activePlayer'));
         if (index !== this.get('activePlayer')) {
             return;
         }
@@ -208,7 +217,6 @@ var Room = Backbone.Model.extend({
         });
 
         this.switchActivePlayer();
-        this.save();
 
         eventInfo = {
             x: eventInfo.x,
@@ -219,17 +227,18 @@ var Room = Backbone.Model.extend({
     },
     emitEventToAllPlayers: function (eventInfo, eventName) {
         var room = this;
+        console.log('room:emitEventToAllPlayers');
         //clearTimeout(room.turnTimeout);
         this.players.each(function (player) {
             var index = room.players.indexOf(player);
             if (room.get('activePlayer') == index) return;
             var socket = player.socket;
-            console.log(eventInfo);
+            //console.log(eventInfo);
             socket && socket.emit(eventName, eventInfo);
         });
         var activePlayer = room.players.at(room.get('activePlayer'));
         var socket = activePlayer.socket;
-        console.log(eventInfo);
+        //console.log(eventInfo);
         if (this.onTimeoutCount < 10) {
             //room.turnTimeout = setTimeout(_(room.onTimeout).bind(room), 10 * 1000);
         } else {
