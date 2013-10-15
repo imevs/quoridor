@@ -303,8 +303,8 @@ exports['quoridor'] = nodeunit.testCase({
         });
 
         var expected = [
-            { x: 4, y: 3, fencesRemaining: 0 },
-            { x: 5, y: 1, fencesRemaining: 1 }
+            { x: 4, y: 3, movedFences: 0 },
+            { x: 5, y: 1, movedFences: 1 }
         ];
         test.deepEqual(expected, history.getPlayerPositions());
 
