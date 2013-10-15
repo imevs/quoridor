@@ -3,7 +3,9 @@ var Backbone = require('backbone');
 var sinon = require('sinon');
 var Game = require('../../server/models/game.js');
 
-Backbone.sync = function() {};
+Backbone.sync = function(method, obj, options) {
+    options && options.success && options.success();
+};
 
 function extend(Child, Parent) {
     Child.prototype = Parent.prototype;

@@ -59,10 +59,12 @@ var Room = Backbone.Model.extend({
             room.fences = new FencesCollection();
             room.fences.createFences(doc.boardSize, doc.fences);
         }
-        delete doc.activePlayer;
-        delete doc.players;
-        delete doc.history;
-        delete doc.fences;
+        if (doc) {
+            delete doc.activePlayer;
+            delete doc.players;
+            delete doc.history;
+            delete doc.fences;
+        }
         return doc;
     },
 
@@ -204,7 +206,7 @@ var Room = Backbone.Model.extend({
         var index = this.players.indexOf(player);
         this.set('currentPlayer', index);
 
-        console.log('room:activePlayer', this.get('activePlayer'));
+        //console.log('room:activePlayer', this.get('activePlayer'));
         if (index !== this.get('activePlayer')) {
             return;
         }
