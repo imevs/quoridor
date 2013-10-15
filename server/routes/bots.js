@@ -9,12 +9,13 @@ module.exports = function(req, res) {
     room.set('state', 'bot');
     var botsCount = playersCount - 1;
 
-    _(_.range(botsCount)).each(function(index){
-        var bot = new Bot(index + '', playersCount);
-        room.addPlayer(bot);
+    room.save({}, {
+        success: function() {
+            _(_.range(botsCount)).each(function(index){
+                var bot = new Bot((index + 1) + '', playersCount);
+                room.addPlayer(bot);
+            });
+            res.redirect('/play/id/' + room.get('id'));
+        }
     });
-
-    room.save();
-
-    res.redirect('/play/id/' + room.get('id'));
 };

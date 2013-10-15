@@ -80,7 +80,9 @@ _.extend(Bot.prototype, {
     makeTurn: function () {
         var bot = this;
         this.attemptsCount++;
-        console.log('attemptsCount', this.attemptsCount);
+        console.log('bot:attemptsCount', this.attemptsCount);
+        console.log('bot:currentPlayer', this.currentPlayer);
+        console.log('----------------');
         if (this.attemptsCount > 50) {
             console.log('bot can`t make a turn');
             return;
@@ -106,6 +108,9 @@ _.extend(Bot.prototype, {
         var playerPosition;
         if (bot.canMovePlayer() && (random || !bot.canMoveFence())) {
             playerPosition = bot.getPossiblePosition();
+            console.log('bot:doTurn', playerPosition);
+            console.log('bot:currentPlayer', this.currentPlayer);
+            console.log('----------------');
             playerPosition && bot.emit('client_move_player', playerPosition);
             return;
         }
@@ -119,6 +124,9 @@ _.extend(Bot.prototype, {
                 playerIndex: bot.id
             };
 
+            console.log('bot:doTurn', eventInfo);
+            console.log('bot:currentPlayer', this.currentPlayer);
+            console.log('----------------');
             bot.emit('client_move_fence', eventInfo);
             return;
         }

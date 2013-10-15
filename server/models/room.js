@@ -127,13 +127,16 @@ var Room = Backbone.Model.extend({
         player.set('id', playerId);
         player.set('state', 'busy');
         player.socket = socket;
-        var index = this.players.indexOf(player);
 
         socket.on('disconnect', _(this.disconnectPlayer).bind(this, socket));
         socket.on('client_move_player', _(this.onMovePlayer).partial(player).bind(this));
         socket.on('client_move_fence', _(this.onMoveFence).partial(player).bind(this));
 
-        socket.emit('server_start', index, this.get('activePlayer'), this.history.get('turns').toJSON());
+        socket.emit('server_start',
+            this.players.indexOf(player),
+            this.get('activePlayer'),
+            this.history.get('turns').toJSON()
+        );
 
         return true;
     },
@@ -144,14 +147,17 @@ var Room = Backbone.Model.extend({
             return fence.pick('x', 'y', 'type');
         });
     },
-    switchActivePlayer: function () {
+    switchActivePlayer: function (callback) {
         console.log('switchActivePlayer', this.get('activePlayer'));
         this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
-        this.save();
+        this.save({}, {
+            success: callback
+        });
         console.log('switchActivePlayer', this.get('activePlayer'));
         console.log('----------------');
     },
     onMoveFence: function(player, eventInfo) {
+        var room = this;
         var index = this.players.indexOf(player);
         var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
         console.log('room:activePlayer', this.get('activePlayer'));
@@ -183,17 +189,18 @@ var Room = Backbone.Model.extend({
             t: 'f'
         });
 
-        this.switchActivePlayer();
-
-        eventInfo = {
-            x : eventInfo.x,
-            y : eventInfo.y,
-            type: eventInfo.type,
-            playerIndex: index
-        };
-        this.emitEventToAllPlayers(eventInfo, 'server_move_fence');
+        this.switchActivePlayer(function() {
+            eventInfo = {
+                x : eventInfo.x,
+                y : eventInfo.y,
+                type: eventInfo.type,
+                playerIndex: index
+            };
+            room.emitEventToAllPlayers(eventInfo, 'server_move_fence');
+        });
     },
     onMovePlayer: function(player, eventInfo) {
+        var room = this;
         var index = this.players.indexOf(player);
         this.set('currentPlayer', index);
 
@@ -216,14 +223,14 @@ var Room = Backbone.Model.extend({
             t: 'p'
         });
 
-        this.switchActivePlayer();
-
-        eventInfo = {
-            x: eventInfo.x,
-            y: eventInfo.y,
-            playerIndex: index
-        };
-        this.emitEventToAllPlayers(eventInfo, 'server_move_player');
+        this.switchActivePlayer(function() {
+            eventInfo = {
+                x: eventInfo.x,
+                y: eventInfo.y,
+                playerIndex: index
+            };
+            room.emitEventToAllPlayers(eventInfo, 'server_move_player');
+        });
     },
     emitEventToAllPlayers: function (eventInfo, eventName) {
         var room = this;
@@ -240,7 +247,7 @@ var Room = Backbone.Model.extend({
         var socket = activePlayer.socket;
         //console.log(eventInfo);
         if (this.onTimeoutCount < 10) {
-            //room.turnTimeout = setTimeout(_(room.onTimeout).bind(room), 10 * 1000);
+            room.turnTimeout = setTimeout(_(room.onTimeout).bind(room), 10 * 1000);
         } else {
             // сообщение о приостановке игры
         }
@@ -249,6 +256,7 @@ var Room = Backbone.Model.extend({
     },
 
     onTimeout: function() {
+        var room = this;
         this.onTimeoutCount = this.onTimeoutCount || 0;
         this.onTimeoutCount++;
         var activePlayer = this.players.at(this.get('activePlayer'));
@@ -259,15 +267,15 @@ var Room = Backbone.Model.extend({
             t: 'p'
         });
 
-        this.switchActivePlayer();
-        this.save();
-        var eventInfo = {
-            x: activePlayer.get('x'),
-            y: activePlayer.get('y'),
-            timeout: 1,
-            playerIndex: this.get('activePlayer')
-        };
-        this.emitEventToAllPlayers(eventInfo, 'server_move_player');
+        this.switchActivePlayer(function() {
+            var eventInfo = {
+                x: activePlayer.get('x'),
+                y: activePlayer.get('y'),
+                timeout: 1,
+                playerIndex: this.get('activePlayer')
+            };
+            room.emitEventToAllPlayers(eventInfo, 'server_move_player');
+        });
     },
 
     findBusyPlayersPlaces: function() {
