@@ -274,7 +274,7 @@ var Room = Backbone.Model.extend({
                 x: activePlayer.get('x'),
                 y: activePlayer.get('y'),
                 timeout: 1,
-                playerIndex: this.get('activePlayer')
+                playerIndex: room.get('activePlayer')
             };
             room.emitEventToAllPlayers(eventInfo, 'server_move_player');
         });
