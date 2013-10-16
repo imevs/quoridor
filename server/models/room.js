@@ -237,7 +237,7 @@ var Room = Backbone.Model.extend({
     emitEventToAllPlayers: function (eventInfo, eventName) {
         var room = this;
         console.log('room:emitEventToAllPlayers');
-        //clearTimeout(room.turnTimeout);
+        clearTimeout(room.turnTimeout);
         this.players.each(function (player) {
             var index = room.players.indexOf(player);
             if (room.get('activePlayer') == index) return;
