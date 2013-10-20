@@ -1,5 +1,6 @@
 if ((typeof module != "undefined")) {
     var _ = require('../utils.js');
+    var Backbone = require('backbone');
     var FencesCollection = require('./FenceModel');
     var PlayersCollection = require('./PlayerModel');
 }
