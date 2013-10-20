@@ -1,11 +1,7 @@
 var nodeunit = require('nodeunit');
-var Backbone = require('backbone');
-var _ = require('underscore');
-var sinon = require('sinon');
 
 var PlayersCollection = require('../../public/models/PlayerModel.js');
-var FencesCollection = require('../../public/models/FenceModel.js');
-var BoardValidation = require('../../public/models/BoardValidation.js');
+var Room = require('../../server/models/room.js');
 
 var board;
 
@@ -18,45 +14,18 @@ exports['validation'] = nodeunit.testCase({
         2|_|x|_|
           0 1 2
 */
-        var fences = [
-            {x: 0, y: 0, type: 'H'},
-            {x: 1, y: 0, type: 'H'},
-            {x: 2, y: 0, type: 'H'},
-
-            {x: 0, y: 1, type: 'H'},
-            {x: 1, y: 1, type: 'H'},
-            {x: 2, y: 1, type: 'H'},
-
-            {x: 0, y: 0, type: 'V'},
-            {x: 1, y: 0, type: 'V'},
-
-            {x: 0, y: 1, type: 'V'},
-            {x: 1, y: 1, type: 'V'},
-
-            {x: 0, y: 2, type: 'V'},
-            {x: 1, y: 2, type: 'V'}
-        ];
-        var players = [
-            {x: 1, y: 0},
-            {x: 1, y: 2}
-        ];
-        board = new Backbone.Model({
-            boardSize    : 3,
-            playersCount : 2,
-            currentPlayer: 1,
-            activePlayer : 1
+        board = Room.createRoom({
+            playersCount: 2,
+            boardSize   : 3
         });
-        _.extend(board, BoardValidation);
-        board.fences = new FencesCollection(fences);
-        board.players = new PlayersCollection(players);
+        board.players = new PlayersCollection([
+            {x: 1, y: 0}, {x: 1, y: 2}
+        ]);
         board.players.playersPositions = [
             {x: 1, y: 0, color: 'red', isWin: function(x,y) { return y == 2; } },
             {x: 1, y: 2, color: 'yellow', isWin: function(x,y) { return x == 2; } }
         ];
 
-        test();
-    },
-    tearDown: function (test) {
         test();
     },
 
