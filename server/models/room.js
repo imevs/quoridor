@@ -26,7 +26,7 @@ var Room = Backbone.Model.extend({
 
     mongooseModel: 'Room',
 
-    parse: function(data) {
+    parse: function (data) {
         var room = this;
         var doc = data && data._doc;
 
@@ -67,22 +67,22 @@ var Room = Backbone.Model.extend({
         return doc;
     },
 
-    isNoFences: function() {
+    isNoFences: function () {
         return !this.fences || !this.fences.length;
     },
 
-    isNoPlayers: function() {
+    isNoPlayers: function () {
         return !this.players || !this.players.length;
     },
 
-    toJSON: function() {
+    toJSON: function () {
         var result = Backbone.Model.prototype.toJSON.call(this);
         delete result._id;
         result.history = this.history.get('turns').toJSON && this.history.get('turns').toJSON();
         return result;
     },
 
-    initialize: function() {
+    initialize: function () {
         var room = this;
 
         if (!room.players) {
@@ -102,10 +102,10 @@ var Room = Backbone.Model.extend({
             room.history.initPlayers();
         }
 
-        room.players.on('win', function(player) {
+        room.players.on('win', function (player) {
             var index = room.players.indexOf(player);
 
-            room.players.each(function(p) {
+            room.players.each(function (p) {
                 var socket = p.socket;
                 if (socket) {
                     socket.emit('server_win', index);
@@ -116,13 +116,13 @@ var Room = Backbone.Model.extend({
             room.set('state', 'finished');
         });
     },
-    isFull: function() {
+    isFull: function () {
         return this.findBusyPlayersPlaces().length >= this.get('playersCount');
     },
-    isOver: function() {
+    isOver: function () {
         return this.get('state') === 'finished';
     },
-    addPlayer: function(socket) {
+    addPlayer: function (socket) {
         var playerId = socket && socket.id && socket.id.toString();
         if (this.isFull()) {
             return false;
@@ -130,7 +130,7 @@ var Room = Backbone.Model.extend({
 
         var player = this.players.findWhere({id: playerId});
 
-        player = player || this.players.find(function(player) {
+        player = player || this.players.find(function (player) {
             return player.get('state') !== 'busy';
         });
         if (!player) {
@@ -153,10 +153,10 @@ var Room = Backbone.Model.extend({
 
         return true;
     },
-    getFencesPositions: function() {
-        return this.fences.filter(function(fence) {
+    getFencesPositions: function () {
+        return this.fences.filter(function (fence) {
             return fence.get('state') === 'busy';
-        }).map(function(fence) {
+        }).map(function (fence) {
             return fence.pick('x', 'y', 'type');
         });
     },
@@ -169,7 +169,7 @@ var Room = Backbone.Model.extend({
         console.log('switchActivePlayer', this.get('activePlayer'));
         console.log('----------------');
     },
-    onMoveFence: function(player, eventInfo) {
+    onMoveFence: function (player, eventInfo) {
         var room = this;
         var index = this.players.indexOf(player);
         var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
@@ -202,7 +202,7 @@ var Room = Backbone.Model.extend({
             t: 'f'
         });
 
-        this.switchActivePlayer(function() {
+        this.switchActivePlayer(function () {
             eventInfo = {
                 x : eventInfo.x,
                 y : eventInfo.y,
@@ -212,7 +212,7 @@ var Room = Backbone.Model.extend({
             room.emitEventToAllPlayers(eventInfo, 'server_move_fence');
         });
     },
-    onMovePlayer: function(player, eventInfo) {
+    onMovePlayer: function (player, eventInfo) {
         var room = this;
         var index = this.players.indexOf(player);
         this.set('currentPlayer', index);
@@ -236,7 +236,7 @@ var Room = Backbone.Model.extend({
             t: 'p'
         });
 
-        this.switchActivePlayer(function() {
+        this.switchActivePlayer(function () {
             eventInfo = {
                 x: eventInfo.x,
                 y: eventInfo.y,
@@ -270,7 +270,7 @@ var Room = Backbone.Model.extend({
         return activePlayer;
     },
 
-    onTimeout: function() {
+    onTimeout: function () {
         var room = this;
         this.onTimeoutCount = this.onTimeoutCount || 0;
         this.onTimeoutCount++;
@@ -282,7 +282,7 @@ var Room = Backbone.Model.extend({
             t: 'p'
         });
 
-        this.switchActivePlayer(function() {
+        this.switchActivePlayer(function () {
             var eventInfo = {
                 x: activePlayer.get('x'),
                 y: activePlayer.get('y'),
@@ -293,24 +293,24 @@ var Room = Backbone.Model.extend({
         });
     },
 
-    findBusyPlayersPlaces: function() {
-        return this.players.filter(function(player) {
+    findBusyPlayersPlaces: function () {
+        return this.players.filter(function (player) {
             return player.get('state') === 'busy';
         });
     },
-    disconnectPlayer: function(socket) {
+    disconnectPlayer: function (socket) {
         var player = this.findPlayer(socket);
         if (player) {
             player.reset();
         }
     },
-    findPlayer: function(socket) {
+    findPlayer: function (socket) {
         var playerId = socket && socket.id && socket.id.toString();
         return this.players.findWhere({id: playerId});
     }
 
 }, {
-    createRoom: function(params) {
+    createRoom: function (params) {
         params.id = uuid.v4();
         var room = new Room(params);
 

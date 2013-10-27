@@ -6,37 +6,37 @@ var Game = Backbone.Collection.extend({
     model: Room,
     mongooseModel: 'Room',
 
-    initialize: function() {
+    initialize: function () {
         var game = this;
         this.fetch({
-            success: function() {
-                game.each(function(room) {
-                    room.players.each(function(player) {
+            success: function () {
+                game.each(function (room) {
+                    room.players.each(function (player) {
                         player.reset();
                     });
                 });
             }
         });
     },
-    start: function(io) {
+    start: function (io) {
         var self = this;
         self.io = io;
-        io.sockets.on('connection', function(client){
+        io.sockets.on('connection', function (client) {
             client.on('myconnection', _(self.addPlayer).partial(client).bind(self));
         });
     },
-    findPlayerRoom: function(socket) {
-        return this.find(function(room) {
+    findPlayerRoom: function (socket) {
+        return this.find(function (room) {
             return room.findPlayer(socket);
         });
     },
-    findRoomById: function(roomId) {
-        return this.find(function(room) {
+    findRoomById: function (roomId) {
+        return this.find(function (room) {
             return room.get('id') === roomId;
         });
     },
-    findFreeRoom: function(roomId) {
-        return this.find(function(room) {
+    findFreeRoom: function (roomId) {
+        return this.find(function (room) {
             return room.get('id') === roomId && !room.isFull() && room.get('state') !== 'finished';
         });
     },
@@ -66,7 +66,7 @@ var Game = Backbone.Collection.extend({
         this.add(room);
         return room;
     },
-    addPlayer: function(socket, params) {
+    addPlayer: function (socket, params) {
         var roomId = params.roomId, room, result = false;
 
         if (roomId) {

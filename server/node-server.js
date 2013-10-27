@@ -29,9 +29,9 @@ if ('production' === app.get('env')) {
     app.use(express.static(path.join(__dirname, '/../build')));
 }
 
-app.use(function(err, req, res){
+app.use(function (err, req, res) {
     res.status(err.status || 500);
-    console.log('Internal error(%d): %s',res.statusCode,err.message);
+    console.log('Internal error(%d): %s', res.statusCode, err.message);
     res.send({ error: err.message });
 });
 // development only
@@ -42,12 +42,12 @@ if ('development' === app.get('env')) {
 routes.init(app);
 
 var server = http.createServer(app);
-server.listen(app.get('port'), function(){
+server.listen(app.get('port'), function () {
     console.log('Express server listening on port ' + app.get('port'));
 });
 
 Backbone.initSync({
-    db_url: 'mongodb://imevs:' + process.env.DB_PASS +'@ds043368.mongolab.com:43368/quoridor',
+    db_url: 'mongodb://imevs:' + process.env.DB_PASS + '@ds043368.mongolab.com:43368/quoridor',
     schema_dir: __dirname + '/schema'
 });
 

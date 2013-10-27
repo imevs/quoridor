@@ -1,7 +1,7 @@
 var Bot = require('../models/bot.js');
 var _ = require('underscore');
 
-module.exports = function(req, res) {
+module.exports = function (req, res) {
 
     var playersCount = req.params.playersCount;
 
@@ -10,8 +10,8 @@ module.exports = function(req, res) {
     var botsCount = playersCount - 1;
 
     room.save({}, {
-        success: function() {
-            _(_.range(botsCount)).each(function(index){
+        success: function () {
+            _(_.range(botsCount)).each(function (index) {
                 var bot = new Bot((index + 1) + '', playersCount);
                 room.addPlayer(bot);
             });

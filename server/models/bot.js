@@ -34,7 +34,7 @@ _.extend(Bot.prototype, {
         }
     },
 
-    getNextActivePlayer: function(currentPlayer) {
+    getNextActivePlayer: function (currentPlayer) {
         currentPlayer++;
         return currentPlayer < this.playersCount ? currentPlayer : 0;
     },
@@ -155,11 +155,11 @@ _.extend(Bot.prototype, {
         return newPositions;
     },
 
-    canMoveFence: function() {
+    canMoveFence: function () {
         return this.fencesRemaining > 0;
     },
 
-    canMovePlayer: function() {
+    canMovePlayer: function () {
         return this.newPositions.length > 0;
     },
 

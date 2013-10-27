@@ -19,7 +19,7 @@
     "trailing":     true,
     "undef":        true,
     "unused":       true,
-    "white":        false,
+    "white":        true,
     "asi":          false,
     "boss":         false,
     "debug":        false,

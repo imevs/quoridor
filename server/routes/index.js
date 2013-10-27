@@ -1,9 +1,9 @@
-exports.init = function(app) {
+exports.init = function (app) {
     app.get('/', require('./main.js'));
-    app.get('/about', function(req, res) {
+    app.get('/about', function (req, res) {
         res.render('about');
     });
-    app.get('/contacts', function(req, res) {
+    app.get('/contacts', function (req, res) {
         res.render('contacts');
     });
     app.get('/create/playersCount/:playersCount', require('./create.js'));

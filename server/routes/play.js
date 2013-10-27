@@ -1,7 +1,7 @@
 var Bot = require('../models/bot.js');
 var _ = require('underscore');
 
-module.exports = function(req, res) {
+module.exports = function (req, res) {
 
     var id = req.params.id;
 
@@ -10,7 +10,7 @@ module.exports = function(req, res) {
     if (room) {
         if (room.get('state') === 'bot') {
             var botsCount = room.get('playersCount') - 1;
-            _(_.range(botsCount)).each(function(index){
+            _(_.range(botsCount)).each(function (index) {
                 var bot = new Bot((index + 1) + '', room.get('playersCount'));
                 room.addPlayer(bot);
             });
