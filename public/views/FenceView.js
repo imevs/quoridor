@@ -1,10 +1,13 @@
+/* global GameObject, FenceHModel */
+var FenceHView, FenceVView;
+
 var FenceView = GameObject.extend({
     events                    : {
         'click'    : 'onClick',
         'mouseover': 'highlightCurrentAndSibling',
         'mouseout' : 'resetCurrentAndSibling'
     },
-    onClick                   : function (evt) {
+    onClick                   : function () {
         this.model.trigger('selected', this.model);
     },
     highlightCurrentAndSibling: function () {
@@ -25,25 +28,26 @@ var FenceView = GameObject.extend({
         var circle = this.el;
         var model = this.model;
 
-        if (model.get('state') == 'prebusy') {
+        if (model.get('state') === 'prebusy') {
             circle.toFront();
         }
-        if (model.get('state') == '') {
+        if (model.get('state') === '') {
             circle.toBack();
         }
-        if (model.get('state') == 'highlight') {
+        if (model.get('state') === 'highlight') {
             circle.toFront();
         }
         circle.attr({fill: model.get('color')});
     }
 }, {
-    createFenceView: function(model) {
-        model instanceof FenceHModel
-            ? new FenceHView({model: model}) : new FenceVView({model: model});
+    createFenceView: function (model) {
+        return model instanceof FenceHModel
+            ? new FenceHView({model: model})
+            : new FenceVView({model: model});
     }
 });
 
-var FenceHView = FenceView.extend({
+FenceHView = FenceView.extend({
 
     createElement: function () {
         var cls = this.constructor;
@@ -65,7 +69,7 @@ var FenceHView = FenceView.extend({
     }
 });
 
-var FenceVView = FenceView.extend({
+FenceVView = FenceView.extend({
 
     createElement: function () {
         var cls = this.constructor;

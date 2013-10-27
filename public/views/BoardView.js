@@ -1,15 +1,16 @@
-var BoardView = GameObject.extend({
+/* global GameObject,$,_, PlayerView, FieldView, FenceView, GameHistoryView,InfoView */
+window.BoardView = GameObject.extend({
     selector: '#board',
     events: {
         'click': 'move'
     },
-    move: function() {
+    move: function () {
         this.model.trigger('confirmturn', true);
     },
-    render: function(callback) {
+    render: function (callback) {
         var me = this;
         this.$el = $(this.selector);
-        this.template = require(["text!templates/board.html"], function(tmpl) {
+        this.template = require(['text!templates/board.html'], function (tmpl) {
             me.template = tmpl;
             me.$el.html(_.template(me.template, me.model.attributes,  {variable: 'data'}));
             callback.call(me);
@@ -101,10 +102,10 @@ var BoardView = GameObject.extend({
         this.renderLegend(y, x, w, h);
         me.fields.each(function (model) {
             var params = {model: model};
-            if (model.get('y') == 0) {
+            if (model.get('y') === 0) {
                 params.defaultColor = 'lightgray';
             }
-            if (model.get('y') == me.get('boardSize') - 1) {
+            if (model.get('y') === me.get('boardSize') - 1) {
                 params.defaultColor = 'red';
             }
             new FieldView(params);
@@ -113,12 +114,12 @@ var BoardView = GameObject.extend({
             FenceView.createFenceView(model);
         });
         me.players.each(function (model) {
-            new PlayerView({model: model})
+            new PlayerView({model: model});
         });
-        var info = new InfoView({
+        new InfoView({
             model: me.infoModel
         });
-        var history = new GameHistoryView({
+        new GameHistoryView({
             model: me.history
         });
 

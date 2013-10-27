@@ -4,7 +4,7 @@ function createUrlObject(url) {
     return a;
 }
 
-var parseUrl = function (url) {
+window.parseUrl = function (url) {
     var queryString = url, result = {}, i, s, seg;
     var isArrayExp = /(\w+)\[(\d*)\]/;
 
@@ -16,7 +16,9 @@ var parseUrl = function (url) {
     seg = queryString.replace(/^\?/, '').split('&');
 
     for (i = 0; i < seg.length; i++) {
-        if (!seg[i]) continue;
+        if (!seg[i]) {
+            continue;
+        }
 
         s = seg[i].split('=');
 
@@ -28,7 +30,7 @@ var parseUrl = function (url) {
             var oldVal = result[paramName];
             if (!oldVal) {
                 result[paramName] = [];
-            } else if ( !(oldVal instanceof Array)) {
+            } else if (!(oldVal instanceof Array)) {
                 result[paramName] = [oldVal];
             }
             result[paramName].push(paramValue);

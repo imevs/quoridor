@@ -1,3 +1,4 @@
+/* global _, Backbone, FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
 var BoardModel = Backbone.Model.extend({
     isPlayerMoved: false,
     isFenceMoved: false,
@@ -9,14 +10,14 @@ var BoardModel = Backbone.Model.extend({
         activePlayer    : null
     },
 
-    resetModels: function() {
-        this.fences.each(function(fence) {
+    resetModels: function () {
+        this.fences.each(function (fence) {
             fence.set('state', '');
         });
         this.players.initPlayerPositions();
         this.run();
     },
-    createModels: function() {
+    createModels: function () {
         this.fences = new FencesCollection();
         this.fields = new FieldsCollection();
         this.players = new PlayersCollection();
@@ -29,7 +30,7 @@ var BoardModel = Backbone.Model.extend({
     initModels   : function () {
         var me = this;
         var count = me.get('playersCount');
-        if (count != 2 && count != 4) {
+        if (count !== 2 && count !== 4) {
             me.set('playersCount', 2);
         }
         me.fields.createFields(me.get('boardSize'));
@@ -68,7 +69,9 @@ var BoardModel = Backbone.Model.extend({
             /**
              * if local mode game then automatic change currentPlayer
              */
-            me.get('roomId') || me.set('currentPlayer', me.get('activePlayer'));
+            if (!me.get('roomId')) {
+                me.set('currentPlayer', me.get('activePlayer'));
+            }
 
             me.isPlayerMoved = false;
             me.isFenceMoved = false;
@@ -109,11 +112,13 @@ var BoardModel = Backbone.Model.extend({
         this.on('change:currentPlayer', this.updateInfo, this);
         this.players.on('change', this.updateInfo, this);
 
-        this.get('roomId') || this.players.on('win', function(player) {
-            if (window.confirm(player + ' выиграл. Начать сначала?')) {
-                me.resetModels();
-            }
-        });
+        if (!this.get('roomId')) {
+            this.players.on('win', function (player) {
+                if (window.confirm(player + ' выиграл. Начать сначала?')) {
+                    me.resetModels();
+                }
+            });
+        }
         this.fences.on({
             'selected'                     : function (model) {
                 if (me.canSelectFences() &&
@@ -138,7 +143,7 @@ var BoardModel = Backbone.Model.extend({
             }
         });
     },
-    run: function(activePlayer, currentPlayer) {
+    run: function (activePlayer, currentPlayer) {
         this.set({
             activePlayer: activePlayer,
             currentPlayer: _.isUndefined(currentPlayer) ? activePlayer : currentPlayer

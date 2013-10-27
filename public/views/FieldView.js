@@ -1,4 +1,5 @@
-var FieldView = GameObject.extend({
+/* global GameObject */
+window.FieldView = GameObject.extend({
 
     defaults: {
         color: '#742'
@@ -36,7 +37,7 @@ var FieldView = GameObject.extend({
         this.el.toFront();
     },
 
-    unSelectCurrent: function() {
+    unSelectCurrent: function () {
         this.model.set({color: this.defaultColor});
         this.el.toBack();
     },
@@ -47,12 +48,12 @@ var FieldView = GameObject.extend({
         'mouseout'   : 'unSelectCurrent'
     },
 
-    movePlayer     : function (evt) {
+    movePlayer     : function () {
         this.model.trigger('moveplayer',
             this.model.get('x'), this.model.get('y'));
         this.unSelectCurrent();
     },
-    onSelectFieldBefore: function() {
+    onSelectFieldBefore: function () {
         this.model.trigger('beforeselectfield',
             this.model.get('x'), this.model.get('y'));
     },

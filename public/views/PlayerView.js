@@ -1,4 +1,5 @@
-var PlayerView = GameObject.extend({
+/* global GameObject */
+window.PlayerView = GameObject.extend({
 
     initialize: function () {
         var cls = this.constructor;
@@ -20,11 +21,11 @@ var PlayerView = GameObject.extend({
         this.setElement(obj);
     },
 
-    markAsCurrent: function() {
+    markAsCurrent: function () {
         this.el.attr({'stroke-width': 3});
     },
 
-    resetState: function() {
+    resetState: function () {
         this.el.attr({'stroke-width': 1});
     },
 

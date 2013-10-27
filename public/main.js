@@ -11,11 +11,11 @@ require.config({
             exports: '_'
         },
         'libs/backbone'           : {
-            deps   : ["libs/underscore", "libs/jquery-1.10.2"],
+            deps   : ['libs/underscore', 'libs/jquery-1.10.2'],
             exports: 'Backbone'
         },
         'libs/backbone.raphael'   : {
-            deps: ["libs/underscore", 'libs/backbone']
+            deps: ['libs/underscore', 'libs/backbone']
         },
         'utils'                   : {
             deps: ['libs/underscore']
@@ -58,7 +58,7 @@ require.config({
 
         'views/GameObject'     : {
             deps: [
-                "libs/backbone.raphael", "libs/raphael"
+                'libs/backbone.raphael', 'libs/raphael'
             ]
         },
         'views/FieldView'      : {
