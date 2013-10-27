@@ -1,5 +1,3 @@
-var Backbone = require('backbone');
-var Game = require('../../server/models/game.js');
 var _ = require('underscore');
 var util = require('util');
 var emitter = require('events').EventEmitter;
@@ -31,7 +29,7 @@ _.extend(Bot.prototype, {
         this.currentPlayer = currentPlayer;
         this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
 
-        if (currentPlayer == activePlayer) {
+        if (currentPlayer === activePlayer) {
             this.turn();
         }
     },
@@ -49,11 +47,11 @@ _.extend(Bot.prototype, {
     },
 
     isPlayerCanMakeTurn: function (playerIndex) {
-        return this.currentPlayer == this.getNextActivePlayer(playerIndex);
+        return this.currentPlayer === this.getNextActivePlayer(playerIndex);
     },
 
     onMovePlayer: function (params) {
-        if (this.currentPlayer == params.playerIndex) {
+        if (this.currentPlayer === params.playerIndex) {
             this.x = params.x;
             this.y = params.y;
         }
@@ -63,7 +61,7 @@ _.extend(Bot.prototype, {
     },
 
     onMoveFence: function (params) {
-        if (this.currentPlayer == params.playerIndex) {
+        if (this.currentPlayer === params.playerIndex) {
             this.fencesRemaining--;
         }
         if (this.isPlayerCanMakeTurn(params.playerIndex)) {
@@ -111,7 +109,9 @@ _.extend(Bot.prototype, {
             console.log('bot:doTurn', playerPosition);
             console.log('bot:currentPlayer', this.currentPlayer);
             console.log('----------------');
-            playerPosition && bot.emit('client_move_player', playerPosition);
+            if (playerPosition) {
+                bot.emit('client_move_player', playerPosition);
+            }
             return;
         }
 

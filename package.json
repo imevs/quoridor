@@ -1,34 +1,36 @@
 {
-    "name": "quoridor-online",
-    "preferGlobal": "false",
-    "version": "1.6.0",
-    "author": "Vitaliy Medvedev <medvedev.vs@gmail.com>",
-    "description": "quoridor game",
-    "scripts": {
-        "postinstall": "node libs/r.js -o build.json",
-        "test": "java -jar resources/JsTestDriver-1.3.5.jar --config tests/jsTestDriver.conf --tests all --reset",
-        "posttest": "nodeunit tests/serverSideTests"
-    },
-    "dependencies": {
-        "connect": "2.7.x",
-        "lmd": "1.10.15",
-        "backbone": "1.x",
-        "underscore": "*",
-        "express": "3.3.5",
-        "mongoose": "3.6.x",
-        "uuid": "1.4.x",
-        "express3-handlebars": "0.5.x",
-        "socket.io": "0.9.x"
-    },
-    "devDependencies": {
-        "sinon": "*",
-        "nodeunit": "*",
-        "phantomjs":     "0.2.x"
-    },
-    "analyze": false,
-    "license": "MIT",
-    "engines": {
-        "node": "0.10.x",
-        "npm": "1.2.x"
-    }
+  "name": "quoridor-online",
+  "preferGlobal": "false",
+  "version": "1.6.0",
+  "author": "Vitaliy Medvedev <medvedev.vs@gmail.com>",
+  "description": "quoridor game",
+  "scripts": {
+    "pretest": "jshint --config jshint.json server",
+    "postinstall": "node libs/r.js -o build.json",
+    "test": "java -jar resources/JsTestDriver-1.3.5.jar --config tests/jsTestDriver.conf --tests all --reset",
+    "posttest": "nodeunit tests/serverSideTests"
+  },
+  "dependencies": {
+    "connect": "2.7.x",
+    "lmd": "1.10.15",
+    "backbone": "1.x",
+    "underscore": "*",
+    "express": "3.3.5",
+    "mongoose": "3.6.x",
+    "uuid": "1.4.x",
+    "express3-handlebars": "0.5.x",
+    "socket.io": "0.9.x"
+  },
+  "devDependencies": {
+    "jshint": "*",
+    "sinon": "*",
+    "nodeunit": "*",
+    "phantomjs": "0.2.x"
+  },
+  "analyze": false,
+  "license": "MIT",
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.2.x"
+  }
 }

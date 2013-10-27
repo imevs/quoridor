@@ -1,8 +1,8 @@
 {
     "browser":      true,
     "node":         true,
-    "yui":          false,
     "bitwise":      true,
+    "camelcase":    false,
     "curly":        true,
     "eqeqeq":       true,
     "forin":        true,
@@ -10,6 +10,7 @@
     "newcap":       true,
     "noarg":        true,
     "noempty":      true,
+    "nonew":        true,
     "nomen":        false,
     "onevar":       false,
     "plusplus":     false,
@@ -44,7 +45,12 @@
     "sub":          false,
     "supernew":     false,
     "maxerr":       500,
-    "maxlen":       150,
+    "maxlen":       110,
     "passfail":     false,
-    "latedef":      true
+    "latedef":      true,
+    "quotmark":     "single",
+    "maxstatements":30,
+    "maxcomplexity":6,
+    "maxdepth":     3,
+    "indent":       4
 }

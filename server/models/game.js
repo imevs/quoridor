@@ -1,4 +1,3 @@
-var io = require('socket.io');
 var _ = require('underscore');
 var Backbone = require('../backbone.mongoose');
 var Room = require('./room.js');
@@ -38,7 +37,7 @@ var Game = Backbone.Collection.extend({
     },
     findFreeRoom: function(roomId) {
         return this.find(function(room) {
-            return room.get('id') === roomId && !room.isFull() && room.get('state') != 'finished';
+            return room.get('id') === roomId && !room.isFull() && room.get('state') !== 'finished';
         });
     },
     removeOld: function () {
@@ -59,7 +58,9 @@ var Game = Backbone.Collection.extend({
         this.removeOld();
 
         var params = {};
-        playersCount && (params.playersCount = playersCount);
+        if (playersCount)  {
+            params.playersCount = playersCount;
+        }
         var room = Room.createRoom(params);
 
         this.add(room);
@@ -71,7 +72,9 @@ var Game = Backbone.Collection.extend({
         if (roomId) {
             room = this.findFreeRoom(roomId);
             result = room && room.addPlayer(socket);
-            !result && socket.emit('server_start', 'error');
+            if (!result) {
+                socket.emit('server_start', 'error');
+            }
         }
     }
 });
