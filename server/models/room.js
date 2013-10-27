@@ -120,7 +120,7 @@ var Room = Backbone.Model.extend({
         return this.findBusyPlayersPlaces().length >= this.get('playersCount');
     },
     isOver: function() {
-        return this.get('state') == 'finished';
+        return this.get('state') === 'finished';
     },
     addPlayer: function(socket) {
         var playerId = socket && socket.id && socket.id.toString();
