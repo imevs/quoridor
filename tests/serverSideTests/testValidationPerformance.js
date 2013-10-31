@@ -5,6 +5,7 @@ var room;
 
 exports['validation'] = nodeunit.testCase({
 
+/*
     'notBreakSomePlayerPath': function(test) {
         room = Room.createRoom({playersCount: 2});
 
@@ -58,8 +59,10 @@ exports['validation'] = nodeunit.testCase({
 
         test.done();
     },
+*/
 
     'breakSomePlayerPath - 4 players - temp': function(test) {
+        console.time('0');
         room = Room.createRoom({playersCount: 4});
 
         room.fences.findWhere({x: 0, y: 5, type: 'H'}).set('state', 'busy');
@@ -71,8 +74,11 @@ exports['validation'] = nodeunit.testCase({
         room.fences.findWhere({x: 6, y: 5, type: 'H'}).set('state', 'busy');
 
         var fence = room.fences.findWhere({x: 8, y: 5, type: 'H'});
+        console.timeEnd('0');
 
-        test.deepEqual([room.doesFenceBreakPlayerPath(room.players.at(0), fence)], [true]);
+        console.time('1');
+        test.ok(room.doesFenceBreakPlayerPath(room.players.at(0), fence));
+        console.timeEnd('1');
 
         test.done();
     }

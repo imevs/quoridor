@@ -3,8 +3,10 @@ var Backbone = require('backbone');
 var sinon = require('sinon');
 var Game = require('../../server/models/game.js');
 
-Backbone.sync = function(method, obj, options) {
-    options && options.success && options.success();
+Backbone.sync = function (method, obj, options) {
+    if (options && options.success) {
+        options.success();
+    }
 };
 
 function extend(Child, Parent) {
@@ -17,11 +19,11 @@ var playerSocket = function (id) {
 };
 extend(playerSocket, emitter);
 
-global.setTimeout = function() {};
+global.setTimeout = function () {};
 
-var io, game;
+var io, game, clock;
 
-exports['game'] = nodeunit.testCase({
+exports['test-game'] = nodeunit.testCase({
 
     setUp   : function (test) {
         io = {
@@ -31,9 +33,12 @@ exports['game'] = nodeunit.testCase({
         game = new Game();
         game.start(io);
 
+        clock = sinon.useFakeTimers();
+
         test();
     },
     tearDown: function (test) {
+        clock.restore();
         test();
     },
 
@@ -130,7 +135,7 @@ exports['game'] = nodeunit.testCase({
         test.done();
     },
 
-    "find player's room": function (test) {
+    'find player`s room': function (test) {
         var room1 = game.createNewRoom(2);
         var room2 = game.createNewRoom(2);
 
@@ -200,7 +205,7 @@ exports['game'] = nodeunit.testCase({
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
 
-        p2.on('server_start', function (currentPlayer, activePlayer, history) {
+        p2.on('server_start', function (currentPlayer, activePlayer/*, gameHistory*/) {
             test.equal(1, currentPlayer);
             test.equal(0, activePlayer);
             test.done();
@@ -380,12 +385,12 @@ exports['game'] = nodeunit.testCase({
         p3.on('server_start', function (currentPlayer, activePlayer, history) {
             test.equal(0, currentPlayer);
             console.log(history[1]);
-/*            test.deepEqual({
-                x              : 4,
-                y              : 1,
-                type           : 'player'
-            }, history[3]);
-*/
+            /*            test.deepEqual({
+             x              : 4,
+             y              : 1,
+             type           : 'player'
+             }, gameHistory[3]);
+             */
             test.done();
         });
         p3.emit('myconnection', {roomId: room1.get('id')});
@@ -409,7 +414,7 @@ exports['game'] = nodeunit.testCase({
         var p3 = new playerSocket('3');
         io.sockets.emit('connection', p3);
 
-        p3.on('server_start', function (currentPlayer, activePlayer, history) {
+        p3.on('server_start', function (currentPlayer, activePlayer/*, gameHistory*/) {
             test.equal(0, currentPlayer);
             test.equal(1, activePlayer);
 /*            test.deepEqual([
@@ -482,6 +487,82 @@ exports['game'] = nodeunit.testCase({
         p2.emit('client_move_fence', {x: 4, y: 2, type: 'H'});
 
         sinon.assert.notCalled(spy);
+        test.done();
+    },
+
+    'switch currentplayer by timeout': function (test) {
+        var room1 = game.createNewRoom(2);
+
+        var p1 = new playerSocket('1');
+        io.sockets.emit('connection', p1);
+        p1.emit('myconnection', {roomId: room1.get('id')});
+
+        var p2 = new playerSocket('2');
+        io.sockets.emit('connection', p2);
+        p2.emit('myconnection', {roomId: room1.get('id')});
+
+        p1.emit('client_move_fence', {x: 4, y: 2, type: 'H'});
+
+        test.equal(room1.get('activePlayer'), 1);
+        clock.tick(11000);
+
+        test.equal(room1.get('activePlayer'), 0);
+        test.deepEqual(room1.history.get('turns').toJSON(), [
+            { x: 4, y: 0, t: 'p' }, // start position
+            { x: 4, y: 8, t: 'p' }, // start position
+            { x: 4, y: 2, x2: 3, y2: 2, t: 'f' }, // move fence
+            { x: 4, y: 8, t: 'p' } // start position
+        ]);
+        test.done();
+    },
+
+    'parse empty': function (test) {
+        var room1 = game.createNewRoom(2);
+        var res = room1.parse();
+
+        test.equal(res, undefined);
+        test.done();
+    },
+
+    'parse history': function (test) {
+        var room1 = game.createNewRoom(2);
+        var turns = [
+            { x: 4, y: 0, t: 'p' },
+            { x: 4, y: 8, t: 'p' },
+            { x: 4, y: 2, x2: 3, y2: 2, t: 'f' },
+            { x: 4, y: 8, t: 'p' }
+        ];
+        room1.parse({
+            _doc: {
+                history: turns
+            }
+        });
+
+        test.deepEqual(room1.history.get('turns').toJSON(), turns);
+        test.done();
+    },
+
+    'test toJSON': function (test) {
+        var room1 = game.createNewRoom(2);
+
+        var result = room1.toJSON();
+        delete result.id;
+        delete result.createDate;
+
+        test.deepEqual(result, {
+            //createDate  : '',
+            //id          : '431eb545-d537-47ca-a43f-4426d71ca243',
+            playersCount: 2,
+            activePlayer: 0,
+            title       : '',
+            boardSize   : 9,
+            state       : '',
+            history     : [
+                { x: 4, y: 0, t: 'p' },
+                { x: 4, y: 8, t: 'p' }
+            ]
+        });
+
         test.done();
     }
 
