@@ -46,6 +46,10 @@ server.listen(app.get('port'), function () {
     console.log('Express server listening on port ' + app.get('port'));
 });
 
+if (!process.env.DB_PASS) {
+    console.log('Undefined variable ' + 'process.env.DB_PASS');
+}
+
 Backbone.initSync({
     db_url: 'mongodb://imevs:' + process.env.DB_PASS + '@ds043368.mongolab.com:43368/quoridor',
     schema_dir: __dirname + '/schema'
