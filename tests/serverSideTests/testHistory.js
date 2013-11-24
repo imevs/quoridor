@@ -308,6 +308,21 @@ exports['test-quoridor'] = nodeunit.testCase({
         test.deepEqual(expected, gameHistory.getPlayerPositions());
 
         test.done();
+    },
+
+    'test initPlayers': function (test) {
+        gameHistory = new TurnModel({
+            playersCount: '2'
+        });
+        gameHistory.initPlayers();
+        gameHistory.initPlayers(); // tests for idempotency of initPlayers method
+        var expected = [
+            { x: 4, y: 0, movedFences: 0 },
+            { x: 4, y: 8, movedFences: 0 }
+        ];
+        test.deepEqual(expected, gameHistory.getPlayerPositions());
+
+        test.done();
     }
 
 });
