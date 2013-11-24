@@ -78,6 +78,7 @@ var PlayersCollection = Backbone.Collection.extend({
     },
     createPlayers: function (playersCount) {
         var me = this;
+        playersCount = +playersCount;
         if (playersCount === 2) {
             me.playersPositions.splice(3, 1);
             me.playersPositions.splice(1, 1);
