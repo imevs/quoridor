@@ -1,0 +1,20 @@
+<!--// ссылка на игру-->
+<!--// список игроков-->
+<!--// ссылка на игрока-->
+<!--// тип игрока-->
+<form action="/create/playersCount/{{players.length}}" method="POST">
+    <dl>
+        {{#each players}}
+        <dt>Игрок № {{@index}}</dt>
+        <dd>
+            <select name="playerType{{@index}}">
+                <option value="bot">Bot</option>
+                <option value="human">Human</option>
+            </select>
+        </dd>
+        {{/each}}
+    </dl>
+
+    <input type="submit" value="CreateGame"/>
+
+</form>

@@ -1,0 +1,17 @@
+Players:
+<dl>
+{{#each players}}
+    <dt>{{@index}}</dt>
+    <dd>
+
+    {{#if url}}
+        <a href="/play/player/{{url}}">
+        play{{#if state}} ({{state}}){{/if}}</a>
+    {{else}}
+    bot
+    {{/if}}
+    </dd>
+{{else}}
+No players
+{{/each}}
+</dl>
