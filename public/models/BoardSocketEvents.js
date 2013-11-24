@@ -21,6 +21,7 @@ window.BoardSocketEvents = {
         return this.get('socket') || window.io && this.set('socket', io.myconnect(host, {
             resource: 'api'
         }, {
+            playerId: this.get('playerId'),
             roomId: this.get('roomId')
         }));
     },
