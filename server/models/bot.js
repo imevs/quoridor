@@ -5,6 +5,7 @@ var History = require('../../public/models/TurnModel.js');
 
 var Bot = function (id, playersCount) {
     this.id = id;
+    this.playerId = id;
     this.initEvents();
     this.playersCount = playersCount;
 };
