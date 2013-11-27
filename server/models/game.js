@@ -75,6 +75,7 @@ var Game = Backbone.Collection.extend({
         if (playersCount)  {
             params.playersCount = playersCount;
         }
+        playerParams = playerParams || [];
         var room = Room.createRoom(params);
         _(_.range(playersCount)).each(function (index) {
             var guid = uuid.v4();

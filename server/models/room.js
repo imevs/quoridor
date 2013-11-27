@@ -40,6 +40,7 @@ var Room = Backbone.Model.extend({
         if (doc && doc.history && doc.history.length) {
             room.history.get('turns').reset(doc.history);
             doc.players = room.history.getPlayerPositions();
+            doc.playersInfo = doc.playersInfo || [];
             _.each(doc.players, function (pl, index) {
                 var info = doc.playersInfo[index];
                 pl.url = info ? info.url : uuid.v4();
