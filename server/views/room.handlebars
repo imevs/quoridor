@@ -3,7 +3,6 @@ Players:
 {{#each players}}
     <dt>{{@index}}</dt>
     <dd>
-
     {{#if url}}
         <a href="/play/player/{{url}}">
         play{{#if state}} ({{state}}){{/if}}</a>
@@ -15,3 +14,10 @@ Players:
 No players
 {{/each}}
 </dl>
+
+<script type="text/javascript">
+    window.roomId = '{{roomId}}';
+    window.playersCount = '{{playersCount}}';
+</script>
+<script src="/libs/require.js" data-main="/main"></script>
+<div id="board"></div>

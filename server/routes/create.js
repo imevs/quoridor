@@ -2,10 +2,19 @@ module.exports = function (req, res) {
 
     var playersCount = req.params.playersCount;
 
-    var room = global.game.createNewRoom(playersCount);
+    var playersParams = [];
+
+    for (var i = 0; i < playersCount; i++) {
+        var type = req.body['playerType' + i];
+        if (type) {
+            playersParams.push(type);
+        }
+    }
+
+    var room = global.game.createNewRoom(playersCount, playersParams);
     room.save({}, {
         success: function () {
-            res.redirect('/play/id/' + room.get('id'));
+            res.redirect('/play/game/' + room.get('id'));
         }
     });
 };

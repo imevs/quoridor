@@ -5,6 +5,7 @@ var History = require('../../public/models/TurnModel.js');
 
 var Bot = function (id, playersCount) {
     this.id = id;
+    this.playerId = id;
     this.initEvents();
     this.playersCount = playersCount;
 };
@@ -85,7 +86,7 @@ _.extend(Bot.prototype, {
             console.log('bot can`t make a turn');
             return;
         }
-        setTimeout(_(bot.doTurn).bind(bot), 100);
+        setTimeout(_(bot.doTurn).bind(bot), 1000);
     },
 
     getFencePosition: function () {

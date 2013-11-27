@@ -1,5 +1,5 @@
 <% if (typeof data.currentplayer != "undefined") { %>
-<p>Вы играете за игрока номер: <strong><%= data.currentplayer + 1 %></strong></p>
+<p>Вы играете за игрока номер: <strong><%= (data.currentplayer + 1)|| 'Passive' %></strong></p>
 <p>Текущий ход игрока номер:
     <strong><%= data.activeplayer + 1 %> <%=(data.activeplayer == data.currentplayer ? '(ваш ход)': '')%></strong></p>
 <% _(data.fences).each(function(fence, index) {%>
