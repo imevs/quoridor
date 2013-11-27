@@ -4,6 +4,7 @@ var RoomSchema = new mongoose.Schema({
     id: { 'type': String },
     state: { 'type': String },
     title: { 'type': String, 'default': '' },
+    playersInfo: {'type': Array },
     history: {'type': Array },
     boardSize: { 'type': Number },
     playersCount: { 'type': Number },

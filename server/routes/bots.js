@@ -1,6 +1,3 @@
-var Bot = require('../models/bot.js');
-var _ = require('underscore');
-
 module.exports = function (req, res) {
 
     var playersCount = req.params.playersCount;
