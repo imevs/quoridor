@@ -56,10 +56,11 @@ exports['test-game'] = nodeunit.testCase({
 
     'connect 1 player': function (test) {
         var room = game.createNewRoom(2);
+        var guid = room.players.at(0).get('url');
 
         var p = new playerSocket('1');
         io.sockets.emit('connection', p);
-        p.emit('myconnection', {roomId: room.get('id')});
+        p.emit('myconnection', {playerId: guid});
 
         var room1 = game.at(0);
         test.equal(1, room1.findBusyPlayersPlaces().length);
@@ -69,14 +70,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'connect 2 player': function (test) {
         var room = game.createNewRoom(2);
+        var guid1 = room.players.at(0).get('url');
+        var guid2 = room.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         var room1 = game.at(0);
         test.equal(2, room1.findBusyPlayersPlaces().length);
@@ -86,14 +89,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'connect 1 player two times': function (test) {
         var room = game.createNewRoom(2);
+        var guid1 = room.players.at(0).get('url');
+        var guid2 = room.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('1');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         var room1 = game.at(0);
         test.equal(1, room1.findBusyPlayersPlaces().length);
@@ -103,18 +108,20 @@ exports['test-game'] = nodeunit.testCase({
 
     'connect 3 player': function (test) {
         var room = game.createNewRoom(2);
+        var guid1 = room.players.at(0).get('url');
+        var guid2 = room.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         var p3 = new playerSocket('3');
         io.sockets.emit('connection', p3);
-        p3.emit('myconnection', {roomId: room.get('id')});
+        p3.emit('myconnection', {playerId: guid1});
 
         var room1 = game.at(0);
         test.equal(2, room1.findBusyPlayersPlaces().length);
@@ -124,10 +131,14 @@ exports['test-game'] = nodeunit.testCase({
 
     'disconnect player from room 1': function (test) {
         var room = game.createNewRoom(2);
+        var guid1 = room.players.at(0).get('url');
 
         var p = new playerSocket('1');
         io.sockets.emit('connection', p);
-        p.emit('myconnection', {roomId: room.get('id')});
+        p.emit('myconnection', {playerId: guid1});
+
+        test.equal(1, room.findBusyPlayersPlaces().length);
+
         p.emit('disconnect', p);
 
         var room1 = game.at(0);
@@ -138,18 +149,21 @@ exports['test-game'] = nodeunit.testCase({
     'find player`s room': function (test) {
         var room1 = game.createNewRoom(2);
         var room2 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(1).get('url');
+        var guid3 = room2.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         var p3 = new playerSocket('3');
         io.sockets.emit('connection', p3);
-        p3.emit('myconnection', {roomId: room2.get('id')});
+        p3.emit('myconnection', {playerId: guid3});
 
         test.equal(game.at(0), game.findPlayerRoom({id: '1'}));
         test.equal(game.at(1), game.findPlayerRoom({id: '3'}));
@@ -164,25 +178,9 @@ exports['test-game'] = nodeunit.testCase({
         test.done();
     },
 
-    'findFreeRoom get room 2': function (test) {
-        var room1 = game.createNewRoom(2);
-        var room2 = game.createNewRoom(2);
-
-        var p1 = new playerSocket('1');
-        io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
-
-        var p2 = new playerSocket('2');
-        io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
-
-        test.notEqual(room1, game.findFreeRoom(room1.get('id')));
-        test.equal(room2, game.findFreeRoom(room2.get('id')));
-        test.done();
-    },
-
     'test start 1st player': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
 
         var p = new playerSocket('1');
         io.sockets.emit('connection', p);
@@ -193,11 +191,13 @@ exports['test-game'] = nodeunit.testCase({
             test.equal(2, history.length);
             test.done();
         });
-        p.emit('myconnection', {roomId: room1.get('id')});
+        p.emit('myconnection', {playerId: guid1});
     },
 
     'test start 2nd player': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
@@ -210,13 +210,16 @@ exports['test-game'] = nodeunit.testCase({
             test.equal(0, activePlayer);
             test.done();
         });
-        p1.emit('myconnection', {roomId: room1.get('id')});
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
+        p2.emit('myconnection', {playerId: guid2});
     },
 
     'test start 3rd player in 2nd room': function (test) {
         var room1 = game.createNewRoom(2);
         var room2 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(1).get('url');
+        var guid3 = room2.players.at(0).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
@@ -234,21 +237,23 @@ exports['test-game'] = nodeunit.testCase({
             test.done();
         });
 
-        p1.emit('myconnection', {roomId: room1.get('id')});
-        p2.emit('myconnection', {roomId: room1.get('id')});
-        p3.emit('myconnection', {roomId: room2.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
+        p2.emit('myconnection', {playerId: guid2});
+        p3.emit('myconnection', {playerId: guid3});
     },
 
     'move player (check event params)': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         p1.on('server_move_player', function (eventInfo) {
             test.equal(eventInfo.x, 4);
@@ -262,14 +267,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'move player (change user position)': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         p1.emit('client_move_player', {x: 4, y: 1});
 
@@ -281,14 +288,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'player can`t move (check that there`s no event)': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(0).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         var spy = sinon.spy();
         p2.on('server_move_player', spy);
@@ -300,14 +309,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'player can`t move (check player position)': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         p2.emit('client_move_player', {x: 4, y: 7});
 
@@ -323,14 +334,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'player move fence': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         p2.on('server_move_fence', function (eventInfo) {
             test.equal(eventInfo.x, 4);
@@ -346,14 +359,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'player can`t move fence': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(0).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         var spy = sinon.spy();
         p1.on('server_move_fence', spy);
@@ -366,14 +381,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'restore players positions': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         p1.emit('client_move_player', {x: 4, y: 1});
 
@@ -393,19 +410,21 @@ exports['test-game'] = nodeunit.testCase({
              */
             test.done();
         });
-        p3.emit('myconnection', {roomId: room1.get('id')});
+        p3.emit('myconnection', {playerId: guid1});
     },
 
     'restore fences positions': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         p1.emit('client_move_fence', {x: 4, y: 1, type: 'H'});
 
@@ -427,19 +446,21 @@ exports['test-game'] = nodeunit.testCase({
 */
             test.done();
         });
-        p3.emit('myconnection', {roomId: room1.get('id')});
+        p3.emit('myconnection', {playerId: guid1});
     },
 
     'player can`t move (invalid position)': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(0).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         var spy = sinon.spy();
         p1.on('server_move_player', spy);
@@ -451,14 +472,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'fence can`t move (invalid position)': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(0).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         var spy = sinon.spy();
         p1.on('server_move_fence', spy);
@@ -471,14 +494,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'fence can`t move (position is busy)': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(0).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         p1.emit('client_move_fence', {x: 4, y: 2, type: 'H'});
 
@@ -492,14 +517,16 @@ exports['test-game'] = nodeunit.testCase({
 
     'switch currentplayer by timeout': function (test) {
         var room1 = game.createNewRoom(2);
+        var guid1 = room1.players.at(0).get('url');
+        var guid2 = room1.players.at(1).get('url');
 
         var p1 = new playerSocket('1');
         io.sockets.emit('connection', p1);
-        p1.emit('myconnection', {roomId: room1.get('id')});
+        p1.emit('myconnection', {playerId: guid1});
 
         var p2 = new playerSocket('2');
         io.sockets.emit('connection', p2);
-        p2.emit('myconnection', {roomId: room1.get('id')});
+        p2.emit('myconnection', {playerId: guid2});
 
         p1.emit('client_move_fence', {x: 4, y: 2, type: 'H'});
 
@@ -548,6 +575,7 @@ exports['test-game'] = nodeunit.testCase({
         var result = room1.toJSON();
         delete result.id;
         delete result.createDate;
+        delete result.playersInfo;
 
         test.deepEqual(result, {
             //createDate  : '',

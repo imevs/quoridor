@@ -23,6 +23,9 @@ var PlayerModel = Backbone.Model.extend({
     reset: function () {
         this.socket = null;
         this.set({id: '', state: ''});
+    },
+    isBot: function () {
+        return this.get('type') === 'bot';
     }
 });
 

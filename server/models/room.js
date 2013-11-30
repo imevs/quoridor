@@ -40,6 +40,11 @@ var Room = Backbone.Model.extend({
         if (doc && doc.history && doc.history.length) {
             room.history.get('turns').reset(doc.history);
             doc.players = room.history.getPlayerPositions();
+            _.each(doc.players, function (pl, index) {
+                var info = (doc.playersInfo || [])[index];
+                pl.url = info ? info.url : uuid.v4();
+                pl.type = info && (info.url === info.id) ? 'bot' : 'human';
+            });
             doc.fences = room.history.getFencesPositions();
         } else {
             console.log('parse error');
@@ -79,11 +84,20 @@ var Room = Backbone.Model.extend({
         var result = Backbone.Model.prototype.toJSON.call(this);
         delete result._id;
         result.history = this.history.get('turns').toJSON && this.history.get('turns').toJSON();
+        console.log(this.players.toJSON());
+        result.playersInfo = _.map(this.players.toJSON(), function (player) {
+            return {
+                url: player.url,
+                id: player.id
+            };
+        });
+        console.log(result.playersInfo);
         return result;
     },
 
     initialize: function () {
         var room = this;
+        this.sockets = [];
 
         if (!room.players) {
             room.players = new PlayersCollection();
@@ -123,21 +137,31 @@ var Room = Backbone.Model.extend({
         return this.get('state') === 'finished';
     },
     addPlayer: function (socket) {
-        var playerId = socket && socket.id && socket.id.toString();
-        if (this.isFull()) {
-            return false;
+        var socketId = socket && socket.id && socket.id.toString();
+        var playerId = socket && socket.playerId && socket.playerId.toString();
+
+        if (!playerId) {
+            socket.emit('server_start',
+                -1,
+                this.get('activePlayer'),
+                this.history.get('turns').toJSON()
+            );
+
+            this.sockets.push(socket);
+
+            return true;
         }
 
-        var player = this.players.findWhere({id: playerId});
+        var player = this.players.findWhere({id: socketId});
 
         player = player || this.players.find(function (player) {
-            return player.get('state') !== 'busy';
+            return player.get('state') !== 'busy' && player.get('url') === playerId;
         });
         if (!player) {
             console.log('player not found');
             return false;
         }
-        player.set('id', playerId);
+        player.set('id', socketId);
         player.set('state', 'busy');
         player.socket = socket;
 
@@ -259,6 +283,9 @@ var Room = Backbone.Model.extend({
                 socket.emit(eventName, eventInfo);
             }
         });
+        this.sockets.forEach(function (socket) {
+            socket.emit(eventName, eventInfo);
+        });
         var activePlayer = room.players.at(room.get('activePlayer'));
         var socket = activePlayer.socket;
         if (this.onTimeoutCount < 10) {
@@ -272,9 +299,13 @@ var Room = Backbone.Model.extend({
 
     onTimeout: function () {
         var room = this;
+        var activePlayer = this.players.at(this.get('activePlayer'));
+
+        if (!activePlayer.get('id')) {
+            return;
+        }
         this.onTimeoutCount = this.onTimeoutCount || 0;
         this.onTimeoutCount++;
-        var activePlayer = this.players.at(this.get('activePlayer'));
 
         this.history.add({
             x: activePlayer.get('x'),

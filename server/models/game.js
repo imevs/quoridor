@@ -1,6 +1,8 @@
 var _ = require('underscore');
 var Backbone = require('../backbone.mongoose');
 var Room = require('./room.js');
+var Bot = require('./bot.js');
+var uuid = require('uuid');
 
 var Game = Backbone.Collection.extend({
     model: Room,
@@ -13,7 +15,12 @@ var Game = Backbone.Collection.extend({
                 game.each(function (room) {
                     room.players.each(function (player) {
                         player.reset();
+                        if (player.isBot()) {
+                            var bot = new Bot(player.get('url'), room.get('playersCount'));
+                            room.addPlayer(bot);
+                        }
                     });
+
                 });
             }
         });
@@ -40,6 +47,13 @@ var Game = Backbone.Collection.extend({
             return room.get('id') === roomId && !room.isFull() && room.get('state') !== 'finished';
         });
     },
+    findRoomByPlayerId: function (playerId) {
+        return this.find(function (room) {
+            return room.players.find(function (player) {
+                return player.get('url') === playerId;
+            });
+        });
+    },
     removeOld: function () {
         var me = this;
         var twoHours = 2 * 60 * 60 * 1000;
@@ -54,27 +68,43 @@ var Game = Backbone.Collection.extend({
             item.destroy();
         });
     },
-    createNewRoom: function (playersCount) {
+    createNewRoom: function (playersCount, playerParams) {
         this.removeOld();
 
         var params = {};
         if (playersCount)  {
             params.playersCount = playersCount;
         }
+        playerParams = playerParams || [];
         var room = Room.createRoom(params);
+        _(_.range(playersCount)).each(function (index) {
+            var guid = uuid.v4();
+            room.players.at(index).set('url', guid);
+            var param = playerParams[index];
+            if (param === 'bot') {
+                var bot = new Bot(guid, playersCount);
+                room.addPlayer(bot);
+            }
+        });
 
         this.add(room);
         return room;
     },
     addPlayer: function (socket, params) {
-        var roomId = params.roomId, room, result = false;
-
-        if (roomId) {
-            room = this.findFreeRoom(roomId);
+        var roomId = params.roomId,
+            playerId = params.playerId,
+            room,
+            result = false;
+        if (playerId) {
+            room = this.findRoomByPlayerId(playerId);
+            socket.playerId = playerId;
             result = room && room.addPlayer(socket);
             if (!result) {
                 socket.emit('server_start', 'error');
             }
+        } else if (roomId) {
+            room = this.findRoomById(roomId);
+            result = room && room.addPlayer(socket);
         }
     }
 });

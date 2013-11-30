@@ -33,9 +33,9 @@ var BoardModel = Backbone.Model.extend({
         if (count !== 2 && count !== 4) {
             me.set('playersCount', 2);
         }
-        me.fields.createFields(me.get('boardSize'));
-        me.fences.createFences(me.get('boardSize'));
-        me.players.createPlayers(me.get('playersCount'));
+        me.fields.createFields(+me.get('boardSize'));
+        me.fences.createFences(+me.get('boardSize'));
+        me.players.createPlayers(+me.get('playersCount'));
     },
 
     switchActivePlayer: function () {
@@ -69,13 +69,17 @@ var BoardModel = Backbone.Model.extend({
             /**
              * if local mode game then automatic change currentPlayer
              */
-            if (!me.get('roomId')) {
+            if (!me.isOnlineGame()) {
                 me.set('currentPlayer', me.get('activePlayer'));
             }
 
             me.isPlayerMoved = false;
             me.isFenceMoved = false;
         }
+    },
+
+    isOnlineGame: function () {
+        return this.get('playerId') || this.get('roomId');
     },
 
     onMovePlayer: function (x, y) {
@@ -112,7 +116,7 @@ var BoardModel = Backbone.Model.extend({
         this.on('change:currentPlayer', this.updateInfo, this);
         this.players.on('change', this.updateInfo, this);
 
-        if (!this.get('roomId')) {
+        if (!this.isOnlineGame()) {
             this.players.on('win', function (player) {
                 if (window.confirm(player + ' выиграл. Начать сначала?')) {
                     me.resetModels();
@@ -155,7 +159,7 @@ var BoardModel = Backbone.Model.extend({
         this.createModels();
         this.initEvents();
         this.initModels();
-        if (this.get('roomId')) {
+        if (this.isOnlineGame()) {
             this.socketEvents();
         } else {
             this.on('confirmturn', this.makeTurn);

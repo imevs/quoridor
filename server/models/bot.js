@@ -86,7 +86,7 @@ _.extend(Bot.prototype, {
             console.log('bot can`t make a turn');
             return;
         }
-        setTimeout(_(bot.doTurn).bind(bot), 100);
+        setTimeout(_(bot.doTurn).bind(bot), 1000);
     },
 
     getFencePosition: function () {
