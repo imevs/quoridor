@@ -72,7 +72,7 @@ _.extend(Bot.prototype, {
 
     turn: function () {
         this.attemptsCount = 0;
-        this.newPositions = this.getPositions();
+        this.newPositions = this.getJumpPositions();
         this.makeTurn();
     },
 
@@ -134,7 +134,7 @@ _.extend(Bot.prototype, {
         console.log('something going wrong');
     },
 
-    getPositions: function () {
+    getJumpPositions: function () {
         var newPositions = [
             {
                 x: this.x + 1,
