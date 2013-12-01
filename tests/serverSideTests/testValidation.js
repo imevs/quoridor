@@ -8,7 +8,7 @@ var board;
 exports['test-validation'] = nodeunit.testCase({
 
     setUp: function (test) {
-        /*        _ _ _
+        /* _ _ _
          0|_|x|_|
          1|_|_|_|
          2|_|x|_|

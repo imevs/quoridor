@@ -2,6 +2,7 @@ var _ = require('underscore');
 var Backbone = require('../backbone.mongoose');
 var Room = require('./room.js');
 var Bot = require('./bot.js');
+var SmartBot = require('./smartBot.js');
 var uuid = require('uuid');
 
 var Game = Backbone.Collection.extend({
@@ -84,6 +85,9 @@ var Game = Backbone.Collection.extend({
             if (param === 'bot') {
                 var bot = new Bot(guid, playersCount);
                 room.addPlayer(bot);
+            }
+            if (param === 'smartbot') {
+                room.addPlayer(new SmartBot(guid, room));
             }
         });
 
