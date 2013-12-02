@@ -180,6 +180,9 @@ var BoardValidation = {
         var fence = board.fences.findWhere(coordinate.pick('x', 'y', 'type'));
         var sibling = board.fences.getSibling(fence);
         fence.set('state', 'busy');
+        if (!sibling) {
+            return 'invalid';
+        }
         sibling.set('state', 'busy');
 
         var addNewCoordinates = function (validMoveCoordinate) {

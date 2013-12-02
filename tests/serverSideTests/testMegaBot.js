@@ -19,8 +19,8 @@ exports.bot = nodeunit.testCase({
             boardSize   : 3
         });
         board.players = new PlayersCollection([
-            {x: 1, y: 0, id: 0},
-            {x: 1, y: 2, id: 1}
+            {x: 1, y: 0, id: 0, fencesRemaining: 3},
+            {x: 1, y: 2, id: 1, fencesRemaining: 3}
         ]);
         board.players.playersPositions = [
             {x: 1, y: 0, color: 'red', isWin: function (x, y) {
@@ -47,7 +47,13 @@ exports.bot = nodeunit.testCase({
     },
 
     'selectMoves': function (test) {
-        test.equal(bot.selectMoves().length, 21);
+        test.equal(bot.selectMoves().length, 15);
+        test.done();
+    },
+
+    'getBestTurn': function (test) {
+        bot = new Bot(0, board);
+        test.deepEqual(bot.getBestTurn(), {x: 0, y: 0, type: 'P', rate: 0});
         test.done();
     }
 

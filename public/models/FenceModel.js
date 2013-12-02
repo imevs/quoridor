@@ -163,7 +163,7 @@ var FencesCollection = Backbone.Collection.extend({
         }
         var sibling = this.getSibling(item);
 
-        return sibling && !this.isBusy(sibling);
+        return !!(sibling && !this.isBusy(sibling));
     },
     validateAndTriggerEventOnFenceAndSibling: function (item, event) {
         var shouldTriggerEvent = this.validateFenceAndSibling(item);
