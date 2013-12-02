@@ -1,5 +1,4 @@
 var nodeunit = require('nodeunit');
-var _ = require('underscore');
 var Bot = require('../../server/models/smartBot.js');
 var Room = require('../../server/models/room.js');
 var PlayersCollection = require('../../public/models/PlayerModel.js');
