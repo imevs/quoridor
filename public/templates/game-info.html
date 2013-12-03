@@ -1,9 +1,9 @@
 <% if (typeof data.currentplayer != "undefined") { %>
-<p>You play as a player number: <strong><%= (data.currentplayer + 1)|| 'You may to view game only' %></strong></p>
+<p>You play as a player number: <strong><%= (data.currentplayer + 1)|| 'You may to view game only (choose who to play from links above)' %></strong></p>
 <p>Current player number:
-    <strong><%= data.activeplayer + 1 %> <%=(data.activeplayer == data.currentplayer ? '(ypur mive)': '')%></strong></p>
+    <strong><%= data.activeplayer + 1 %> <%=(data.activeplayer == data.currentplayer ? '(your move)': '')%></strong></p>
 <% _(data.fences).each(function(fence, index) {%>
-<p><%=index + 1 %> player walls count: <strong><%=fence%></strong></p>
+<p><%=index + 1 %>-player walls count: <strong><%=fence%></strong></p>
 <%}); %>
 <%} else { %>
 <p>Connecting to game server...</p>
