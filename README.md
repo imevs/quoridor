@@ -8,6 +8,13 @@ Quoridor game
 [![Build Status](https://travis-ci.org/imevs/quoridor.png?branch=master)](https://travis-ci.org/imevs/quoridor)
 
 
+This game is an example of fullstack javascript application. 
+The application based on javascript framework Backbone, it's also using next libraries: requirejs, handlebars, bootstrap and Raphael for svg graphics. 
+Here you can also find an examples of using mongodb, phantomjs, jshint and jstestdriver.  
+The application intgrated with such external services as heroku (for deployment), travis-ci (for continuos integration and continuos deplument), mongolab (data storage).
+
+You can play in game on the [sane browser window for all players](http://quoridor-online.herokuapp.com/playLocal/playersCount/2), and you can play in [multiplayer mode](http://quoridor-online.herokuapp.com/create/playersCount/2) (up to 4 players). If you haven't any friends, you can [choose bots](http://quoridor-online.herokuapp.com/new/playersCount/4). Eventually you can look [on bots battle](http://quoridor-online.herokuapp.com/createGameWithBots/playersCount/2) 
+
 Road map
 =
 
