@@ -1,19 +1,18 @@
 Players:
-<dl>
+<ul>
 {{#each players}}
-    <dt>{{@index}}</dt>
-    <dd>
+    <li>
     {{#if url}}
         <a href="/play/player/{{url}}">
-        play{{#if state}} ({{state}}){{/if}}</a>
+        play (player № {{@index}}){{#if state}} ({{state}}){{/if}}</a>
     {{else}}
     bot
     {{/if}}
-    </dd>
+    </li>
 {{else}}
 No players
 {{/each}}
-</dl>
+</ul>
 
 <script type="text/javascript">
     window.roomId = '{{roomId}}';
