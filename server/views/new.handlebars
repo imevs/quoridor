@@ -1,11 +1,7 @@
-<!--// ссылка на игру-->
-<!--// список игроков-->
-<!--// ссылка на игрока-->
-<!--// тип игрока-->
 <form action="/create/playersCount/{{players.length}}" method="POST">
     <dl>
         {{#each players}}
-        <dt>Игрок № {{@index}}</dt>
+        <dt>Player  № {{@index}}</dt>
         <dd>
             <select name="playerType{{@index}}">
                 <option value="human">Human</option>
