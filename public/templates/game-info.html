@@ -1,10 +1,10 @@
 <% if (typeof data.currentplayer != "undefined") { %>
-<p>Вы играете за игрока номер: <strong><%= (data.currentplayer + 1)|| 'Passive' %></strong></p>
-<p>Текущий ход игрока номер:
-    <strong><%= data.activeplayer + 1 %> <%=(data.activeplayer == data.currentplayer ? '(ваш ход)': '')%></strong></p>
+<p>You play as a player number: <strong><%= (data.currentplayer + 1)|| 'You may to view game only' %></strong></p>
+<p>Current player number:
+    <strong><%= data.activeplayer + 1 %> <%=(data.activeplayer == data.currentplayer ? '(ypur mive)': '')%></strong></p>
 <% _(data.fences).each(function(fence, index) {%>
-<p>Количество фишек <%=index + 1 %>-го игрока: <strong><%=fence%></strong></p>
+<p><%=index + 1 %> player walls count: <strong><%=fence%></strong></p>
 <%}); %>
 <%} else { %>
-<p>Подключение к игровому серверу...</p>
+<p>Connecting to game server...</p>
 <%}%>
