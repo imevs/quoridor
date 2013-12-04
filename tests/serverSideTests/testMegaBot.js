@@ -40,9 +40,9 @@ exports.bot = nodeunit.testCase({
         test();
     },
 
-/*    calcHeuristic: function (test) {
-        test.equal(bot.calcHeuristic(), 0);
-
+    calcHeuristic: function (test) {
+        var othersMinPathLength = bot.othersPlayersHeuristic(bot.board);
+        test.equal(bot.calcHeuristic(bot.board, othersMinPathLength), 1);
         test.done();
     },
 
@@ -55,7 +55,7 @@ exports.bot = nodeunit.testCase({
         bot = new Bot(0, board);
         test.deepEqual(bot.getBestTurn(), {x: 1, y: 1, type: 'P', rate: 0});
         test.done();
-    },*/
+    },
 
     'getPossiblePosition - first - fullsizeboard': function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9});
