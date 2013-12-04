@@ -40,7 +40,7 @@ exports.bot = nodeunit.testCase({
         test();
     },
 
-    calcHeuristic: function (test) {
+/*    calcHeuristic: function (test) {
         test.equal(bot.calcHeuristic(), 0);
 
         test.done();
@@ -53,8 +53,28 @@ exports.bot = nodeunit.testCase({
 
     'getBestTurn': function (test) {
         bot = new Bot(0, board);
-        test.deepEqual(bot.getBestTurn(), {x: 0, y: 0, type: 'P', rate: 0});
+        test.deepEqual(bot.getBestTurn(), {x: 1, y: 1, type: 'P', rate: 0});
+        test.done();
+    },*/
+
+    'getPossiblePosition - first - fullsizeboard': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9});
+        board.players.at(0).set('id', 0);
+        board.players.at(1).set('id', 1);
+        bot = new Bot(0, board);
+
+        test.deepEqual(bot.getBestTurn(), {x: 4, y: 1, type: 'P', rate: 0});
+        test.done();
+    },
+
+    'getPossiblePosition - second - fullsizeboard': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9});
+        board.players.at(0).set('id', 0);
+        board.players.at(1).set('id', 1);
+        bot = new Bot(1, board);
+        test.deepEqual(bot.getBestTurn(), {x: 4, y: 7, type: 'P', rate: 0});
         test.done();
     }
+
 
 });

@@ -26,36 +26,48 @@ _.extend(MegaBot.prototype, {
     },
 
     getBestTurn: function () {
-        return this.getTurnsRating()[0];
+        var rates = this.getTurnsRating();
+        var minRate = _(_(rates).pluck('rate')).min();
+        var types = {'H': 0, 'V': 1, 'P': 2 };
+        var minRatedMoves = _(rates).filter(function (move) {
+            return move.rate === minRate;
+        }).sort(function (a, b) {
+            return types[b.type] - types[a.type];
+        });
+        return minRatedMoves[0];
     },
 
     getTurnsRating: function () {
-        var board = this.board.copy();
+        var board = this.board;//.copy();
         var player = board.players.findWhere({id: this.id});
+        var othersMinPathLength = this.othersPlayersHeuristic(board);
 
         return _(this.selectMoves()).map(function (move) {
 
             if (move.type === 'P') {
+                var prevPosition = player.pick('x', 'y', 'prev_x', 'prev_y');
                 player.set({
                     x: move.x,
                     y: move.y,
                     prev_x: move.x,
                     prev_y: move.y
                 });
-                move.rate = this.calcHeuristic();
+                move.rate = this.calcHeuristic(board, othersMinPathLength);
+                player.set(prevPosition);
             } else {
                 var fence = board.fences.findWhere(move);
+                var sibling = board.fences.getSibling(fence);
                 if (!player.hasFences() ||
-                    !board.fences.validateFenceAndSibling(fence) ||
+                    !board.fences.validateFenceAndSibling(fence) &&
                     board.breakSomePlayerPath(fence)
                     ) {
                     move.rate = 999999;
                 } else {
-                    var sibling = board.fences.getSibling(fence);
-
                     fence.set({state: 'busy'});
                     sibling.set({state: 'busy'});
-                    move.rate = this.calcHeuristic();
+                    move.rate = this.calcHeuristic(board, othersMinPathLength);
+                    fence.set({state: ''});
+                    sibling.set({state: ''});
                 }
             }
             return move;
@@ -64,20 +76,21 @@ _.extend(MegaBot.prototype, {
         });
     },
 
-    calcHeuristic: function () {
-        var player = this.board.players.findWhere({
+    othersPlayersHeuristic: function (board) {
+        var paths = _(board.players.models).reject(function (v) {
+            return v.get('id') === this.playerId;
+        }, this).map(function (player) {
+                return this.findPathToGoal(player).length;
+            }, this);
+        return _(paths).min();
+    },
+
+    calcHeuristic: function (board, othersMinPathLength) {
+        var player = board.players.findWhere({
             id: this.playerId
         });
         var path = this.findPathToGoal(player);
-
-        var paths = _(this.board.players.models).reject(function (v) {
-            return v.get('id') === this.playerId;
-        }, this).map(function (player) {
-            return this.findPathToGoal(player).length;
-        }, this);
-        var minPath = _(paths).min();
-
-        return path.length - minPath;
+        return (path.length + 1) - othersMinPathLength;
     },
 
     selectMoves: function () {
@@ -91,14 +104,15 @@ _.extend(MegaBot.prototype, {
             return playerPosition;
         });
         positions = positions.concat(playerPositions);
-
-        var boardSize = this.board.get('boardSize');
-        _([boardSize, boardSize - 1]).iter(function (i, j) {
-            positions.push({x: i, y: j, type: 'H'});
-        });
-        _([boardSize - 1, boardSize]).iter(function (i, j) {
-            positions.push({x: i, y: j, type: 'V'});
-        });
+        if (player.hasFences()) {
+            var boardSize = this.board.get('boardSize');
+            _([boardSize, boardSize - 1]).iter(function (i, j) {
+                positions.push({x: i, y: j, type: 'H'});
+            });
+            _([boardSize - 1, boardSize]).iter(function (i, j) {
+                positions.push({x: i, y: j, type: 'V'});
+            });
+        }
 
         return positions;
     }
