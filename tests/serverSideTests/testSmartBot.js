@@ -54,8 +54,8 @@ exports.bot = nodeunit.testCase({
             { x: 1, y: 1, deep: 1 },
             { x: 0, y: 1, deep: 2 },
             { x: 2, y: 1, deep: 2 },
-            { x: 0, y: 0, deep: 3 },
-            { x: 2, y: 0, deep: 3 }
+            { x: 0, y: 0, deep: 2 },
+            { x: 2, y: 0, deep: 2 }
         ]);
 
         test.done();
@@ -69,7 +69,7 @@ exports.bot = nodeunit.testCase({
 
         var goal = bot.findGoal(closed, pawn);
 
-        test.deepEqual(goal, {x: 0, y: 0, deep: 3});
+        test.deepEqual(goal, {x: 0, y: 0, deep: 2});
 
         test.done();
     },
@@ -85,9 +85,8 @@ exports.bot = nodeunit.testCase({
             board, closed, player);
 
         test.deepEqual(path, [
-            { x: 0, y: 0, deep: 3 },
-            { x: 0, y: 1, deep: 2 },
-            { x: 0, y: 2, deep: 1 }
+            { x: 0, y: 0, deep: 2 },
+            { x: 1, y: 1, deep: 1 }
         ]);
 
         test.done();
@@ -95,21 +94,38 @@ exports.bot = nodeunit.testCase({
 
     'findPathToGoal': function (test) {
         test.deepEqual(bot.findPathToGoal(bot.board.players.at(1)), [
-            { x: 0, y: 0, deep: 3 },
-            { x: 0, y: 1, deep: 2 },
-            { x: 0, y: 2, deep: 1 }
+            { x: 1, y: 0, deep: 2 }, { x: 1, y: 1, deep: 1 }
         ]);
         test.done();
     },
 
     'getPossiblePosition - first': function (test) {
         bot = new Bot(0, board);
-        test.deepEqual(bot.getPossiblePosition(), {x: 0, y: 0});
+        test.deepEqual(bot.getPossiblePosition(), {x: 1, y: 1});
         test.done();
     },
 
     'getPossiblePosition - second': function (test) {
-        test.deepEqual(bot.getPossiblePosition(), {x: 0, y: 2});
+        test.deepEqual(bot.getPossiblePosition(), {x: 1, y: 1});
+        test.done();
+    },
+
+    'getPossiblePosition - first - fullsizeboard': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9});
+        board.players.at(0).set('id', 0);
+        board.players.at(1).set('id', 1);
+        bot = new Bot(0, board);
+
+        test.deepEqual(bot.getPossiblePosition(), {x: 4, y: 1});
+        test.done();
+    },
+
+    'getPossiblePosition - second - fullsizeboard': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9});
+        board.players.at(0).set('id', 0);
+        board.players.at(1).set('id', 1);
+        bot = new Bot(1, board);
+        test.deepEqual(bot.getPossiblePosition(), {x: 4, y: 7});
         test.done();
     }
 

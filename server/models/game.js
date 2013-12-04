@@ -3,6 +3,7 @@ var Backbone = require('../backbone.mongoose');
 var Room = require('./room.js');
 var Bot = require('./bot.js');
 var SmartBot = require('./smartBot.js');
+var MegaBot = require('./megaBot.js');
 var uuid = require('uuid');
 
 var Game = Backbone.Collection.extend({
@@ -88,6 +89,9 @@ var Game = Backbone.Collection.extend({
             }
             if (param === 'smartbot') {
                 room.addPlayer(new SmartBot(guid, room));
+            }
+            if (param === 'megabot') {
+                room.addPlayer(new MegaBot(guid, room));
             }
         });
 

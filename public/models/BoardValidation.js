@@ -37,11 +37,12 @@ var BoardValidation = {
          */
         sibling1 = this.players.findWhere({
             x: playerX,
-            y: playerY - (playerY - y)
+            y: y
         });
-        sibling2 = this.fences.findWhere({
+        var wallY = y - (playerY < y ? 0 : 1);
+        sibling2 = wallY === -1 || wallY === 8 || this.fences.findWhere({
             x: playerX,
-            y: playerY - (playerY - y),
+            y: wallY,
             state: 'busy',
             type: 'H'
         });
@@ -61,11 +62,12 @@ var BoardValidation = {
          *  p - player
          */
         sibling1 = this.players.findWhere({
-            x: playerX - (playerX - x),
+            x: x,
             y: playerY
         });
-        sibling2 = this.fences.findWhere({
-            x: playerX - (playerX - x),
+        var wallX = x - (playerX < x ? 0 : 1);
+        sibling2 = wallX === -1 || wallX === 8 || this.fences.findWhere({
+            x: wallX,
             y: playerY,
             state: 'busy',
             type: 'V'
@@ -148,7 +150,23 @@ var BoardValidation = {
         return activePlayer && activePlayer.hasFences() && this.isCurrentPlayerTurn();
     },
 
-    getValidPositions: function (pawn) {
+    getNearestPositions: function (pawn) {
+        var positions = [
+            {x: pawn.x - 1, y: pawn.y - 1},
+            {x: pawn.x - 1, y: pawn.y},
+            {x: pawn.x - 1, y: pawn.y + 1},
+
+            {x: pawn.x + 1, y: pawn.y - 1},
+            {x: pawn.x + 1, y: pawn.y},
+            {x: pawn.x + 1, y: pawn.y + 1},
+
+            {x: pawn.x, y: pawn.y - 1},
+            {x: pawn.x, y: pawn.y + 1}
+        ];
+        return positions;
+    },
+
+    getPossiblePositions: function (pawn) {
         var positions = [
             {x: pawn.x - 1, y: pawn.y - 1},
             {x: pawn.x - 1, y: pawn.y},
@@ -166,7 +184,11 @@ var BoardValidation = {
             {x: pawn.x, y: pawn.y - 2},
             {x: pawn.x, y: pawn.y + 2}
         ];
+        return positions;
+    },
 
+    getValidPositions: function (pawn) {
+        var positions = this.getPossiblePositions(pawn);
         return _.filter(positions, function (pos) {
             return this.isValidPlayerPosition(pawn, pos);
         }, this);

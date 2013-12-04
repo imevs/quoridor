@@ -29,6 +29,15 @@ _.extend(SmartBot.prototype, {
         var indexPlayer = this.board.players.indexOf(pawn);
         var player = board.players.at(indexPlayer);
 
+        /**
+         * leave out of account another players positions
+         */
+        board.players.each(function (p, i) {
+            if (i !== indexPlayer) {
+                p.set({x: -1, y: -1, prev_x: -1, prev_y: -1});
+            }
+        });
+
         var closed = this.processBoardForGoal(board, player);
         var goal = this.findGoal(closed, this.board.players.playersPositions[indexPlayer]);
         return this.buildPath(goal, pawn.pick('x', 'y'), board, closed, player);
@@ -88,11 +97,8 @@ _.extend(SmartBot.prototype, {
         var path = [];
 
         var func = function (pos) {
-            return pos.deep === current.deep - 1 &&
-                _(board.getValidPositions(current)).findWhere({
-                    x: pos.x,
-                    y: pos.y
-                });
+            return (pos.deep === current.deep - 1) &&
+                _(board.getNearestPositions(current)).findWhere({x: pos.x, y: pos.y});
         };
         while (current.x !== to.x || current.y !== to.y) {
             player.set({
@@ -103,6 +109,10 @@ _.extend(SmartBot.prototype, {
             });
             path.push(current);
             current = _(closed).detect(func);
+            if (!current) {
+                console.log('cannot build path');
+                return [false];
+            }
         }
         return path;
     }
