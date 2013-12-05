@@ -74,6 +74,20 @@ exports.bot = nodeunit.testCase({
         bot = new Bot(1, board);
         test.deepEqual(bot.getBestTurn(), {x: 4, y: 7, type: 'P', rate: 0});
         test.done();
+    },
+
+    'getPossiblePosition - second - fullsizeboard - walls': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9});
+        board.players.at(0).set('id', 0);
+        board.players.at(1).set('id', 1);
+        board.fences.findWhere({x: 4, y: 6, type: 'H'}).set('state', 'busy');
+        board.fences.findWhere({x: 5, y: 6, type: 'H'}).set('state', 'busy');
+        board.fences.findWhere({x: 6, y: 6, type: 'H'}).set('state', 'busy');
+        board.fences.findWhere({x: 7, y: 6, type: 'H'}).set('state', 'busy');
+
+        bot = new Bot(0, board);
+        test.deepEqual(bot.getBestTurn(), {x: 3, y: 8, type: 'V', rate: -2});
+        test.done();
     }
 
 

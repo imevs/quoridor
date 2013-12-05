@@ -32,7 +32,9 @@ _.extend(SmartBot.prototype, {
         /**
          * leave out of account another players positions
          */
+        var prevPositions = [];
         board.players.each(function (p, i) {
+            prevPositions.push(p.pick('x', 'y', 'prev_x', 'prev_y'));
             if (i !== indexPlayer) {
                 p.set({x: -1, y: -1, prev_x: -1, prev_y: -1});
             }
@@ -40,7 +42,11 @@ _.extend(SmartBot.prototype, {
 
         var closed = this.processBoardForGoal(board, player);
         var goal = this.findGoal(closed, this.board.players.playersPositions[indexPlayer]);
-        return this.buildPath(goal, pawn.pick('x', 'y'), board, closed, player);
+        var path = this.buildPath(goal, pawn.pick('x', 'y'), board, closed, player);
+        board.players.each(function (p, i) {
+            p.set(prevPositions[i]);
+        });
+        return path;
     },
 
     processBoardForGoal: function (board, player) {

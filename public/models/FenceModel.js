@@ -136,8 +136,8 @@ var FencesCollection = Backbone.Collection.extend({
     },
 
     getSibling                      : function (item) {
-        var siblingPosition = item.getAdjacentFencePosition();
-        return this.findWhere({
+        var siblingPosition = item && item.getAdjacentFencePosition();
+        return siblingPosition && this.findWhere({
             x   : siblingPosition.x,
             y   : siblingPosition.y,
             type: item.get('type')

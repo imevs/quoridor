@@ -65,8 +65,7 @@ exports['test-validation'] = nodeunit.testCase({
 
     'getValidPositions items (center of the board)': function (test) {
         var expected = [
-            { x: 0, y: 1 },
-            { x: 2, y: 1 }
+            { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 2, y: 0 }, { x: 2, y: 1 }
         ];
         test.deepEqual(board.getValidPositions({x: 1, y: 1}), expected);
         test.done();

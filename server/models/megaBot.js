@@ -63,11 +63,13 @@ _.extend(MegaBot.prototype, {
                     ) {
                     move.rate = 999999;
                 } else {
+                    var prevStateFence = fence.get('state');
+                    var prevStateSibling = sibling.get('state');
                     fence.set({state: 'busy'});
                     sibling.set({state: 'busy'});
-                    move.rate = this.calcHeuristic(board, othersMinPathLength);
-                    fence.set({state: ''});
-                    sibling.set({state: ''});
+                    move.rate = this.calcHeuristic(board);
+                    fence.set({state: prevStateFence});
+                    sibling.set({state: prevStateSibling});
                 }
             }
             return move;
@@ -77,10 +79,13 @@ _.extend(MegaBot.prototype, {
     },
 
     othersPlayersHeuristic: function (board) {
-        var paths = _(board.players.models).reject(function (v) {
-            return v.get('id') === this.playerId;
-        }, this).map(function (player) {
-                return this.findPathToGoal(player).length;
+        var paths = _(board.players.models)
+            .reject(function (v) {
+                return v.get('id') === this.playerId;
+            }, this)
+            .map(function (player) {
+                var path = this.findPathToGoal(player);
+                return path.length;
             }, this);
         return _(paths).min();
     },
@@ -90,6 +95,8 @@ _.extend(MegaBot.prototype, {
             id: this.playerId
         });
         var path = this.findPathToGoal(player);
+        othersMinPathLength = _.isUndefined(othersMinPathLength)
+            ? this.othersPlayersHeuristic(board) : othersMinPathLength;
         return (path.length + 1) - othersMinPathLength;
     },
 
