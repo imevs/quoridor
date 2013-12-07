@@ -7,7 +7,7 @@ var Bot = function (id, playersCount) {
     this.id = id;
     this.playerId = id;
     this.initEvents();
-    this.playersCount = playersCount;
+    this.playersCount = +playersCount;
 };
 util.inherits(Bot, emitter);
 

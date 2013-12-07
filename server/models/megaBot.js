@@ -2,8 +2,14 @@ var _ = require('underscore');
 var util = require('util');
 var Bot = require('./smartBot.js');
 
-var MegaBot = function (id, room) {
+var MegaBot = function (id, room, satisfiedRate) {
     MegaBot.super_.call(this, id, room);
+    this.player = this.board.players.findWhere({url: this.id});
+    this.othersPlayers = _(this.board.players.models)
+        .reject(function (v) {
+            return v.get('url') === this.playerId;
+        }, this);
+    this.satisfiedRate = satisfiedRate || 0;
 };
 
 util.inherits(MegaBot, Bot);
@@ -26,7 +32,9 @@ _.extend(MegaBot.prototype, {
     },
 
     getBestTurn: function () {
+        //console.time('getTurnsRating');
         var rates = this.getTurnsRating();
+        //console.timeEnd('getTurnsRating');
         var minRate = _(_(rates).pluck('rate')).min();
         var types = {'H': 0, 'V': 1, 'P': 2 };
         var minRatedMoves = _(rates).filter(function (move) {
@@ -39,11 +47,14 @@ _.extend(MegaBot.prototype, {
 
     getTurnsRating: function () {
         var board = this.board;//.copy();
-        var player = board.players.findWhere({id: this.id});
-        var othersMinPathLength = this.othersPlayersHeuristic(board);
+        var player = this.player;
+        var othersMinPathLength = this.othersPlayersHeuristic();
 
-        return _(this.selectMoves()).map(function (move) {
+        var result = [];
 
+        var satisfiedCount = 0;
+        var moves = this.selectMoves();
+        _(moves).each(function (move) {
             if (move.type === 'P') {
                 var prevPosition = player.pick('x', 'y', 'prev_x', 'prev_y');
                 player.set({
@@ -52,9 +63,14 @@ _.extend(MegaBot.prototype, {
                     prev_x: move.x,
                     prev_y: move.y
                 });
-                move.rate = this.calcHeuristic(board, othersMinPathLength);
+                move.rate = this.calcHeuristic(othersMinPathLength);
                 player.set(prevPosition);
-            } else {
+                result.push(move);
+            }
+        }, this);
+
+        _(moves).some(function (move) {
+            if (move.type !== 'P') {
                 var fence = board.fences.findWhere(move);
                 var sibling = board.fences.getSibling(fence);
                 if (!player.hasFences() ||
@@ -67,44 +83,41 @@ _.extend(MegaBot.prototype, {
                     var prevStateSibling = sibling.get('state');
                     fence.set({state: 'busy'});
                     sibling.set({state: 'busy'});
-                    move.rate = this.calcHeuristic(board);
+                    move.rate = this.calcHeuristic();
                     fence.set({state: prevStateFence});
                     sibling.set({state: prevStateSibling});
+                    result.push(move);
                 }
             }
-            return move;
-        }, this).sort(function (move1, move2) {
+            if (move.rate <= this.satisfiedRate) {
+                satisfiedCount++;
+            }
+            return satisfiedCount >= 2;
+        }, this);
+
+        result = _(result).sort(function (move1, move2) {
             return move1.rate - move2.rate;
         });
+        return result;
     },
 
-    othersPlayersHeuristic: function (board) {
-        var paths = _(board.players.models)
-            .reject(function (v) {
-                return v.get('id') === this.playerId;
-            }, this)
-            .map(function (player) {
-                var path = this.findPathToGoal(player);
-                return path.length;
-            }, this);
+    othersPlayersHeuristic: function () {
+        var paths = this.othersPlayers.map(function (player) {
+            return this.findPathToGoal(player).length;
+        }, this);
         return _(paths).min();
     },
 
-    calcHeuristic: function (board, othersMinPathLength) {
-        var player = board.players.findWhere({
-            id: this.playerId
-        });
-        var path = this.findPathToGoal(player);
+    calcHeuristic: function (othersMinPathLength) {
+        var path = this.findPathToGoal(this.player);
         othersMinPathLength = _.isUndefined(othersMinPathLength)
-            ? this.othersPlayersHeuristic(board) : othersMinPathLength;
+            ? this.othersPlayersHeuristic() : othersMinPathLength;
         return (path.length + 1) - othersMinPathLength;
     },
 
     selectMoves: function () {
         var positions = [];
-        var player = this.board.players.findWhere({
-            id: this.playerId
-        });
+        var player = this.player;
         var playerPositions = this.board.getValidPositions(player.pick('x', 'y'));
         playerPositions = _(playerPositions).map(function (playerPosition) {
             playerPosition.type = 'P';

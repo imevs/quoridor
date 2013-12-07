@@ -1,4 +1,5 @@
 require.config({
+    waitSeconds: 30,
     paths: {
         'socket.io': 'libs/socket.io/socket.io',
         'text'     : 'libs/text'

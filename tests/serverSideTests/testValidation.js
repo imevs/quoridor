@@ -12,7 +12,7 @@ exports['test-validation'] = nodeunit.testCase({
          0|_|x|_|
          1|_|_|_|
          2|_|x|_|
-         0 1 2
+           0 1 2
          */
         board = Room.createRoom({
             playersCount: 2,

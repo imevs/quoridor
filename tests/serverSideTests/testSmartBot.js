@@ -127,6 +127,28 @@ exports.bot = nodeunit.testCase({
         bot = new Bot(1, board);
         test.deepEqual(bot.getPossiblePosition(), {x: 4, y: 7});
         test.done();
+    },
+
+    'getPossiblePosition - second - fullsizeboard2': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9});
+        board.players.at(0).set('id', 0);
+        board.players.at(1).set('id', 1);
+        board.players.at(0).set('y', 2);
+        bot = new Bot(0, board);
+        test.deepEqual(bot.getPossiblePosition(), {x: 4, y: 3});
+        test.done();
+    },
+
+    'getPossiblePosition - second - fullsizeboard 3': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9});
+        board.players.at(0).set('id', 0);
+        board.players.at(1).set('id', 1);
+        board.players.at(1).set({x: 3, y: 5});
+        board.fences.findWhere({x: 4, y: 3, type: 'H'}).set('state', 'busy');
+        board.fences.findWhere({x: 5, y: 3, type: 'H'}).set('state', 'busy');
+        bot = new Bot(1, board);
+        test.deepEqual(bot.getPossiblePosition(), {x: 3, y: 4});
+        test.done();
     }
 
 });

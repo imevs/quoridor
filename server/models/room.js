@@ -126,6 +126,7 @@ var Room = Backbone.Model.extend({
                 }
                 p.reset();
             });
+            clearTimeout(room.turnTimeout);
             room.set('title', 'Game over!');
             room.set('state', 'finished');
         });
@@ -271,32 +272,38 @@ var Room = Backbone.Model.extend({
     },
     emitEventToAllPlayers: function (eventInfo, eventName) {
         var room = this;
-        console.log('room:emitEventToAllPlayers');
-        clearTimeout(room.turnTimeout);
-        this.players.each(function (player) {
-            var index = room.players.indexOf(player);
-            if (room.get('activePlayer') === index) {
-                return;
+
+        process.nextTick(function () {
+            console.log('room:emitEventToAllPlayers');
+            clearTimeout(room.turnTimeout);
+            room.players.each(function (player) {
+                var index = room.players.indexOf(player);
+                if (room.get('activePlayer') === index) {
+                    return;
+                }
+                var socket = player.socket;
+                if (socket) {
+                    socket.emit(eventName, eventInfo);
+                }
+            });
+            room.sockets.forEach(function (socket) {
+                socket.emit(eventName, eventInfo);
+            });
+            var activePlayer = room.players.at(room.get('activePlayer'));
+            var socket = activePlayer.socket;
+            if (room.onTimeoutCount < 10) { // stop auto switch after 15 move passing
+                room.turnTimeout = setTimeout(_(room.onTimeout).bind(room), 15 * 1000);
             }
-            var socket = player.socket;
             if (socket) {
                 socket.emit(eventName, eventInfo);
             }
+            return activePlayer;
         });
-        this.sockets.forEach(function (socket) {
-            socket.emit(eventName, eventInfo);
-        });
-        var activePlayer = room.players.at(room.get('activePlayer'));
-        var socket = activePlayer.socket;
-        if (this.onTimeoutCount < 10) {
-            room.turnTimeout = setTimeout(_(room.onTimeout).bind(room), 10 * 1000);
-        }
-        if (socket) {
-            socket.emit(eventName, eventInfo);
-        }
-        return activePlayer;
     },
 
+    /**
+     * auto change current player after 10 sec (so we prevent suspended players)
+     */
     onTimeout: function () {
         var room = this;
         var activePlayer = this.players.at(this.get('activePlayer'));
@@ -313,12 +320,13 @@ var Room = Backbone.Model.extend({
             t: 'p'
         });
 
+        var activePlayerIndex = room.get('activePlayer');
         this.switchActivePlayer(function () {
             var eventInfo = {
                 x: activePlayer.get('x'),
                 y: activePlayer.get('y'),
                 timeout: 1,
-                playerIndex: room.get('activePlayer')
+                playerIndex: activePlayerIndex
             };
             room.emitEventToAllPlayers(eventInfo, 'server_move_player');
         });

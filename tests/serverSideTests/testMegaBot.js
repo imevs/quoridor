@@ -19,8 +19,8 @@ exports.bot = nodeunit.testCase({
             boardSize   : 3
         });
         board.players = new PlayersCollection([
-            {x: 1, y: 0, id: 0, fencesRemaining: 3},
-            {x: 1, y: 2, id: 1, fencesRemaining: 3}
+            {x: 1, y: 0, id: 0, url: 0, fencesRemaining: 3},
+            {x: 1, y: 2, id: 1, url: 1, fencesRemaining: 3}
         ]);
         board.players.playersPositions = [
             {x: 1, y: 0, color: 'red', isWin: function (x, y) {
@@ -41,8 +41,8 @@ exports.bot = nodeunit.testCase({
     },
 
     calcHeuristic: function (test) {
-        var othersMinPathLength = bot.othersPlayersHeuristic(bot.board);
-        test.equal(bot.calcHeuristic(bot.board, othersMinPathLength), 1);
+        var othersMinPathLength = bot.othersPlayersHeuristic();
+        test.equal(bot.calcHeuristic(othersMinPathLength), 1);
         test.done();
     },
 
@@ -59,8 +59,8 @@ exports.bot = nodeunit.testCase({
 
     'getPossiblePosition - first - fullsizeboard': function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('id', 0);
-        board.players.at(1).set('id', 1);
+        board.players.at(0).set('url', 0);
+        board.players.at(1).set('url', 1);
         bot = new Bot(0, board);
 
         test.deepEqual(bot.getBestTurn(), {x: 4, y: 1, type: 'P', rate: 0});
@@ -69,8 +69,8 @@ exports.bot = nodeunit.testCase({
 
     'getPossiblePosition - second - fullsizeboard': function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('id', 0);
-        board.players.at(1).set('id', 1);
+        board.players.at(0).set('url', 0);
+        board.players.at(1).set('url', 1);
         bot = new Bot(1, board);
         test.deepEqual(bot.getBestTurn(), {x: 4, y: 7, type: 'P', rate: 0});
         test.done();
@@ -78,14 +78,15 @@ exports.bot = nodeunit.testCase({
 
     'getPossiblePosition - second - fullsizeboard - walls': function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('id', 0);
-        board.players.at(1).set('id', 1);
+        board.players.at(0).set('url', 0);
+        board.players.at(1).set('url', 1);
         board.fences.findWhere({x: 4, y: 6, type: 'H'}).set('state', 'busy');
         board.fences.findWhere({x: 5, y: 6, type: 'H'}).set('state', 'busy');
         board.fences.findWhere({x: 6, y: 6, type: 'H'}).set('state', 'busy');
         board.fences.findWhere({x: 7, y: 6, type: 'H'}).set('state', 'busy');
 
-        bot = new Bot(0, board);
+        var satisfiedRate = -1;
+        bot = new Bot(0, board, satisfiedRate);
         test.deepEqual(bot.getBestTurn(), {x: 3, y: 8, type: 'V', rate: -2});
         test.done();
     }
