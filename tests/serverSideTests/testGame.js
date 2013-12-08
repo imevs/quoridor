@@ -531,14 +531,14 @@ exports['test-game'] = nodeunit.testCase({
         p1.emit('client_move_fence', {x: 4, y: 2, type: 'H'});
 
         test.equal(room1.get('activePlayer'), 1);
-        clock.tick(11000);
+        clock.tick(16000);
 
-        test.equal(room1.get('activePlayer'), 0);
+        test.equal(room1.get('activePlayer'), 1);
         test.deepEqual(room1.history.get('turns').toJSON(), [
             { x: 4, y: 0, t: 'p' }, // start position
             { x: 4, y: 8, t: 'p' }, // start position
             { x: 4, y: 2, x2: 3, y2: 2, t: 'f' }, // move fence
-            { x: 4, y: 8, t: 'p' } // start position
+            //{ x: 4, y: 8, t: 'p' } // start position
         ]);
         test.done();
     },

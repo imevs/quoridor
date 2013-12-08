@@ -19,8 +19,8 @@ exports.bot = nodeunit.testCase({
             boardSize   : 3
         });
         board.players = new PlayersCollection([
-            {x: 1, y: 0, id: 0},
-            {x: 1, y: 2, id: 1}
+            {x: 1, y: 0, url: 0},
+            {x: 1, y: 2, url: 1}
         ]);
         board.players.playersPositions = [
             {x: 1, y: 0, color: 'red', isWin: function (x, y) {
@@ -112,8 +112,8 @@ exports.bot = nodeunit.testCase({
 
     'getPossiblePosition - first - fullsizeboard': function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('id', 0);
-        board.players.at(1).set('id', 1);
+        board.players.at(0).set('url', 0);
+        board.players.at(1).set('url', 1);
         bot = new Bot(0, board);
 
         test.deepEqual(bot.getPossiblePosition(), {x: 4, y: 1});
@@ -122,8 +122,8 @@ exports.bot = nodeunit.testCase({
 
     'getPossiblePosition - second - fullsizeboard': function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('id', 0);
-        board.players.at(1).set('id', 1);
+        board.players.at(0).set('url', 0);
+        board.players.at(1).set('url', 1);
         bot = new Bot(1, board);
         test.deepEqual(bot.getPossiblePosition(), {x: 4, y: 7});
         test.done();
@@ -131,8 +131,8 @@ exports.bot = nodeunit.testCase({
 
     'getPossiblePosition - second - fullsizeboard2': function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('id', 0);
-        board.players.at(1).set('id', 1);
+        board.players.at(0).set('url', 0);
+        board.players.at(1).set('url', 1);
         board.players.at(0).set('y', 2);
         bot = new Bot(0, board);
         test.deepEqual(bot.getPossiblePosition(), {x: 4, y: 3});
@@ -141,8 +141,8 @@ exports.bot = nodeunit.testCase({
 
     'getPossiblePosition - second - fullsizeboard 3': function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('id', 0);
-        board.players.at(1).set('id', 1);
+        board.players.at(0).set('url', 0);
+        board.players.at(1).set('url', 1);
         board.players.at(1).set({x: 3, y: 5});
         board.fences.findWhere({x: 4, y: 3, type: 'H'}).set('state', 'busy');
         board.fences.findWhere({x: 5, y: 3, type: 'H'}).set('state', 'busy');

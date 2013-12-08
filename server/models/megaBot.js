@@ -4,7 +4,6 @@ var Bot = require('./smartBot.js');
 
 var MegaBot = function (id, room, satisfiedRate) {
     MegaBot.super_.call(this, id, room);
-    this.player = this.board.players.findWhere({url: this.id});
     this.othersPlayers = _(this.board.players.models)
         .reject(function (v) {
             return v.get('url') === this.playerId;

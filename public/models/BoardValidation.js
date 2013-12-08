@@ -37,7 +37,7 @@ var BoardValidation = {
             type: 'H'
         });
 
-        return sibling1 && sibling2;
+        return !!(sibling1 && sibling2);
     },
 
     /**
@@ -63,7 +63,7 @@ var BoardValidation = {
             type: 'V'
         });
 
-        return sibling1 && sibling2;
+        return !!(sibling1 && sibling2);
     },
     isOtherPlayerAndFenceBehindHim: function (pos1, pos2) {
         var playerX = pos1.x, playerY = pos1.y, x = pos2.x, y = pos2.y;

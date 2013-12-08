@@ -5,8 +5,8 @@ var SmartBot = function (id, room) {
     this.id = id;
     this.playerId = id;
     this.board = room;
-    var pawn = room.players.findWhere({url: id});
-    this.index = room.players.indexOf(pawn);
+    this.player = room.players.findWhere({url: id});
+    this.index = room.players.indexOf(this.player);
 
     this.initEvents();
     this.playersCount = room.get('playersCount');
