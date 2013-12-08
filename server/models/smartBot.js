@@ -1,9 +1,6 @@
 var _ = require('underscore');
 var util = require('util');
 var Bot = require('./bot.js');
-var i = 0;
-var j = 0;
-var k = 0;
 var SmartBot = function (id, room) {
     this.id = id;
     this.playerId = id;
@@ -28,9 +25,6 @@ _.extend(SmartBot.prototype, {
     },
 
     findPathToGoal: function (pawn) {
-        i++;
-        j++;
-        //console.time('1:' + i);
         var board = this.board.copy();
         var indexPlayer = this.board.players.indexOf(pawn);
         var player = board.players.at(indexPlayer);
@@ -45,18 +39,15 @@ _.extend(SmartBot.prototype, {
                 p.set({x: -1, y: -1, prev_x: -1, prev_y: -1});
             }
         });
-        //console.timeEnd('1:' + i);
 
-        //console.time('2:' + j);
         var closed = this.processBoardForGoal(board, player);
-        //console.timeEnd('2:' + j);
-        //console.time('3:' + k);
+
         var goal = this.findGoal(closed, this.board.players.playersPositions[indexPlayer]);
         var path = this.buildPath(goal, pawn.pick('x', 'y'), board, closed, player);
         board.players.each(function (p, i) {
             p.set(prevPositions[i]);
         });
-        //console.timeEnd('3:' + k);
+
         return path;
     },
 
