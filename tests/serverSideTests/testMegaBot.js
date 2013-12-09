@@ -47,7 +47,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'selectMoves': function (test) {
-        test.equal(bot.selectMoves().length, 15);
+        test.equal(bot.getPossibleMoves().length, 15);
         test.done();
     },
 
@@ -80,16 +80,27 @@ exports.bot = nodeunit.testCase({
         board = Room.createRoom({playersCount: 2, boardSize: 9});
         board.players.at(0).set('url', 0);
         board.players.at(1).set('url', 1);
-        board.fences.findWhere({x: 4, y: 6, type: 'H'}).set('state', 'busy');
-        board.fences.findWhere({x: 5, y: 6, type: 'H'}).set('state', 'busy');
-        board.fences.findWhere({x: 6, y: 6, type: 'H'}).set('state', 'busy');
-        board.fences.findWhere({x: 7, y: 6, type: 'H'}).set('state', 'busy');
 
-        var satisfiedRate = -1;
+        /**
+         * walls positions:
+         *  _
+         * |_
+         * |x
+         */
+
+        board.fences.findWhere({x: 3, y: 6, type: 'H'}).set('state', 'busy');
+        board.fences.findWhere({x: 4, y: 6, type: 'H'}).set('state', 'busy');
+
+        board.fences.findWhere({x: 3, y: 7, type: 'H'}).set('state', 'busy');
+        board.fences.findWhere({x: 4, y: 7, type: 'H'}).set('state', 'busy');
+
+        board.fences.findWhere({x: 4, y: 7, type: 'V'}).set('state', 'busy');
+        board.fences.findWhere({x: 4, y: 8, type: 'V'}).set('state', 'busy');
+
+        var satisfiedRate = -2;
         bot = new Bot(0, board, satisfiedRate);
-        test.deepEqual(bot.getBestTurn(), {x: 3, y: 8, type: 'V', rate: -2});
+        test.deepEqual(bot.getBestTurn(), {x: 2, y: 7, type: 'H', rate: -2});
         test.done();
     }
-
 
 });

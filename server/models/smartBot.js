@@ -101,6 +101,9 @@ _.extend(SmartBot.prototype, {
     },
 
     buildPath: function (from, to, board, closed, player) {
+        if (!from) {
+            return false;
+        }
         var current = from;
         var path = [];
 

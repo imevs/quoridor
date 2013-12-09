@@ -79,8 +79,6 @@ window.BoardView = GameObject.extend({
     },
 
     afterRender: function () {
-        this.$el.find('.move').click(_.bind(this.move, this));
-
         var me = this.model,
             cls = this.constructor,
             d = cls.squareDistance,
@@ -116,13 +114,13 @@ window.BoardView = GameObject.extend({
         me.players.each(function (model) {
             new PlayerView({model: model});
         });
-        new InfoView({
+        var info = new InfoView({
             model: me.infoModel
         });
         new GameHistoryView({
             model: me.history
         });
 
-        //info.on('click', _.bind(this.move, this));
+        info.on('click', _.bind(this.move, this));
     }
 });
