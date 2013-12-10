@@ -122,6 +122,18 @@ var BoardValidation = {
                 this.isOtherPlayerAndFenceBehindHim(currentPos, newPos)
             );
     },
+    isValidPlayerPositionQuickCheck: function (currentPos, newPos) {
+        return this.isBetween(0, this.get('boardSize'), newPos.x)
+            && this.isBetween(0, this.get('boardSize'), newPos.y)
+            && this.players.isFieldNotBusy(newPos)
+            && this.noFenceBetweenPositions(currentPos, newPos)
+            && (
+            this.isNearestPosition(currentPos, newPos) ||
+                this.players.isFieldBehindOtherPlayer(currentPos, newPos) ||
+                //this.players.isFieldNearOtherPlayer(currentPos, newPos) ||
+                this.isOtherPlayerAndFenceBehindHim(currentPos, newPos)
+            );
+    },
     isCurrentPlayerTurn: function () {
         var current = this.get('currentPlayer');
         var active = this.get('activePlayer');
@@ -187,7 +199,7 @@ var BoardValidation = {
     getValidPositions: function (pawn) {
         var positions = this.getPossiblePositions(pawn);
         return _.filter(positions, function (pos) {
-            return this.isValidPlayerPosition(pawn, pos);
+            return this.isValidPlayerPositionQuickCheck(pawn, pos);
         }, this);
     },
 
@@ -232,22 +244,78 @@ var BoardValidation = {
         return !this.breakSomePlayerPath(wall);
     },
 
-    isWallNearBorder: function () {
-        return true;
+    isWallNearBorder: function (wall) {
+        var boardSize = this.get('boardSize');
+        return wall.x === 0 || wall.x === boardSize
+            || wall.y === 0  || wall.y === boardSize;
     },
 
     hasWallsOrPawnsNear: function (wall) {
-        if (this.isWallNearBorder(wall)) {
+        var fence = this.fences.findWhere(wall);
+        var sibling = this.fences.getSibling(fence);
+        if (this.isWallNearBorder(wall) || this.isWallNearBorder(sibling.pick('x', 'y'))) {
             return true;
         }
-        return !![].length;
+        var busyFences = this.fences.where({state: 'busy'});
+        busyFences = _.map(busyFences, function (item) {
+            return item.get('type') + item.get('x') + item.get('y');
+        });
+        var nearestWalls = _.map(this.getNearestWalls(wall), function (item) {
+            return item.type + item.x + item.y;
+        });
+        var result = !!_.intersection(busyFences, nearestWalls).length;
+        return result;
+    },
+
+    _getNearestWalls: function (wall) {
+        return wall.type === 'H' ? [
+            {x: wall.x - 1, y: wall.y, type: 'H'},
+            {x: wall.x + 1, y: wall.y, type: 'H'},
+
+            {x: wall.x - 1, y: wall.y, type: 'V'},
+            {x: wall.x - 1, y: wall.y + 1, type: 'V'},
+            {x: wall.x, y: wall.y, type: 'V'},
+            {x: wall.x, y: wall.y + 1, type: 'V'}
+        ] : [
+            {x: wall.x, y: wall.y - 1, type: 'V'},
+            {x: wall.x, y: wall.y + 1, type: 'V'},
+
+            {x: wall.x, y: wall.y - 1, type: 'H'},
+            {x: wall.x + 1, y: wall.y - 1, type: 'H'},
+
+            {x: wall.x, y: wall.y, type: 'H'},
+            {x: wall.x + 1, y: wall.y, type: 'H'}
+        ];
+    },
+
+    getNearestWalls: function (wall) {
+        var fence = this.fences.findWhere(wall);
+        var sibling = this.fences.getSibling(fence);
+        var siblingWall = sibling.pick('x', 'y', 'type');
+        var all = _(this._getNearestWalls(wall).concat(this._getNearestWalls(siblingWall)));
+        all = all.without(all.findWhere(wall), all.findWhere(siblingWall));
+        var unique = _.uniq(all, function (a) {
+            return a.type + a.x + a.y;
+        });
+        return _.filter(unique, function (item) {
+            return this.isBetween(0, this.get('boardSize'), item.x) ||
+                   this.isBetween(0, this.get('boardSize'), item.y);
+        }, this);
+    },
+
+    getNearestFields: function () {
+        return [];
     },
 
     breakSomePlayerPath: function (wall) {
         var me = this;
-        return /*this.hasWallsOrPawnsNear(wall) && */me.players.some(function (player) {
-            return me.doesFenceBreakPlayerPath(player, wall);
-        });
+        //console.time('breakSomePlayerPath');
+        var result = this.hasWallsOrPawnsNear(wall.pick('x', 'y', 'type')) &&
+            me.players.some(function (player) {
+                return me.doesFenceBreakPlayerPath(player, wall);
+            });
+        //console.timeEnd('breakSomePlayerPath');
+        return result;
     },
 
     copy: function () {

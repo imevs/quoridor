@@ -139,6 +139,73 @@ exports['test-validation'] = nodeunit.testCase({
         ));
 
         test.done();
+    },
+
+    'test isWallNearBorder - false': function (test) {
+        var wall = {x: 4, y: 4, type: 'H'};
+        test.ok(!board.isWallNearBorder(wall));
+
+        test.done();
+    },
+
+    'test isWallNearBorder - OK': function (test) {
+        var wall = {x: 0, y: 4, type: 'H'};
+        test.ok(board.isWallNearBorder(wall));
+
+        test.done();
+    },
+
+    'test getNearestWalls - Horizontal': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9 });
+        var wall = {x: 4, y: 3, type: 'H'};
+        test.deepEqual(board.getNearestWalls(wall), [
+            {x: 5, y: 3, type: 'H'},
+            {x: 3, y: 3, type: 'V'},
+            {x: 3, y: 4, type: 'V'},
+            {x: 4, y: 3, type: 'V'},
+            {x: 4, y: 4, type: 'V'},
+            {x: 2, y: 3, type: 'H'},
+            {x: 2, y: 3, type: 'V'},
+            {x: 2, y: 4, type: 'V'}
+        ]);
+
+        test.done();
+    },
+
+    'test getNearestWalls - Vertical': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9 });
+        var wall = {x: 1, y: 4, type: 'V'};
+        test.deepEqual(board.getNearestWalls(wall), [
+            {x: 1, y: 5, type: 'V'},
+            {x: 1, y: 3, type: 'H'},
+            {x: 2, y: 3, type: 'H'},
+            {x: 1, y: 4, type: 'H'},
+            {x: 2, y: 4, type: 'H'},
+            {x: 1, y: 2, type: 'V'},
+            {x: 1, y: 2, type: 'H'},
+            {x: 2, y: 2, type: 'H'}
+        ]);
+
+        test.done();
+    },
+
+    'test hasWallsOrPawnsNear - false': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9 });
+        var wall = {x: 1, y: 4, type: 'V'};
+
+        test.ok(!board.hasWallsOrPawnsNear(wall));
+
+        test.done();
+    },
+
+    'test hasWallsOrPawnsNear - OK': function (test) {
+        board = Room.createRoom({playersCount: 2, boardSize: 9 });
+        var wall = {x: 1, y: 4, type: 'V'};
+
+        board.fences.findWhere({x: 1, y: 3, type: 'H'}).set('state', 'busy');
+        test.ok(board.hasWallsOrPawnsNear(wall));
+
+        test.done();
     }
 
 });
