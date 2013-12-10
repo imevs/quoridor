@@ -42,12 +42,12 @@ exports.bot = nodeunit.testCase({
 
     calcHeuristic: function (test) {
         var othersMinPathLength = bot.othersPlayersHeuristic();
-        test.equal(bot.calcHeuristic(othersMinPathLength), 1);
+        test.equal(bot.calcHeuristic(bot.player, othersMinPathLength), 1);
         test.done();
     },
 
     'selectMoves': function (test) {
-        test.equal(bot.getPossibleMoves().length, 15);
+        test.equal(bot.getPossibleMoves(bot.board, bot.player).length, 15);
         test.done();
     },
 

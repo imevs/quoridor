@@ -4,11 +4,10 @@ var Bot = require('./smartBot.js');
 
 var MegaBot = function (id, room, satisfiedRate) {
     MegaBot.super_.call(this, id, room);
-    this.othersPlayers = _(this.board.players.models)
-        .reject(function (v) {
-            return v.get('url') === this.playerId;
-        }, this);
     this.satisfiedRate = satisfiedRate || 1;
+    this.othersPlayers = _(this.board.players.models).reject(function (v) {
+        return v.get('url') === this.playerId;
+    }, this);
 };
 
 util.inherits(MegaBot, Bot);
@@ -33,9 +32,11 @@ _.extend(MegaBot.prototype, {
     },
 
     getBestTurn: function () {
-        var moves = this.getPossibleMoves();
-        var rates = this.getRatesForPlayersMoves(moves)
-            .concat(this.getRatesForWallsMoves(moves));
+        var board = this.board;//.copy();
+        var player = board.players.at(this.index);
+        var moves = this.getPossibleMoves(board, player);
+        var rates = this.getRatesForPlayersMoves(moves, player)
+            .concat(this.getRatesForWallsMoves(moves, player, board));
 
         rates = _(rates).sort(function (move1, move2) {
             return move1.rate - move2.rate;
@@ -51,8 +52,7 @@ _.extend(MegaBot.prototype, {
         return minRatedMoves[0];
     },
 
-    getRatesForPlayersMoves: function (moves) {
-        var player = this.player;
+    getRatesForPlayersMoves: function (moves, player) {
         var result = [];
         var othersMinPathLength = this.othersPlayersHeuristic();
         _(moves).each(function (move) {
@@ -64,7 +64,7 @@ _.extend(MegaBot.prototype, {
                     prev_x: move.x,
                     prev_y: move.y
                 });
-                move.rate = this.calcHeuristic(othersMinPathLength);
+                move.rate = this.calcHeuristic(player, othersMinPathLength);
                 player.set(prevPosition);
                 result.push(move);
             }
@@ -72,14 +72,11 @@ _.extend(MegaBot.prototype, {
         return result;
     },
 
-    getRatesForWallsMoves: function (moves) {
-        var player = this.player;
-        var board = this.board;//.copy();
-        var satisfiedCount = 0;
-        var result = [];
+    getRatesForWallsMoves: function (moves, player, board) {
         if (!player.hasFences()) {
-            return result;
+            return [];
         }
+        var satisfiedCount = 0, result = [];
         _(moves).some(function (move) {
             if (move.type === 'P') {
                 return false;
@@ -97,7 +94,7 @@ _.extend(MegaBot.prototype, {
                 fence.set({state: 'busy'});
                 sibling.set({state: 'busy'});
 
-                move.rate = this.calcHeuristic();
+                move.rate = this.calcHeuristic(player);
                 result.push(move);
 
                 fence.set({state: prevStateFence});
@@ -109,7 +106,6 @@ _.extend(MegaBot.prototype, {
             }
             return satisfiedCount >= 2;
         }, this);
-
         this.satisfiedRate = 0;
         return result;
     },
@@ -122,8 +118,8 @@ _.extend(MegaBot.prototype, {
         return _(paths).min();
     },
 
-    calcHeuristic: function (othersMinPathLength) {
-        var path = this.findPathToGoal(this.player);
+    calcHeuristic: function (player, othersMinPathLength) {
+        var path = this.findPathToGoal(player);
         othersMinPathLength = _.isUndefined(othersMinPathLength)
             ? this.othersPlayersHeuristic() : othersMinPathLength;
         var number = (path ? path.length  + 1 : 9999) - othersMinPathLength;
@@ -134,14 +130,14 @@ _.extend(MegaBot.prototype, {
         this.possibleWallsMoves = this.possibleWallsMoves || this.selectWallsMoves();
     },
 
-    getPossibleMoves: function () {
+    getPossibleMoves: function (board, player) {
         this.initPossibleMoves();
-        var playerPositions = this.board.getValidPositions(this.player.pick('x', 'y'));
+        var playerPositions = board.getValidPositions(player.pick('x', 'y'));
         playerPositions = _(playerPositions).map(function (playerPosition) {
             playerPosition.type = 'P';
             return playerPosition;
         });
-        return this.player.hasFences()
+        return player.hasFences()
             ? playerPositions.concat(this.possibleWallsMoves) : playerPositions;
     },
 
