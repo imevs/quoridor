@@ -166,7 +166,7 @@ exports.bot = nodeunit.testCase({
         test.done();
     },
 
-    'getPossiblePosition': function (test) {
+    'test getPossiblePosition': function (test) {
         bot.newPositions = [
             { x: 6, y: 1 },
             { x: 4, y: 1 },

@@ -17,17 +17,17 @@ util.inherits(SmartBot, Bot);
 _.extend(SmartBot.prototype, {
 
     getPossiblePosition: function () {
-        var pawn = this.board.players.findWhere({url: this.playerId});
-        var goalPath = this.findPathToGoal(pawn);
+        var board = this.board.copy();
+        var player = board.players.at(this.index);
+        var goalPath = this.findPathToGoal(player, board);
         var result = goalPath.pop();
         delete result.deep;
         return result;
     },
 
-    findPathToGoal: function (pawn) {
-        var board = this.board.copy();
-        var indexPlayer = this.board.players.indexOf(pawn);
-        var player = board.players.at(indexPlayer);
+    findPathToGoal: function (player, board) {
+        var playerXY = player.pick('x', 'y');
+        var indexPlayer = board.players.indexOf(player);
 
         /**
          * leave out of account another players positions
@@ -42,8 +42,8 @@ _.extend(SmartBot.prototype, {
 
         var closed = this.processBoardForGoal(board, player);
 
-        var goal = this.findGoal(closed, this.board.players.playersPositions[indexPlayer]);
-        var path = this.buildPath(goal, pawn.pick('x', 'y'), board, closed, player);
+        var goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]);
+        var path = this.buildPath(goal, playerXY, board, closed, player);
         board.players.each(function (p, i) {
             p.set(prevPositions[i]);
         });

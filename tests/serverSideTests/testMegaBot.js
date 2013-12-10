@@ -40,18 +40,18 @@ exports.bot = nodeunit.testCase({
         test();
     },
 
-    calcHeuristic: function (test) {
-        var othersMinPathLength = bot.othersPlayersHeuristic();
-        test.equal(bot.calcHeuristic(bot.player, othersMinPathLength), 1);
+    'test calcHeuristic': function (test) {
+        bot.initOthersPlayers(bot.board);
+        test.equal(bot.calcHeuristic(bot.player, bot.board), 1);
         test.done();
     },
 
-    'selectMoves': function (test) {
+    'test getPossibleMoves': function (test) {
         test.equal(bot.getPossibleMoves(bot.board, bot.player).length, 15);
         test.done();
     },
 
-    'getBestTurn': function (test) {
+    'test getBestTurn': function (test) {
         bot = new Bot(0, board);
         test.deepEqual(bot.getBestTurn(), {x: 1, y: 1, type: 'P', rate: 0});
         test.done();

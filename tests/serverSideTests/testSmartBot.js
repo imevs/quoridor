@@ -92,8 +92,9 @@ exports.bot = nodeunit.testCase({
         test.done();
     },
 
-    'findPathToGoal': function (test) {
-        test.deepEqual(bot.findPathToGoal(bot.board.players.at(1)), [
+    'test findPathToGoal': function (test) {
+        var board = bot.board.copy();
+        test.deepEqual(bot.findPathToGoal(board.players.at(1), board), [
             { x: 1, y: 0, deep: 2 }, { x: 1, y: 1, deep: 1 }
         ]);
         test.done();

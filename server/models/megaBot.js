@@ -5,9 +5,6 @@ var Bot = require('./smartBot.js');
 var MegaBot = function (id, room, satisfiedRate) {
     MegaBot.super_.call(this, id, room);
     this.satisfiedRate = satisfiedRate || 1;
-    this.othersPlayers = _(this.board.players.models).reject(function (v) {
-        return v.get('url') === this.playerId;
-    }, this);
 };
 
 util.inherits(MegaBot, Bot);
@@ -31,11 +28,18 @@ _.extend(MegaBot.prototype, {
         }
     },
 
+    initOthersPlayers: function (board) {
+        this.othersPlayers = _(board.players.models).reject(function (v) {
+            return v.get('url') === this.playerId;
+        }, this);
+    },
+
     getBestTurn: function () {
-        var board = this.board;//.copy();
+        var board = this.board.copy();
         var player = board.players.at(this.index);
+        this.initOthersPlayers(board);
         var moves = this.getPossibleMoves(board, player);
-        var rates = this.getRatesForPlayersMoves(moves, player)
+        var rates = this.getRatesForPlayersMoves(moves, player, board)
             .concat(this.getRatesForWallsMoves(moves, player, board));
 
         rates = _(rates).sort(function (move1, move2) {
@@ -52,9 +56,9 @@ _.extend(MegaBot.prototype, {
         return minRatedMoves[0];
     },
 
-    getRatesForPlayersMoves: function (moves, player) {
+    getRatesForPlayersMoves: function (moves, player, board) {
         var result = [];
-        var othersMinPathLength = this.othersPlayersHeuristic();
+        var othersMinPathLength = this.othersPlayersHeuristic(board);
         _(moves).each(function (move) {
             if (move.type === 'P') {
                 var prevPosition = player.pick('x', 'y', 'prev_x', 'prev_y');
@@ -64,7 +68,7 @@ _.extend(MegaBot.prototype, {
                     prev_x: move.x,
                     prev_y: move.y
                 });
-                move.rate = this.calcHeuristic(player, othersMinPathLength);
+                move.rate = this.calcHeuristic(player, board, othersMinPathLength);
                 player.set(prevPosition);
                 result.push(move);
             }
@@ -94,7 +98,7 @@ _.extend(MegaBot.prototype, {
                 fence.set({state: 'busy'});
                 sibling.set({state: 'busy'});
 
-                move.rate = this.calcHeuristic(player);
+                move.rate = this.calcHeuristic(player, board);
                 result.push(move);
 
                 fence.set({state: prevStateFence});
@@ -110,18 +114,18 @@ _.extend(MegaBot.prototype, {
         return result;
     },
 
-    othersPlayersHeuristic: function () {
+    othersPlayersHeuristic: function (board) {
         var paths = this.othersPlayers.map(function (player) {
-            var path = this.findPathToGoal(player);
+            var path = this.findPathToGoal(player, board);
             return path ? path.length : 0;
         }, this);
         return _(paths).min();
     },
 
-    calcHeuristic: function (player, othersMinPathLength) {
-        var path = this.findPathToGoal(player);
+    calcHeuristic: function (player, board, othersMinPathLength) {
+        var path = this.findPathToGoal(player, board);
         othersMinPathLength = _.isUndefined(othersMinPathLength)
-            ? this.othersPlayersHeuristic() : othersMinPathLength;
+            ? this.othersPlayersHeuristic(board) : othersMinPathLength;
         var number = (path ? path.length  + 1 : 9999) - othersMinPathLength;
         return number;
     },

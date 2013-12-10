@@ -228,14 +228,25 @@ var BoardValidation = {
         return !canWin;
     },
 
-    notBreakSomePlayerPath: function (model) {
-        return !this.breakSomePlayerPath(model);
+    notBreakSomePlayerPath: function (wall) {
+        return !this.breakSomePlayerPath(wall);
     },
 
-    breakSomePlayerPath: function (model) {
+    isWallNearBorder: function () {
+        return true;
+    },
+
+    hasWallsOrPawnsNear: function (wall) {
+        if (this.isWallNearBorder(wall)) {
+            return true;
+        }
+        return !![].length;
+    },
+
+    breakSomePlayerPath: function (wall) {
         var me = this;
-        return me.players.some(function (player) {
-            return me.doesFenceBreakPlayerPath(player, model);
+        return /*this.hasWallsOrPawnsNear(wall) && */me.players.some(function (player) {
+            return me.doesFenceBreakPlayerPath(player, wall);
         });
     },
 
@@ -249,6 +260,7 @@ var BoardValidation = {
         _.extend(board, BoardValidation);
         board.fences = new FencesCollection(this.fences.toJSON());
         board.players = new PlayersCollection(this.players.toJSON());
+        board.players.playersPositions = this.players.playersPositions;
 
         return board;
     }
