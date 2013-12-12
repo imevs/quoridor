@@ -1,14 +1,16 @@
-var _ = require('underscore');
-var SmartBot = require('./smartBot.js');
+if (typeof module !== 'undefined') {
+    var _ = require('underscore');
+    var SmartBot = require('./smartBot.js');
+}
 
 var MegaBot = SmartBot.extend({
+
+    possibleWallsMoves: false,
 
     constructor: function (id, room, satisfiedRate) {
         SmartBot.prototype.constructor.apply(this, arguments);
         this.satisfiedRate = satisfiedRate || 1;
     },
-
-    possibleWallsMoves: false,
 
     doTurn     : function () {
         var turn = this.getBestTurn();
@@ -161,4 +163,6 @@ var MegaBot = SmartBot.extend({
 
 });
 
-module.exports = MegaBot;
+if (typeof module !== 'undefined') {
+    module.exports = MegaBot;
+}

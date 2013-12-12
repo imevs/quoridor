@@ -52,5 +52,11 @@
     "maxstatements":30,
     "maxcomplexity":6,
     "maxdepth":     3,
-    "indent":       4
+    "indent":       4,
+    "globals": {
+        "_": true,
+        "io": true,
+        "Backbone": true,
+        "alert": true
+    }
 }

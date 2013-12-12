@@ -1,7 +1,9 @@
-var _ = require('underscore');
-var emitter = require('events').EventEmitter;
-var History = require('../../public/models/TurnModel.js');
-var Backbone = require('backbone');
+if (typeof module !== 'undefined') {
+    var _ = require('underscore');
+    var Emitter = require('events').EventEmitter;
+    var History = require('../../public/models/TurnModel.js');
+    var Backbone = require('backbone');
+}
 
 var Bot = Backbone.Model.extend({
 
@@ -11,7 +13,9 @@ var Bot = Backbone.Model.extend({
         this.id = id;
         this.playerId = id;
         this.playersCount = +playersCount;
-        this.emitter = new emitter();
+        if (Emitter) {
+            this.emitter = new Emitter();
+        }
         this.initEvents();
     },
 
@@ -182,4 +186,6 @@ var Bot = Backbone.Model.extend({
 
 });
 
-module.exports = Bot;
+if (typeof module !== 'undefined') {
+    module.exports = Bot;
+}

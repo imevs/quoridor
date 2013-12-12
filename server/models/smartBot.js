@@ -1,5 +1,7 @@
-var _ = require('underscore');
-var Bot = require('./bot.js');
+if (typeof module !== 'undefined') {
+    var _ = require('underscore');
+    var Bot = require('./bot.js');
+}
 
 var SmartBot = Bot.extend({
 
@@ -125,4 +127,6 @@ var SmartBot = Bot.extend({
 
 });
 
-module.exports = SmartBot;
+if (typeof module !== 'undefined') {
+    module.exports = SmartBot;
+}

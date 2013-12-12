@@ -1,7 +1,9 @@
-/* global _, Backbone, FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
+/* global FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
 var BoardModel = Backbone.Model.extend({
     isPlayerMoved: false,
     isFenceMoved: false,
+
+    bot: null,
 
     defaults: {
         boardSize       : 9,

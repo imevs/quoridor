@@ -1,5 +1,3 @@
-/* global _, io,alert */
-
 /**
  * add to standard io.connect function extra params
  */
