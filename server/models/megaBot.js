@@ -1,15 +1,12 @@
 var _ = require('underscore');
-var util = require('util');
-var Bot = require('./smartBot.js');
+var SmartBot = require('./smartBot.js');
 
-var MegaBot = function (id, room, satisfiedRate) {
-    MegaBot.super_.call(this, id, room);
-    this.satisfiedRate = satisfiedRate || 1;
-};
+var MegaBot = SmartBot.extend({
 
-util.inherits(MegaBot, Bot);
-
-_.extend(MegaBot.prototype, {
+    constructor: function (id, room, satisfiedRate) {
+        SmartBot.prototype.constructor.apply(this, arguments);
+        this.satisfiedRate = satisfiedRate || 1;
+    },
 
     possibleWallsMoves: false,
 
@@ -22,9 +19,9 @@ _.extend(MegaBot.prototype, {
             playerIndex: this.id
         };
         if (turn.type === 'P') {
-            this.emit('client_move_player', eventInfo);
+            this.trigger('client_move_player', eventInfo);
         } else {
-            this.emit('client_move_fence', eventInfo);
+            this.trigger('client_move_fence', eventInfo);
         }
     },
 
@@ -51,8 +48,8 @@ _.extend(MegaBot.prototype, {
         var minRatedMoves = _(rates).filter(function (move) {
             return move.rate === minRate;
         }).sort(function (a, b) {
-            return types[b.type] - types[a.type];
-        });
+                return types[b.type] - types[a.type];
+            });
         return minRatedMoves[0];
     },
 

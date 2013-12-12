@@ -242,7 +242,6 @@ var Room = Backbone.Model.extend({
         var index = this.players.indexOf(player);
         this.set('currentPlayer', index);
 
-        //console.log('room:activePlayer', this.get('activePlayer'));
         if (index !== this.get('activePlayer')) {
             return;
         }

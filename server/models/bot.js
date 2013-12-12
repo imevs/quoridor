@@ -1,19 +1,35 @@
 var _ = require('underscore');
-var util = require('util');
 var emitter = require('events').EventEmitter;
 var History = require('../../public/models/TurnModel.js');
+var Backbone = require('backbone');
 
-var Bot = function (id, playersCount) {
-    this.id = id;
-    this.playerId = id;
-    this.initEvents();
-    this.playersCount = +playersCount;
-};
-util.inherits(Bot, emitter);
-
-_.extend(Bot.prototype, {
+var Bot = Backbone.Model.extend({
 
     fencesCount: 20,
+
+    constructor: function (id, playersCount) {
+        this.id = id;
+        this.playerId = id;
+        this.playersCount = +playersCount;
+        this.emitter = new emitter();
+        this.initEvents();
+    },
+
+    trigger: function () {
+        if (this.emitter) {
+            return this.emitter.emit.apply(this, arguments);
+        } else {
+            return Backbone.Model.prototype.trigger.apply(this, arguments);
+        }
+    },
+
+    on: function () {
+        if (this.emitter) {
+            return this.emitter.on.apply(this, arguments);
+        } else {
+            return Backbone.Model.prototype.on.apply(this, arguments);
+        }
+    },
 
     onStart: function (currentPlayer, activePlayer, history) {
         var historyModel = new History({
@@ -107,11 +123,8 @@ _.extend(Bot.prototype, {
         var playerPosition;
         if (bot.canMovePlayer() && (random || !bot.canMoveFence())) {
             playerPosition = bot.getPossiblePosition();
-            console.log('bot:doTurn', playerPosition);
-            console.log('bot:currentPlayer', this.currentPlayer);
-            console.log('----------------');
             if (playerPosition) {
-                bot.emit('client_move_player', playerPosition);
+                bot.trigger('client_move_player', playerPosition);
             }
             return;
         }
@@ -125,17 +138,14 @@ _.extend(Bot.prototype, {
                 playerIndex: bot.id
             };
 
-            console.log('bot:doTurn', eventInfo);
-            console.log('bot:currentPlayer', this.currentPlayer);
-            console.log('----------------');
-            bot.emit('client_move_fence', eventInfo);
+            bot.trigger('client_move_fence', eventInfo);
             return;
         }
         console.log('something going wrong');
     },
 
     getJumpPositions: function () {
-        var newPositions = [
+        return [
             {
                 x: this.x + 1,
                 y: this.y
@@ -153,7 +163,6 @@ _.extend(Bot.prototype, {
                 y: this.y - 1
             }
         ];
-        return newPositions;
     },
 
     canMoveFence: function () {

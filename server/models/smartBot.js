@@ -1,20 +1,15 @@
 var _ = require('underscore');
-var util = require('util');
 var Bot = require('./bot.js');
-var SmartBot = function (id, room) {
-    this.id = id;
-    this.playerId = id;
-    this.board = room;
-    this.player = room.players.findWhere({url: id});
-    this.index = room.players.indexOf(this.player);
 
-    this.initEvents();
-    this.playersCount = room.get('playersCount');
-};
+var SmartBot = Bot.extend({
 
-util.inherits(SmartBot, Bot);
-
-_.extend(SmartBot.prototype, {
+    constructor: function (id, room) {
+        Bot.prototype.constructor.apply(this, arguments);
+        this.board = room;
+        this.player = room.players.findWhere({url: id});
+        this.index = room.players.indexOf(this.player);
+        this.playersCount = room.get('playersCount');
+    },
 
     getPossiblePosition: function () {
         var board = this.board.copy();
@@ -95,8 +90,8 @@ _.extend(SmartBot.prototype, {
         var winPositions = _(closed).filter(function (item) {
             return pawn.isWin(item.x, item.y);
         }).sort(function (a, b) {
-            return a.deep - b.deep;
-        });
+                return a.deep - b.deep;
+            });
         return winPositions[0];
     },
 
