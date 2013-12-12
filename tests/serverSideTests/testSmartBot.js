@@ -1,5 +1,5 @@
 var nodeunit = require('nodeunit');
-var Bot = require('../../server/models/smartBot.js');
+var Bot = require('../../public/models/smartBot.js');
 var Room = require('../../server/models/room.js');
 var PlayersCollection = require('../../public/models/PlayerModel.js');
 

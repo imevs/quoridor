@@ -1,9 +1,9 @@
 var _ = require('underscore');
 var Backbone = require('../backbone.mongoose');
 var Room = require('./room.js');
-var Bot = require('./bot.js');
-var SmartBot = require('./smartBot.js');
-var MegaBot = require('./megaBot.js');
+var Bot = require('./../../public/models/bot.js');
+var SmartBot = require('./../../public/models/smartBot.js');
+var MegaBot = require('./../../public/models/megaBot.js');
 var uuid = require('uuid');
 
 var Game = Backbone.Collection.extend({
