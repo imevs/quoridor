@@ -1,7 +1,7 @@
 if (typeof module !== 'undefined') {
     var _ = require('underscore');
     var Emitter = require('events').EventEmitter;
-    var History = require('../../public/models/TurnModel.js');
+    var GameHistoryModel = require('../../public/models/TurnModel.js');
     var Backbone = require('backbone');
 }
 
@@ -36,7 +36,7 @@ var Bot = Backbone.Model.extend({
     },
 
     onStart: function (currentPlayer, activePlayer, history) {
-        var historyModel = new History({
+        var historyModel = new GameHistoryModel({
             boardSize: 9,
             playersCount: this.playersCount
         });

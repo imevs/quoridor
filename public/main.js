@@ -21,6 +21,9 @@ require.config({
         'utils'                   : {
             deps: ['libs/underscore']
         },
+        'models/bot'       : {
+            deps: ['models/TurnModel', 'libs/backbone', 'utils']
+        },
         'models/FenceModel'       : {
             deps: ['libs/backbone', 'utils']
         },
@@ -47,6 +50,7 @@ require.config({
             deps: [
                 'libs/underscore',
                 'libs/backbone',
+                'models/bot',
                 'models/FenceModel',
                 'models/FieldModel',
                 'models/TurnModel',
