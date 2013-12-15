@@ -12,8 +12,7 @@ var path = require('path'),
     COVER_VAR = '$$selfcover$$',
     seq = 0,
     verbose = false,
-    OPTS = {
-    };
+    OPTS = {};
 
 /*
  * Danger, Will Robinson! A lot of small stuff has to fall in place just so
@@ -67,6 +66,7 @@ function resetOpts() {
 }
 
 function runCommand(command, args, envVars, callback) {
+    /* jshint maxcomplexity: 8 */
     var cmd = 'node',
         selfCover = common.isSelfCover(),
         env = {},
@@ -166,7 +166,11 @@ function customHook(lazyHook, callback) {
             });
         };
 
-    require('../lib/util/file-matcher').matcherFor({ root : COVER_ROOT, excludes: EXCLUDES, includes: [ '**/*.js'] }, function (err, matcher) {
+    require('../lib/util/file-matcher').matcherFor({
+        root : COVER_ROOT,
+        excludes: EXCLUDES,
+        includes: [ '**/*.js']
+    }, function (err, matcher) {
         var added = false;
 
         Module._extensions['.js'] = function (module, filename) {

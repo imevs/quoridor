@@ -1,11 +1,11 @@
-TestCase("Test testValidateFencePositions", {
-    setUp: function() {
+new TestCase('Test testValidateFencePositions', {
+    setUp: function () {
         this.room = new BoardModel({
             playersCount: 4
         });
     },
 
-    'test': function() {
+    'test': function () {
         var room = this.room;
         room.fences.findWhere({x: 0, y: 5, type: 'H'}).set('state', 'busy');
         room.fences.findWhere({x: 1, y: 5, type: 'H'}).set('state', 'busy');

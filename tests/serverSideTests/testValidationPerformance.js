@@ -3,7 +3,7 @@ var Room = require('../../server/models/room.js');
 
 var room;
 
-exports['validation'] = nodeunit.testCase({
+exports['validation performance'] = nodeunit.testCase({
 
 /*
     'notBreakSomePlayerPath': function(test) {
@@ -61,7 +61,7 @@ exports['validation'] = nodeunit.testCase({
     },
 */
 
-    'breakSomePlayerPath - 4 players - temp': function(test) {
+    'breakSomePlayerPath - 4 players - temp': function (test) {
         console.time('0');
         room = Room.createRoom({playersCount: 4});
 

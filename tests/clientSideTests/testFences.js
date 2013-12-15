@@ -1,18 +1,18 @@
-TestCase("Test fences", {
+new TestCase('Test fences', {
 
-    setUp: function() {
+    setUp: function () {
         this.board = new BoardModel({
             playersCount: 2
         });
         this.board.run(0);
     },
 
-    testCountFencesForTwoPlayers: function() {
+    testCountFencesForTwoPlayers: function () {
         assertEquals(10, this.board.players.at(0).get('fencesRemaining'));
         assertEquals(10, this.board.players.at(1).get('fencesRemaining'));
     },
 
-    testCountFencesForFourPlayers: function() {
+    testCountFencesForFourPlayers: function () {
         this.board = new BoardModel({
             playersCount: 4
         });
@@ -22,7 +22,7 @@ TestCase("Test fences", {
         assertEquals(5, this.board.players.at(3).get('fencesRemaining'));
     },
 
-    testCountFencesAfterTurn: function() {
+    testCountFencesAfterTurn: function () {
         var fence = this.board.fences.findWhere({x: 4, y: 1, type: 'V'});
         fence.trigger('selected', fence);
         this.board.trigger('maketurn');
@@ -30,7 +30,7 @@ TestCase("Test fences", {
         assertEquals(9, this.board.players.at(0).get('fencesRemaining'));
     },
 
-    testCanNotPlaceFenceIfPlayerHasNotFences: function() {
+    testCanNotPlaceFenceIfPlayerHasNotFences: function () {
         this.board.players.at(0).set('fencesRemaining', 0);
         this.board.players.at(1).set('fencesRemaining', 0);
 
@@ -40,7 +40,7 @@ TestCase("Test fences", {
         assertFalse(this.board.fences.isBusy(fence));
     },
 
-    testTryPlaceFenceOnSamePositionTwiceSameType: function() {
+    testTryPlaceFenceOnSamePositionTwiceSameType: function () {
         var fence = this.board.fences.findWhere({x: 4, y: 1, type: 'V'});
         fence.trigger('selected', fence);
         fence.trigger('selected', fence);
@@ -49,7 +49,7 @@ TestCase("Test fences", {
         assertEquals(10, this.board.players.at(1).get('fencesRemaining'));
     },
 
-    testTryPlaceFenceOnSamePositionTwiceDifferentType: function() {
+    testTryPlaceFenceOnSamePositionTwiceDifferentType: function () {
         var fenceV = this.board.fences.findWhere({x: 4, y: 1, type: 'V'});
         var fenceH = this.board.fences.findWhere({x: 4, y: 1, type: 'H'});
         fenceV.trigger('selected', fenceV);
@@ -60,17 +60,17 @@ TestCase("Test fences", {
         assertEquals(9, this.board.players.at(1).get('fencesRemaining'));
     },
 
-    testHasFencesTrue: function() {
+    testHasFencesTrue: function () {
         assertTrue(this.board.players.at(0).hasFences());
     },
 
-    testHasFencesFalse: function() {
-        _([5, 2]).iter(function(i, j) {
+    testHasFencesFalse: function () {
+        _([5, 2]).iter(function (i, j) {
             var fence = this.board.fences.findWhere({x: i, y: j * 2 + 1, type: 'V'});
             fence.trigger('selected', fence);
             this.board.trigger('maketurn');
         }, this);
-        _([4, 3]).iter(function(i, j) {
+        _([4, 3]).iter(function (i, j) {
             var fence = this.board.fences.findWhere({x: i * 2 + 1, y: j + 4, type: 'H'});
             fence.trigger('selected', fence);
             this.board.trigger('maketurn');
@@ -82,7 +82,7 @@ TestCase("Test fences", {
         assertFalse(this.board.players.at(1).hasFences());
     },
 
-    'test place fence on the board': function() {
+    'test place fence on the board': function () {
         var fence1 = this.board.fences.findWhere({x: 4, y: 0, type: 'H'});
         var fence2 = this.board.fences.findWhere({x: 3, y: 0, type: 'H'});
 
@@ -94,7 +94,7 @@ TestCase("Test fences", {
         assertFalse(this.board.fences.validateAndTriggerEventOnFenceAndSibling(fence1));
     },
 
-    'test Try To place crossed Fence - Not allowed': function() {
+    'test Try To place crossed Fence - Not allowed': function () {
         var fence1 = this.board.fences.findWhere({x: 4, y: 1, type: 'V'});
         var fence2 = this.board.fences.findWhere({x: 5, y: 0, type: 'H'});
 
@@ -107,7 +107,7 @@ TestCase("Test fences", {
         assertFalse(this.board.fences.isBusy(fence2));
     },
 
-    'test Try To place crossed Fence - Allowed (left)': function() {
+    'test Try To place crossed Fence - Allowed (left)': function () {
         var fence1 = this.board.fences.findWhere({x: 4, y: 1, type: 'V'});
         var fence2 = this.board.fences.findWhere({x: 4, y: 0, type: 'H'});
 
@@ -120,7 +120,7 @@ TestCase("Test fences", {
         assertTrue(this.board.fences.isBusy(fence2));
     },
 
-    'test Try To place crossed Fence - Allowed (right)': function() {
+    'test Try To place crossed Fence - Allowed (right)': function () {
         var fence1 = this.board.fences.findWhere({x: 4, y: 1, type: 'V'});
         var fence2 = this.board.fences.findWhere({x: 6, y: 0, type: 'H'});
 
@@ -134,9 +134,9 @@ TestCase("Test fences", {
     },
 
     // для прохождения теста нужно задать координаты пешек
-    '_test Place Fence on the line': function() {
+    '_test Place Fence on the line': function () {
         this.board = new BoardModel({
-            boardSize   : 3
+            boardSize: 3
         });
         this.board.run(0);
 
@@ -155,7 +155,7 @@ TestCase("Test fences", {
         assertFalse(this.board.fences.validateAndTriggerEventOnFenceAndSibling(fence3));
     },
 
-    'test Place Fence on the line - check pass - ok': function() {
+    'test Place Fence on the line - check pass - ok': function () {
         this.board = new BoardModel({boardSize: 5});
         var fence2 = this.board.fences.findWhere({x: 1, y: 0, type: 'H'});
         var fence4 = this.board.fences.findWhere({x: 3, y: 0, type: 'H'});

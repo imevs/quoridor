@@ -34,10 +34,10 @@ Verifier.prototype = {
     verify: function (test, args, expectedOutput, expectedCoverage) {
 
         if (this.err) {
-            test.ok(false, "Cannot call verify when errors present");
+            test.ok(false, 'Cannot call verify when errors present');
             return;
         } else if (this.fn === NO_OP) {
-            test.ok(false, "Cannot call verify for noop");
+            test.ok(false, 'Cannot call verify for noop');
             return;
         }
         var actualOutput = this.fn(args),
@@ -74,7 +74,8 @@ function setup(file, codeArray, opts) {
 
     var expectError = opts.expectError,
         //exercise the case where RE substitutions for the preamble have $ signs
-        coverageVariable = typeof opts.coverageVariable === 'undefined' ? '$$coverage$$' : opts.coverageVariable,
+        coverageVariable = typeof opts.coverageVariable === 'undefined'
+            ? '$$coverage$$' : opts.coverageVariable,
         ps = opts.embedSource || false,
         verifier,
         cover = new Instrumenter({
@@ -84,7 +85,7 @@ function setup(file, codeArray, opts) {
             coverageVariable: coverageVariable,
             embedSource: ps
         }),
-        args = [ codeArray.join("\n")],
+        args = [ codeArray.join('\n')],
         callback = function (err, generated) {
             if (err) {
                 if (expectError) {
