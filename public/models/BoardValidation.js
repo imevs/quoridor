@@ -137,7 +137,13 @@ var BoardValidation = {
     isCurrentPlayerTurn: function () {
         var current = this.get('currentPlayer');
         var active = this.get('activePlayer');
-        return this.auto || (current === active && !!this.getActivePlayer());
+        return this.auto || (current === active && !!this.getActivePlayer() && !this.getActiveBot());
+    },
+
+    getActiveBot: function () {
+        return _(this.bots).find(function (bot) {
+            return bot.currentPlayer === this.get('currentPlayer');
+        }, this);
     },
 
     getActivePlayer: function () {
