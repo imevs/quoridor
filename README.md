@@ -6,6 +6,8 @@ Quoridor game
 [Demo on heroku](http://quoridor-online.herokuapp.com/)
 
 [![Build Status](https://travis-ci.org/imevs/quoridor.png?branch=master)](https://travis-ci.org/imevs/quoridor)
+[![Dependency Status](https://david-dm.org/imevs/quoridor.png)](https://david-dm.org/imevs/quoridor)
+[![devDependency Status](https://david-dm.org/imevs/quoridor/dev-status.png)](https://david-dm.org/imevs/quoridor#info=devDependencies)
 
 
 This game is an example of fullstack javascript application. 
