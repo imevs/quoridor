@@ -90,6 +90,7 @@ var PlayersCollection = Backbone.Collection.extend({
         _(playersCount).times(function (player) {
             var position = me.playersPositions[player];
             var model = new PlayerModel({
+                url            : player,
                 color          : position.color,
                 x              : position.x,
                 prev_x         : position.x,
@@ -107,6 +108,7 @@ var PlayersCollection = Backbone.Collection.extend({
             var position = me.playersPositions[i];
             var fences = Math.round(me.fencesCount / me.length);
             player.set({
+                url            : i,
                 x              : position.x,
                 prev_x         : position.x,
                 y              : position.y,

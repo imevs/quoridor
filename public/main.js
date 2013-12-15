@@ -24,6 +24,12 @@ require.config({
         'models/bot'       : {
             deps: ['models/TurnModel', 'libs/backbone', 'utils']
         },
+        'models/smartBot'       : {
+            deps: ['models/TurnModel', 'libs/backbone', 'utils', 'models/bot']
+        },
+        'models/megaBot'       : {
+            deps: ['models/TurnModel', 'libs/backbone', 'utils', 'models/smartBot']
+        },
         'models/FenceModel'       : {
             deps: ['libs/backbone', 'utils']
         },
@@ -51,6 +57,8 @@ require.config({
                 'libs/underscore',
                 'libs/backbone',
                 'models/bot',
+                'models/smartBot',
+                'models/megaBot',
                 'models/FenceModel',
                 'models/FieldModel',
                 'models/TurnModel',

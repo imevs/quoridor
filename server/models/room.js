@@ -84,14 +84,12 @@ var Room = Backbone.Model.extend({
         var result = Backbone.Model.prototype.toJSON.call(this);
         delete result._id;
         result.history = this.history.get('turns').toJSON && this.history.get('turns').toJSON();
-        console.log(this.players.toJSON());
         result.playersInfo = _.map(this.players.toJSON(), function (player) {
             return {
                 url: player.url,
                 id: player.id
             };
         });
-        console.log(result.playersInfo);
         return result;
     },
 
@@ -198,7 +196,6 @@ var Room = Backbone.Model.extend({
         var room = this;
         var index = this.players.indexOf(player);
         var fence = this.fences.findWhere(_(eventInfo).pick('x', 'y', 'type'));
-        console.log('room:activePlayer', this.get('activePlayer'));
 
         if (index !== this.get('activePlayer')) {
             return;
