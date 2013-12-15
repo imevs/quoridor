@@ -42,7 +42,6 @@ var BoardModel = Backbone.Model.extend({
         me.fields.createFields(+me.get('boardSize'));
         me.fences.createFences(+me.get('boardSize'));
         me.players.createPlayers(+me.get('playersCount'));
-        this.history.initPlayers();
     },
 
     switchActivePlayer: function () {
@@ -207,6 +206,7 @@ var BoardModel = Backbone.Model.extend({
             activePlayer: activePlayer,
             currentPlayer: _.isUndefined(currentPlayer) ? activePlayer : currentPlayer
         });
+        this.history.initPlayers();
         this.connectBots();
     },
     connectBots: function () {
