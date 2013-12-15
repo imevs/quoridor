@@ -1,4 +1,6 @@
-/* global Bot, FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
+/* global SmartBot, FencesCollection, FieldsCollection,
+    PlayersCollection, GameHistoryModel
+*/
 var BoardModel = Backbone.Model.extend({
     isPlayerMoved: false,
     isFenceMoved: false,
@@ -216,7 +218,7 @@ var BoardModel = Backbone.Model.extend({
 
         _(this.get('botsCount')).times(function (i) {
             var botIndex = i + (this.get('playersCount') - this.get('botsCount'));
-            var bot = new Bot(botIndex, this.get('playersCount'));
+            var bot = new SmartBot(botIndex, this);
 
             bot.on('client_move_player', this.onSocketMovePlayer, this);
             bot.on('client_move_fence', function (pos) {
