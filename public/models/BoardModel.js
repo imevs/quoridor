@@ -1,11 +1,12 @@
-/* global FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
+/* global Bot, FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
 var BoardModel = Backbone.Model.extend({
     isPlayerMoved: false,
     isFenceMoved: false,
 
-    bot: null,
+    bots: [],
 
     defaults: {
+        botsCount       : 0,
         boardSize       : 9,
         playersCount    : 2,
         currentPlayer   : null,
@@ -35,9 +36,11 @@ var BoardModel = Backbone.Model.extend({
         if (count !== 2 && count !== 4) {
             me.set('playersCount', 2);
         }
+        me.set('botsCount', Math.min(me.get('playersCount'), me.get('botsCount')));
         me.fields.createFields(+me.get('boardSize'));
         me.fences.createFences(+me.get('boardSize'));
         me.players.createPlayers(+me.get('playersCount'));
+        this.history.initPlayers();
     },
 
     switchActivePlayer: function () {
@@ -45,38 +48,76 @@ var BoardModel = Backbone.Model.extend({
     },
 
     makeTurn: function () {
+        /* jshint maxcomplexity:8 */
         var me = this;
-        if (me.isPlayerMoved || me.isFenceMoved) {
+        if (!(me.isPlayerMoved || me.isFenceMoved)) {
+            return;
+        }
+        var active = me.getActivePlayer();
+        var preBusy = me.fences.getPreBusy();
+        var index = me.get('activePlayer');
+        if (me.isFenceMoved) {
+            me.getActivePlayer().placeFence();
+            me.history.add({
+                x: preBusy[0].get('x'),
+                y: preBusy[0].get('y'),
+                x2: preBusy[1].get('x'),
+                y2: preBusy[1].get('y'),
+                t: 'f'
+            });
+            me.fences.setBusy();
+        }
+        if (me.isPlayerMoved) {
+            me.history.add({
+                x: active.get('x'),
+                y: active.get('y'),
+                t: 'p'
+            });
+        }
+        me.switchActivePlayer();
+        /**
+         * if local mode game then automatic change currentPlayer
+         */
+        if (!me.isOnlineGame()) {
+            me.set('currentPlayer', me.get('activePlayer'));
+
             if (me.isFenceMoved) {
-                me.getActivePlayer().placeFence();
-                var preBusy = me.fences.getPreBusy();
-                me.history.add({
-                    x : preBusy[0].get('x'),
-                    y : preBusy[0].get('y'),
-                    x2: preBusy[1].get('x'),
-                    y2: preBusy[1].get('y'),
-                    t : 'f'
+                me.emitEventToBots('server_move_fence', {
+                    x: preBusy[0].get('x'),
+                    y: preBusy[0].get('y'),
+                    type: preBusy[0].get('type'),
+                    playerIndex: index
                 });
-                me.fences.setBusy();
             }
             if (me.isPlayerMoved) {
-                var active = me.getActivePlayer();
-                me.history.add({
-                    x : active.get('x'),
-                    y : active.get('y'),
-                    t : 'p'
+                me.emitEventToBots('server_move_player', {
+                    x: active.get('x'),
+                    y: active.get('y'),
+                    playerIndex: index
                 });
             }
-            me.switchActivePlayer();
-            /**
-             * if local mode game then automatic change currentPlayer
-             */
-            if (!me.isOnlineGame()) {
-                me.set('currentPlayer', me.get('activePlayer'));
-            }
+        }
 
-            me.isPlayerMoved = false;
-            me.isFenceMoved = false;
+        me.isPlayerMoved = false;
+        me.isFenceMoved = false;
+    },
+
+    getNextActiveBot: function (next) {
+        return _(this.bots).find(function (bot) {
+            return bot.currentPlayer === next;
+        }, this);
+    },
+
+    emitEventToBots: function (eventName, param) {
+        var next = this.players.getNextActivePlayer(this.get('activePlayer'));
+        _(this.bots).each(function (bot) {
+            if (next !== bot.currentPlayer) {
+                bot.trigger(eventName, param);
+            }
+        }, this);
+        var nextBot = this.getNextActiveBot(next);
+        if (nextBot) {
+            nextBot.trigger(eventName, param);
         }
     },
 
@@ -92,6 +133,11 @@ var BoardModel = Backbone.Model.extend({
             me.fences.clearBusy();
             me.isFenceMoved = false;
             me.isPlayerMoved = true;
+        } else {
+            var activeBot = me.getActiveBot();
+            if (activeBot) {
+                activeBot.trigger('server_turn_fail');
+            }
         }
     },
 
@@ -137,6 +183,11 @@ var BoardModel = Backbone.Model.extend({
                     me.players.updatePlayersPositions();
                     me.isPlayerMoved = false;
                     me.isFenceMoved = true;
+                } else {
+                    var activeBot = me.getActiveBot();
+                    if (activeBot) {
+                        activeBot.trigger('server_turn_fail');
+                    }
                 }
             },
             'highlight_current_and_sibling': function (model) {
@@ -154,6 +205,33 @@ var BoardModel = Backbone.Model.extend({
             activePlayer: activePlayer,
             currentPlayer: _.isUndefined(currentPlayer) ? activePlayer : currentPlayer
         });
+        this.connectBots();
+    },
+    connectBots: function () {
+        if (_.isUndefined(this.get('botsCount'))) {
+            return;
+        }
+
+        var turns = this.history.get('turns').toJSON();
+
+        _(this.get('botsCount')).times(function (i) {
+            var botIndex = i + (this.get('playersCount') - this.get('botsCount'));
+            var bot = new Bot(botIndex, this.get('playersCount'));
+
+            bot.on('client_move_player', this.onSocketMovePlayer, this);
+            bot.on('client_move_fence', function (pos) {
+                if (this.onSocketMoveFence(pos) === false) {
+                    var activeBot = this.getActiveBot();
+                    if (activeBot) {
+                        activeBot.trigger('server_turn_fail');
+                    }
+                }
+            }, this);
+
+            bot.trigger('server_start', botIndex, this.get('activePlayer'), turns);
+
+            this.bots.push(bot);
+        }, this);
     },
     initialize: function () {
         this.set('playersCount', +this.get('playersCount'));
