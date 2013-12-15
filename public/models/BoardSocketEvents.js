@@ -70,6 +70,9 @@ window.BoardSocketEvents = {
             y   : pos.y
         };
         var fence = this.fences.findWhere(pos);
+        if (!fence) {
+            return false;
+        }
         this.auto = true;
         fence.trigger('selected', fence);
         this.auto = false;
