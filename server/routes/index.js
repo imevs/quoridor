@@ -13,4 +13,5 @@ exports.init = function (app) {
     app.get('/play/game/:game', require('./play.js'));
     app.get('/play/player/:player', require('./play.js'));
     app.get('/playLocal/playersCount/:playersCount', require('./playLocal.js'));
+    app.get('/playLocal/playersCount/:playersCount/bots/:bots', require('./playLocal.js'));
 };

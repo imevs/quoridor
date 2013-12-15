@@ -296,7 +296,6 @@ var Room = Backbone.Model.extend({
             if (socket) {
                 socket.emit(eventName, eventInfo);
             }
-            return activePlayer;
         });
     },
 
