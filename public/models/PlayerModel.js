@@ -173,13 +173,14 @@ var PlayersCollection = Backbone.Collection.extend({
      */
     hasTwoVerticalSibling    : function (pos1, pos2) {
         var playerX = pos1.x, playerY = pos1.y, y = pos2.y;
+        var diffY = playerY - y; // 1 or -1
         var sibling1 = this.findWhere({
-            x: playerX,
-            y: playerY - (playerY - y)
+            prev_x: playerX,
+            prev_y: playerY - diffY
         });
         var sibling2 = this.findWhere({
-            x: playerX,
-            y: playerY - (playerY - y) * 2
+            prev_x: playerX,
+            prev_y: playerY - diffY * 2
         });
         return sibling1 && sibling2;
     },
@@ -195,12 +196,13 @@ var PlayersCollection = Backbone.Collection.extend({
      */
     hasTwoHorizontalSiblings : function (pos1, pos2) {
         var playerX = pos1.x, playerY = pos1.y, x = pos2.x;
+        var diffX = playerX - x; //1 or -1
         var sibling1 = this.findWhere({
-            x: playerX - (playerX - x),
+            x: playerX - diffX,
             y: playerY
         });
         var sibling2 = this.findWhere({
-            x: playerX - (playerX - x) * 2,
+            x: playerX - diffX * 2,
             y: playerY
         });
         return sibling1 && sibling2;

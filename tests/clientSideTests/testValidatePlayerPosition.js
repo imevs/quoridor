@@ -202,6 +202,14 @@ new TestCase('Test Validate Player Position', {
             var res = this.board.isValidPlayerPosition(player3.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
-    })
+    }),
+
+    'test bug with different prev_y and y': function () {
+        var player1 = this.board.players.at(0).set({prev_x: 4, prev_y: 3, x: 4, y: 4});
+        this.board.players.at(1).set({prev_x: 4, prev_y: 5, x: 4, y: 5});
+        var newPos = {x: 5, y: 4};
+        var currentPos = {x: player1.get('prev_x'), y: player1.get('prev_y')};
+        assertFalse(this.board.isValidPlayerPosition(currentPos, newPos));
+    }
 
 });
