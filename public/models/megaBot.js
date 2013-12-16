@@ -34,6 +34,7 @@ var MegaBot = SmartBot.extend({
     },
 
     getBestTurn: function () {
+        console.time('getBestTurn');
         var board = this.board.copy();
         var player = board.players.at(this.index);
         this.initOthersPlayers(board);
@@ -52,7 +53,8 @@ var MegaBot = SmartBot.extend({
         }).sort(function (a, b) {
                 return types[b.type] - types[a.type];
             });
-        return minRatedMoves[0];
+        console.timeEnd('getBestTurn');
+        return minRatedMoves[_.random(0, minRatedMoves.length - 1)];
     },
 
     getRatesForPlayersMoves: function (moves, player, board) {
@@ -80,7 +82,8 @@ var MegaBot = SmartBot.extend({
             return [];
         }
         var satisfiedCount = 0, result = [];
-        _(moves).some(function (move) {
+        _(moves).some(function (item) {
+            var move = {x: item.x, y: item.y, type: item.type };
             if (move.type === 'P') {
                 return false;
             }
@@ -125,8 +128,7 @@ var MegaBot = SmartBot.extend({
         var path = this.findPathToGoal(player, board);
         othersMinPathLength = _.isUndefined(othersMinPathLength)
             ? this.othersPlayersHeuristic(board) : othersMinPathLength;
-        var number = (path ? path.length  + 1 : 9999) - othersMinPathLength;
-        return number;
+        return (path ? path.length  + 1 : 9999) - othersMinPathLength;
     },
 
     initPossibleMoves: function () {
@@ -145,8 +147,11 @@ var MegaBot = SmartBot.extend({
     },
 
     removePossibleWallsMove: function (move) {
-        var index = _(this.possibleWallsMoves).indexOf(move);
-        this.possibleWallsMoves.splice(index, 1);
+        var item = _(this.possibleWallsMoves).findWhere(move);
+        var index = _(this.possibleWallsMoves).indexOf(item);
+        if (index !== -1) {
+            this.possibleWallsMoves.splice(index, 1);
+        }
     },
 
     selectWallsMoves: function () {

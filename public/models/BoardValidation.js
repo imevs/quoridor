@@ -166,7 +166,7 @@ var BoardValidation = {
     },
 
     getNearestPositions: function (pawn) {
-        var positions = [
+        return [
             {x: pawn.x - 1, y: pawn.y - 1},
             {x: pawn.x - 1, y: pawn.y},
             {x: pawn.x - 1, y: pawn.y + 1},
@@ -178,11 +178,10 @@ var BoardValidation = {
             {x: pawn.x, y: pawn.y - 1},
             {x: pawn.x, y: pawn.y + 1}
         ];
-        return positions;
     },
 
     getPossiblePositions: function (pawn) {
-        var positions = [
+        return [
             {x: pawn.x - 1, y: pawn.y - 1},
             {x: pawn.x - 1, y: pawn.y},
             {x: pawn.x - 1, y: pawn.y + 1},
@@ -199,7 +198,6 @@ var BoardValidation = {
             {x: pawn.x, y: pawn.y - 2},
             {x: pawn.x, y: pawn.y + 2}
         ];
-        return positions;
     },
 
     getValidPositions: function (pawn) {
@@ -257,11 +255,6 @@ var BoardValidation = {
     },
 
     hasWallsOrPawnsNear: function (wall) {
-        var fence = this.fences.findWhere(wall);
-        var sibling = this.fences.getSibling(fence);
-        if (this.isWallNearBorder(wall) || this.isWallNearBorder(sibling.pick('x', 'y'))) {
-            return true;
-        }
         var busyFences = this.fences.where({state: 'busy'});
         busyFences = _.map(busyFences, function (item) {
             return item.get('type') + item.get('x') + item.get('y');
@@ -315,13 +308,10 @@ var BoardValidation = {
 
     breakSomePlayerPath: function (wall) {
         var me = this;
-        //console.time('breakSomePlayerPath');
-        var result = this.hasWallsOrPawnsNear(wall.pick('x', 'y', 'type')) &&
+        return this.hasWallsOrPawnsNear(wall.pick('x', 'y', 'type')) &&
             me.players.some(function (player) {
                 return me.doesFenceBreakPlayerPath(player, wall);
             });
-        //console.timeEnd('breakSomePlayerPath');
-        return result;
     },
 
     copy: function () {

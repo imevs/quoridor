@@ -1,6 +1,5 @@
-/* global SmartBot, FencesCollection, FieldsCollection,
-    PlayersCollection, GameHistoryModel
-*/
+/* global MegaBot */
+/* global FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
 var BoardModel = Backbone.Model.extend({
     isPlayerMoved: false,
     isFenceMoved: false,
@@ -150,6 +149,25 @@ var BoardModel = Backbone.Model.extend({
         });
     },
 
+    onFenceSelected: function (model) {
+        if (this.canSelectFences() &&
+            this.fences.validateFenceAndSibling(model) &&
+            this.notBreakSomePlayerPath(model)) {
+
+            this.fences.clearBusy();
+            this.fences.validateAndTriggerEventOnFenceAndSibling(model, 'movefence');
+
+            this.players.updatePlayersPositions();
+            this.isPlayerMoved = false;
+            this.isFenceMoved = true;
+        } else {
+            var activeBot = this.getActiveBot();
+            if (activeBot) {
+                activeBot.trigger('server_turn_fail');
+            }
+        }
+    },
+
     initEvents: function () {
         var me = this;
 
@@ -173,24 +191,7 @@ var BoardModel = Backbone.Model.extend({
             });
         }
         this.fences.on({
-            'selected'                     : function (model) {
-                if (me.canSelectFences() &&
-                    me.fences.validateFenceAndSibling(model) &&
-                    me.notBreakSomePlayerPath(model)) {
-
-                    me.fences.clearBusy();
-                    me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'movefence');
-
-                    me.players.updatePlayersPositions();
-                    me.isPlayerMoved = false;
-                    me.isFenceMoved = true;
-                } else {
-                    var activeBot = me.getActiveBot();
-                    if (activeBot) {
-                        activeBot.trigger('server_turn_fail');
-                    }
-                }
-            },
+            'selected'                     : _.bind(me.onFenceSelected, me),
             'highlight_current_and_sibling': function (model) {
                 if (me.canSelectFences()) {
                     me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markfence');
@@ -218,7 +219,7 @@ var BoardModel = Backbone.Model.extend({
 
         _(this.get('botsCount')).times(function (i) {
             var botIndex = i + (this.get('playersCount') - this.get('botsCount'));
-            var bot = new SmartBot(botIndex, this);
+            var bot = new MegaBot(botIndex, this);
 
             bot.on('client_move_player', this.onSocketMovePlayer, this);
             bot.on('client_move_fence', function (pos) {
