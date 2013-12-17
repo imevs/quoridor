@@ -16,10 +16,13 @@ var Bot = Backbone.Model.extend({
         if (Emitter) {
             this.emitter = new Emitter();
         }
+        this.emit = this.trigger;
         this.initEvents();
     },
 
     trigger: function () {
+        //console.log(arguments[0]);
+        //console.log(arguments[1]);
         if (this.emitter) {
             return this.emitter.emit.apply(this, arguments);
         } else {
