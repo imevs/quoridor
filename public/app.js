@@ -3,8 +3,8 @@ $(function () {
 
     var params = parseUrl(document.location.search);
     var boardModel = new BoardModel({
-        playersCount: +(window.playersCount || params.playersCount),
-        botsCount: +(window.botsCount || params.botsCount),
+        playersCount: +(window.playersCount || params.playersCount || 0),
+        botsCount: +(window.botsCount || params.botsCount || 0),
         roomId: window.roomId,
         playerId: window.playerId
     });
