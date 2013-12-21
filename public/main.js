@@ -52,13 +52,19 @@ require.config({
         'models/BoardSocketEvents': {
             deps: ['socket.io']
         },
+        'models/BotWrapper': {
+            deps: [
+                'libs/backbone',
+                'models/bot',
+                'models/smartBot',
+                'models/megaBot'
+            ]
+        },
         'models/BoardModel'       : {
             deps: [
                 'libs/underscore',
                 'libs/backbone',
-                'models/bot',
-                'models/smartBot',
-                'models/megaBot',
+                'models/BotWorkerWrapper',
                 'models/FenceModel',
                 'models/FieldModel',
                 'models/TurnModel',

@@ -1,4 +1,4 @@
-/* global FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
+/* global BotWrapper, FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
 var BoardModel = Backbone.Model.extend({
     isPlayerMoved: false,
     isFenceMoved: false,
@@ -112,12 +112,12 @@ var BoardModel = Backbone.Model.extend({
         var next = this.players.getNextActivePlayer(this.get('activePlayer'));
         _(this.bots).each(function (bot) {
             if (next !== bot.currentPlayer) {
-                bot.postMessage({eventName: eventName, params: param });
+                bot.trigger(eventName, param);
             }
         }, this);
         var nextBot = this.getNextActiveBot(next);
         if (nextBot) {
-            nextBot.postMessage({eventName: eventName, params: param });
+            nextBot.trigger(eventName, param);
         }
     },
 
@@ -136,7 +136,7 @@ var BoardModel = Backbone.Model.extend({
         } else {
             var activeBot = me.getActiveBot();
             if (activeBot) {
-                activeBot.postMessage({eventName: 'server_turn_fail'});
+                activeBot.trigger('server_turn_fail');
             }
         }
     },
@@ -163,7 +163,7 @@ var BoardModel = Backbone.Model.extend({
         } else {
             var activeBot = this.getActiveBot();
             if (activeBot) {
-                activeBot.postMessage({eventName: 'server_turn_fail'});
+                activeBot.trigger('server_turn_fail');
             }
         }
     },
@@ -221,28 +221,20 @@ var BoardModel = Backbone.Model.extend({
         _(this.get('botsCount')).times(function (i) {
             var botIndex = i + (this.get('playersCount') - this.get('botsCount'));
 
-            var bot = new Worker('/models/BotWorker.js');
-
-            bot.addEventListener('message', function (event) {
-                var events = {
-                    'client_move_player': me.onSocketMovePlayer,
-                    'client_move_fence': function (pos) {
-                        if (me.onSocketMoveFence(pos) === false) {
-                            var activeBot = this.getActiveBot();
-                            if (activeBot) {
-                                activeBot.postMessage({eventName: 'server_turn_fail'});
-                            }
-                        }
+            var bot = new BotWrapper({
+                id: botIndex,
+                botType: 'medium'
+            });
+            bot.on('client_move_player', me.onSocketMovePlayer, me);
+            bot.on('client_move_fence', function (pos) {
+                if (me.onSocketMoveFence(pos) === false) {
+                    var activeBot = this.getActiveBot();
+                    if (activeBot) {
+                        activeBot.trigger('server_turn_fail');
                     }
-                };
-                events[event.data.eventName].apply(me, event.data.params);
-            });
-
-            bot.currentPlayer = botIndex;
-            bot.postMessage({
-                eventName   : 'server_start',
-                params: [botIndex, this.get('activePlayer'), turns, this.get('playersCount')]
-            });
+                }
+            }, me);
+            bot.trigger('server_start', botIndex, this.get('activePlayer'), turns, this.get('playersCount'));
 
             this.bots.push(bot);
         }, this);
