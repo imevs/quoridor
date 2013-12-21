@@ -1,4 +1,3 @@
-/* global MegaBot */
 /* global FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
 var BoardModel = Backbone.Model.extend({
     isPlayerMoved: false,
@@ -54,15 +53,16 @@ var BoardModel = Backbone.Model.extend({
             return;
         }
         var active = me.getActivePlayer();
-        var preBusy = me.fences.getPreBusy();
+        var preBusy = me.fences.getMovedFence();
         var index = me.get('activePlayer');
         if (me.isFenceMoved) {
             me.getActivePlayer().placeFence();
+            var preBusySibling = me.fences.getSibling(preBusy);
             me.history.add({
-                x: preBusy[0].get('x'),
-                y: preBusy[0].get('y'),
-                x2: preBusy[1].get('x'),
-                y2: preBusy[1].get('y'),
+                x: preBusy.get('x'),
+                y: preBusy.get('y'),
+                x2: preBusySibling.get('x'),
+                y2: preBusySibling.get('y'),
                 t: 'f'
             });
             me.fences.setBusy();
@@ -83,9 +83,9 @@ var BoardModel = Backbone.Model.extend({
 
             if (me.isFenceMoved) {
                 me.emitEventToBots('server_move_fence', {
-                    x: preBusy[0].get('x'),
-                    y: preBusy[0].get('y'),
-                    type: preBusy[0].get('type'),
+                    x: preBusy.get('x'),
+                    y: preBusy.get('y'),
+                    type: preBusy.get('type'),
                     playerIndex: index
                 });
             }
@@ -112,12 +112,12 @@ var BoardModel = Backbone.Model.extend({
         var next = this.players.getNextActivePlayer(this.get('activePlayer'));
         _(this.bots).each(function (bot) {
             if (next !== bot.currentPlayer) {
-                bot.trigger(eventName, param);
+                bot.postMessage({eventName: eventName, params: param });
             }
         }, this);
         var nextBot = this.getNextActiveBot(next);
         if (nextBot) {
-            nextBot.trigger(eventName, param);
+            nextBot.postMessage({eventName: eventName, params: param });
         }
     },
 
@@ -136,7 +136,7 @@ var BoardModel = Backbone.Model.extend({
         } else {
             var activeBot = me.getActiveBot();
             if (activeBot) {
-                activeBot.trigger('server_turn_fail');
+                activeBot.postMessage({eventName: 'server_turn_fail'});
             }
         }
     },
@@ -163,7 +163,7 @@ var BoardModel = Backbone.Model.extend({
         } else {
             var activeBot = this.getActiveBot();
             if (activeBot) {
-                activeBot.trigger('server_turn_fail');
+                activeBot.postMessage({eventName: 'server_turn_fail'});
             }
         }
     },
@@ -214,24 +214,35 @@ var BoardModel = Backbone.Model.extend({
         if (_.isUndefined(this.get('botsCount'))) {
             return;
         }
+        var me = this;
 
         var turns = this.history.get('turns').toJSON();
 
         _(this.get('botsCount')).times(function (i) {
             var botIndex = i + (this.get('playersCount') - this.get('botsCount'));
-            var bot = new MegaBot(botIndex, this);
 
-            bot.on('client_move_player', this.onSocketMovePlayer, this);
-            bot.on('client_move_fence', function (pos) {
-                if (this.onSocketMoveFence(pos) === false) {
-                    var activeBot = this.getActiveBot();
-                    if (activeBot) {
-                        activeBot.trigger('server_turn_fail');
+            var bot = new Worker('/models/BotWorker.js');
+
+            bot.addEventListener('message', function (event) {
+                var events = {
+                    'client_move_player': me.onSocketMovePlayer,
+                    'client_move_fence': function (pos) {
+                        if (me.onSocketMoveFence(pos) === false) {
+                            var activeBot = this.getActiveBot();
+                            if (activeBot) {
+                                activeBot.postMessage({eventName: 'server_turn_fail'});
+                            }
+                        }
                     }
-                }
-            }, this);
+                };
+                events[event.data.eventName].apply(me, event.data.params);
+            });
 
-            bot.trigger('server_start', botIndex, this.get('activePlayer'), turns);
+            bot.currentPlayer = botIndex;
+            bot.postMessage({
+                eventName   : 'server_start',
+                params: [botIndex, this.get('activePlayer'), turns, this.get('playersCount')]
+            });
 
             this.bots.push(bot);
         }, this);
