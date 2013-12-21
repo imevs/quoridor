@@ -124,17 +124,13 @@ var FencesCollection = Backbone.Collection.extend({
             fence.set({state: 'busy'});
         });
     },
-
     getMovedFence: function () {
-        var fences = this.where({
-            state: 'prebusy'
-        });
+        var fences = this.getPreBusy();
         return _.chain(fences)
             .sortBy(function (i) { return i.get('x'); })
             .sortBy(function (i) { return i.get('y'); })
             .last().value();
     },
-
     getSibling                      : function (item) {
         var siblingPosition = item && item.getAdjacentFencePosition();
         return siblingPosition && this.findWhere({
@@ -143,7 +139,6 @@ var FencesCollection = Backbone.Collection.extend({
             type: item.get('type')
         });
     },
-
     triggerEventOnFenceAndSibling: function (item, event) {
         var sibling = this.getSibling(item);
         if (sibling && event) {

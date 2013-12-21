@@ -8,7 +8,7 @@ var bot, originSettimeout;
 exports.bot = nodeunit.testCase({
 
     setUp: function (test) {
-        bot = new Bot(1, 2);
+        bot = new Bot(1);
         gameHistory = [
             {
                 x: 4,
@@ -45,7 +45,7 @@ exports.bot = nodeunit.testCase({
     'start first': function (test) {
         global.setTimeout = function () {};
 
-        bot.onStart(0, 0, gameHistory);
+        bot.startGame(0, 0, gameHistory, 2);
 
         test.equal(bot.fencesRemaining, 10);
         test.equal(bot.x, 4);
@@ -55,7 +55,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'start second': function (test) {
-        bot.onStart(1, 0, gameHistory);
+        bot.onStart(1, 0, gameHistory, 2);
 
         test.equal(bot.fencesRemaining, 10);
         test.equal(bot.x, 5);
@@ -88,7 +88,7 @@ exports.bot = nodeunit.testCase({
             }
         ];
 
-        bot.onStart(1, 0, gameHistory);
+        bot.onStart(1, 0, gameHistory, 2);
 
         test.equal(bot.fencesRemaining, 10);
         test.equal(bot.x, 3);
@@ -97,7 +97,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'start 4players game': function (test) {
-        bot = new Bot(1, 4);
+        bot = new Bot(1);
         var gameHistory = [
             {
                 x: 4,
@@ -121,7 +121,7 @@ exports.bot = nodeunit.testCase({
             }
         ];
 
-        bot.onStart(3, 0, gameHistory);
+        bot.onStart(3, 0, gameHistory, 4);
 
         test.equal(bot.fencesRemaining, 5);
         test.equal(bot.x, 3);
@@ -130,7 +130,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'first:getJumpPositions': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
 
         test.deepEqual(bot.getJumpPositions(), [
             { x: 5, y: 2 },
@@ -142,7 +142,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'second:getJumpPositions': function (test) {
-        bot.onStart(1, 0, gameHistory);
+        bot.onStart(1, 0, gameHistory, 2);
 
         test.deepEqual(bot.getJumpPositions(), [
             { x: 6, y: 1 },
@@ -154,7 +154,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'getJumpPositions': function (test) {
-        bot.onStart(1, 0, gameHistory);
+        bot.onStart(1, 0, gameHistory, 2);
 
         test.equal(bot.getJumpPositions().length, 4);
         test.deepEqual(bot.getJumpPositions(), [
@@ -211,41 +211,41 @@ exports.bot = nodeunit.testCase({
     },
 
     'canMoveFence - ok': function (test) {
-        bot.onStart(1, 0, gameHistory);
+        bot.onStart(1, 0, gameHistory, 2);
         test.ok(bot.canMoveFence());
         test.done();
     },
 
     'canMoveFence - notOk': function (test) {
-        bot.onStart(1, 0, gameHistory);
+        bot.onStart(1, 0, gameHistory, 2);
         bot.fencesRemaining = 0;
         test.ok(!bot.canMoveFence());
         test.done();
     },
 
     'isCurrent - ok': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         test.ok(!bot.isPlayerCanMakeTurn(0));
         test.ok(bot.isPlayerCanMakeTurn(1));
         test.done();
     },
 
     'isCurrent - not ok': function (test) {
-        bot.onStart(1, 0, gameHistory);
+        bot.onStart(1, 0, gameHistory, 2);
         test.ok(bot.isPlayerCanMakeTurn(0));
         test.ok(!bot.isPlayerCanMakeTurn(1));
         test.done();
     },
 
     'getNextActivePlayer - two players game': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         test.equal(bot.getNextActivePlayer(0), 1);
         test.equal(bot.getNextActivePlayer(1), 0);
         test.done();
     },
 
     'getNextActivePlayer - four players game': function (test) {
-        bot = new Bot(1, 4);
+        bot = new Bot(1);
         var gameHistory = [
             {
                 x: 4,
@@ -269,7 +269,7 @@ exports.bot = nodeunit.testCase({
             }
         ];
 
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 4);
         test.equal(bot.getNextActivePlayer(0), 1);
         test.equal(bot.getNextActivePlayer(1), 2);
         test.equal(bot.getNextActivePlayer(2), 3);
@@ -278,7 +278,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'movePlayer if no fences': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         bot.fencesRemaining = 0;
 
         bot.on('client_move_player', function (params) {
@@ -293,7 +293,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'test moveFence': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return [];
         };
@@ -312,7 +312,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'attemptsCount - 1': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return [];
         };
@@ -324,7 +324,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'attemptsCount - 2': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return [];
         };
@@ -371,10 +371,10 @@ exports.bot = nodeunit.testCase({
                 t : 'f'
             }
         ];
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         test.equals(bot.fencesRemaining, 8);
 
-        bot.onStart(1, 0, gameHistory);
+        bot.onStart(1, 0, gameHistory, 2);
         test.equals(bot.fencesRemaining, 9);
 
         test.equals(bot.fencesPositions.length, 0);
@@ -383,7 +383,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'test fencesPositions': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return []; // no possible player positions
         };
@@ -397,7 +397,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'test fencesPositions 1': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return []; // no possible player positions
         };
@@ -411,7 +411,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'test fencesPositions 2': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return []; // no possible player positions
         };
@@ -425,7 +425,7 @@ exports.bot = nodeunit.testCase({
     },
 
     'test fencesPositions 3': function (test) {
-        bot.onStart(0, 1, gameHistory);
+        bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return []; // no possible player positions
         };

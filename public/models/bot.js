@@ -1,7 +1,7 @@
 if (typeof module !== 'undefined') {
     var _ = require('underscore');
     var Emitter = require('events').EventEmitter;
-    var GameHistoryModel = require('../../public/models/TurnModel.js');
+    var GameHistoryModel = require('./TurnModel.js');
     var Backbone = require('backbone');
 }
 
@@ -9,10 +9,9 @@ var Bot = Backbone.Model.extend({
 
     fencesCount: 20,
 
-    constructor: function (id, playersCount) {
+    constructor: function (id) {
         this.id = id;
         this.playerId = id;
-        this.playersCount = +playersCount;
         if (Emitter) {
             this.emitter = new Emitter();
         }
@@ -38,7 +37,15 @@ var Bot = Backbone.Model.extend({
         }
     },
 
-    onStart: function (currentPlayer, activePlayer, history) {
+    startGame: function (currentPlayer, activePlayer) {
+        this.onStart.apply(this, arguments);
+        if (currentPlayer === activePlayer) {
+            this.turn();
+        }
+    },
+
+    onStart: function (currentPlayer, activePlayer, history, playersCount) {
+        this.playersCount = +playersCount;
         var historyModel = new GameHistoryModel({
             boardSize: 9,
             playersCount: this.playersCount
@@ -52,10 +59,6 @@ var Bot = Backbone.Model.extend({
         this.fencesPositions = [];
         this.currentPlayer = currentPlayer;
         this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
-
-        if (currentPlayer === activePlayer) {
-            this.turn();
-        }
     },
 
     getNextActivePlayer: function (currentPlayer) {
@@ -66,7 +69,7 @@ var Bot = Backbone.Model.extend({
     initEvents: function () {
         this.on('server_move_player', _(this.onMovePlayer).bind(this));
         this.on('server_move_fence', _(this.onMoveFence).bind(this));
-        this.on('server_start', _(this.onStart).bind(this));
+        this.on('server_start', _(this.startGame).bind(this));
         this.on('server_turn_fail', _(this.makeTurn).bind(this));
     },
 

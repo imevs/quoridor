@@ -7,7 +7,7 @@ var MegaBot = SmartBot.extend({
 
     possibleWallsMoves: false,
 
-    constructor: function (id, room, satisfiedRate) {
+    constructor: function (id, satisfiedRate) {
         SmartBot.prototype.constructor.apply(this, arguments);
         this.satisfiedRate = satisfiedRate || 1;
     },
@@ -36,7 +36,7 @@ var MegaBot = SmartBot.extend({
     getBestTurn: function () {
         console.time('getBestTurn');
         var board = this.board.copy();
-        var player = board.players.at(this.index);
+        var player = board.players.at(this.currentPlayer);
         this.initOthersPlayers(board);
         var moves = this.getPossibleMoves(board, player);
         var rates = this.getRatesForPlayersMoves(moves, player, board)

@@ -84,14 +84,14 @@ var Game = Backbone.Collection.extend({
             room.players.at(index).set('url', guid);
             var param = playerParams[index];
             if (param === 'bot') {
-                var bot = new Bot(guid, playersCount);
+                var bot = new Bot(guid);
                 room.addPlayer(bot);
             }
             if (param === 'smartbot') {
-                room.addPlayer(new SmartBot(guid, room));
+                room.addPlayer(new SmartBot(guid));
             }
             if (param === 'megabot') {
-                room.addPlayer(new MegaBot(guid, room));
+                room.addPlayer(new MegaBot(guid));
             }
         });
 

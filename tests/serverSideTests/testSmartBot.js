@@ -1,9 +1,14 @@
 var nodeunit = require('nodeunit');
 var Bot = require('../../public/models/smartBot.js');
-var Room = require('../../server/models/room.js');
-var PlayersCollection = require('../../public/models/PlayerModel.js');
 
-var bot, board;
+var bot, playersPositions = [
+    {x: 1, y: 0, color: 'red', isWin: function (x, y) {
+        return y === 2;
+    } },
+    {x: 1, y: 2, color: 'yellow', isWin: function (x, y) {
+        return y === 0;
+    } }
+];
 
 exports.bot = nodeunit.testCase({
 
@@ -14,29 +19,9 @@ exports.bot = nodeunit.testCase({
          2|_|x|_|
            0 1 2
          */
-        board = Room.createRoom({
-            playersCount: 2,
-            boardSize   : 3
-        });
-        board.players = new PlayersCollection([
-            {x: 1, y: 0, url: 0},
-            {x: 1, y: 2, url: 1}
-        ]);
-        board.players.playersPositions = [
-            {x: 1, y: 0, color: 'red', isWin: function (x, y) {
-                return y === 2;
-            } },
-            {x: 1, y: 2, color: 'yellow', isWin: function (x, y) {
-                return y === 0;
-            } }
-        ];
-
-        bot = new Bot(1, board);
-
-        test();
-    },
-
-    tearDown: function (test) {
+        bot = new Bot(1);
+        bot.onStart(1, 1, [{x: 1, y: 0, t: 'p'}, {x: 1, y: 2, t: 'p'}], 2, 3);
+        bot.board.players.playersPositions = playersPositions;
 
         test();
     },
@@ -101,7 +86,9 @@ exports.bot = nodeunit.testCase({
     },
 
     'getPossiblePosition - first': function (test) {
-        bot = new Bot(0, board);
+        bot.onStart(0, 0, [{x: 1, y: 0, t: 'p'}, {x: 1, y: 2, t: 'p'}], 2, 3);
+        bot.board.players.playersPositions = playersPositions;
+
         test.deepEqual(bot.getPossiblePosition(), {x: 1, y: 1});
         test.done();
     },
@@ -112,42 +99,36 @@ exports.bot = nodeunit.testCase({
     },
 
     'getPossiblePosition - first - fullsizeboard': function (test) {
-        board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('url', 0);
-        board.players.at(1).set('url', 1);
-        bot = new Bot(0, board);
+        bot = new Bot(0);
+        bot.onStart(0, 0, [], 2);
 
         test.deepEqual(bot.getPossiblePosition(), {x: 4, y: 1});
         test.done();
     },
 
     'getPossiblePosition - second - fullsizeboard': function (test) {
-        board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('url', 0);
-        board.players.at(1).set('url', 1);
-        bot = new Bot(1, board);
+        bot = new Bot(1);
+        bot.onStart(1, 1, [], 2);
         test.deepEqual(bot.getPossiblePosition(), {x: 4, y: 7});
         test.done();
     },
 
     'getPossiblePosition - second - fullsizeboard2': function (test) {
-        board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('url', 0);
-        board.players.at(1).set('url', 1);
-        board.players.at(0).set('y', 2);
-        bot = new Bot(0, board);
+        bot = new Bot(0);
+        bot.onStart(0, 0, [], 2);
+        bot.board.players.at(0).set('y', 2);
+
         test.deepEqual(bot.getPossiblePosition(), {x: 4, y: 3});
         test.done();
     },
 
     'getPossiblePosition - second - fullsizeboard 3': function (test) {
-        board = Room.createRoom({playersCount: 2, boardSize: 9});
-        board.players.at(0).set('url', 0);
-        board.players.at(1).set('url', 1);
-        board.players.at(1).set({x: 3, y: 5});
-        board.fences.findWhere({x: 4, y: 3, type: 'H'}).set('state', 'busy');
-        board.fences.findWhere({x: 5, y: 3, type: 'H'}).set('state', 'busy');
-        bot = new Bot(1, board);
+        bot = new Bot(1);
+        bot.onStart(1, 1, [], 2);
+        bot.board.players.at(1).set({x: 3, y: 5});
+        bot.board.fences.findWhere({x: 4, y: 3, type: 'H'}).set('state', 'busy');
+        bot.board.fences.findWhere({x: 5, y: 3, type: 'H'}).set('state', 'busy');
+
         test.deepEqual(bot.getPossiblePosition(), {x: 3, y: 4});
         test.done();
     }

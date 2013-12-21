@@ -1,24 +1,89 @@
 if (typeof module !== 'undefined') {
     var _ = require('underscore');
+    var Backbone = require('backbone');
     var Bot = require('./bot.js');
+    var PlayersCollection = require('../../public/models/PlayerModel.js');
+    var FencesCollection = require('../../public/models/FenceModel.js');
+    var BoardValidation = require('../../public/models/BoardValidation.js');
+    var GameHistoryModel = require('./TurnModel.js');
 }
 
 var SmartBot = Bot.extend({
 
-    constructor: function (id, room) {
-        Bot.prototype.constructor.apply(this, arguments);
-        this.board = room;
-        this.player = room.players.findWhere({url: id});
-        this.index = room.players.indexOf(this.player);
-        this.playersCount = room.get('playersCount');
+    onMovePlayer: function (params) {
+        this.board.players.at(params.playerIndex).set({
+            x: params.x,
+            y: params.y,
+            prev_x: params.x,
+            prev_y: params.y
+        });
+
+        if (this.isPlayerCanMakeTurn(params.playerIndex)) {
+            this.turn();
+        }
+    },
+
+    onMoveFence: function (params) {
+        var fence = this.board.fences.findWhere({
+            x: params.x,
+            y: params.y,
+            type: params.type
+        });
+        var sibling = this.board.fences.getSibling(fence);
+        fence.set('state', 'busy');
+        sibling.set('state', 'busy');
+
+        if (this.currentPlayer === params.playerIndex) {
+            this.fencesRemaining--;
+        }
+        if (this.isPlayerCanMakeTurn(params.playerIndex)) {
+            this.turn();
+        }
+    },
+
+    onStart: function (currentPlayer, activePlayer, history, playersCount, boardSize) {
+        this.newPositions = [];
+        this.fencesPositions = [];
+        this.currentPlayer = currentPlayer;
+        this.playersCount = +playersCount;
+
+        var historyModel = new GameHistoryModel({
+            boardSize: boardSize || 9,
+            playersCount: this.playersCount
+        });
+        if (history.length) {
+            historyModel.get('turns').reset(history);
+        } else {
+            historyModel.initPlayers();
+        }
+
+        this.board = new Backbone.Model({
+            boardSize: historyModel.get('boardSize'),
+            playersCount: historyModel.get('playersCount'),
+            currentPlayer: currentPlayer,
+            activePlayer: activePlayer
+        });
+        _.extend(this.board, BoardValidation);
+        this.board.fences = new FencesCollection();
+        this.board.fences.createFences(historyModel.get('boardSize'));
+        this.board.players = new PlayersCollection(historyModel.getPlayerPositions());
+        this.player = this.board.players.at(this.currentPlayer);
+
+        var position = historyModel.getPlayerPositions()[currentPlayer];
+
+        this.x = position.x;
+        this.y = position.y;
+        this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
     },
 
     getPossiblePosition: function () {
+        //console.profile();
         var board = this.board.copy();
-        var player = board.players.at(this.index);
+        var player = board.players.at(this.currentPlayer);
         var goalPath = this.findPathToGoal(player, board);
         var result = goalPath.pop();
         delete result.deep;
+        //console.profileEnd();
         return result;
     },
 

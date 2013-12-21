@@ -143,7 +143,8 @@ var Room = Backbone.Model.extend({
             socket.emit('server_start',
                 -1,
                 this.get('activePlayer'),
-                this.history.get('turns').toJSON()
+                this.history.get('turns').toJSON(),
+                this.get('playersCount')
             );
 
             this.sockets.push(socket);
@@ -171,7 +172,8 @@ var Room = Backbone.Model.extend({
         socket.emit('server_start',
             this.players.indexOf(player),
             this.get('activePlayer'),
-            this.history.get('turns').toJSON()
+            this.history.get('turns').toJSON(),
+            this.get('playersCount')
         );
 
         return true;

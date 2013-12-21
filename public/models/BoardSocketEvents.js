@@ -74,6 +74,7 @@ window.BoardSocketEvents = {
             return false;
         }
         this.auto = true;
+        /** TODO: refactor fence events to board event */
         fence.trigger('selected', fence);
         this.auto = false;
         this.trigger('maketurn');

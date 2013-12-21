@@ -41,12 +41,17 @@ var PlayersCollection = Backbone.Collection.extend({
                 player.fencesRemaining = fences - player.movedFences;
             }
         });
-        this.playersPositions = [
+        me.playersPositions = [
             {x: 4, y: 0, color: 'red', isWin: function (x, y) { return y === 8; } },
             {x: 8, y: 4, color: 'blue', isWin: function (x) { return x === 0; } },
             {x: 4, y: 8, color: 'white', isWin: function (x, y) { return y === 0; } },
             {x: 0, y: 4, color: 'yellow', isWin: function (x) { return x === 8; } }
         ];
+
+        if (players && players.length === 2 && me.playersPositions.length === 4) {
+            me.playersPositions.splice(3, 1);
+            me.playersPositions.splice(1, 1);
+        }
     },
 
     getNextActivePlayer: function (currentPlayer) {
@@ -82,7 +87,7 @@ var PlayersCollection = Backbone.Collection.extend({
     createPlayers: function (playersCount) {
         var me = this;
         playersCount = +playersCount;
-        if (playersCount === 2) {
+        if (playersCount === 2 && me.playersPositions.length === 4) {
             me.playersPositions.splice(3, 1);
             me.playersPositions.splice(1, 1);
         }
