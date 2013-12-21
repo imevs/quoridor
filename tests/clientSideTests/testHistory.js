@@ -34,7 +34,7 @@ new TestCase('Test History', {
 
         this.board.trigger('maketurn');
 
-        assertEquals('d4e4', this.board.history.at(2));
+        assertEquals('e4d4', this.board.history.at(2));
     }
 
 });
