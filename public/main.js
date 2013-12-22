@@ -64,7 +64,7 @@ require.config({
             deps: [
                 'libs/underscore',
                 'libs/backbone',
-                'models/BotWorkerWrapper',
+                'models/BotWrapper',
                 'models/FenceModel',
                 'models/FieldModel',
                 'models/TurnModel',
