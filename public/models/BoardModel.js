@@ -223,7 +223,7 @@ var BoardModel = Backbone.Model.extend({
 
             var bot = new BotWrapper({
                 id: botIndex,
-                botType: 'medium'
+                botType: 'super'
             });
             bot.on('client_move_player', me.onSocketMovePlayer, me);
             bot.on('client_move_fence', function (pos) {

@@ -1,6 +1,6 @@
 if (typeof module !== 'undefined') {
     var _ = require('underscore');
-    var SmartBot = require('./smartBot.js');
+    var SmartBot = require('./SmartBot.js');
 }
 
 var MegaBot = SmartBot.extend({
@@ -39,7 +39,7 @@ var MegaBot = SmartBot.extend({
         var player = board.players.at(this.currentPlayer);
         this.initOthersPlayers(board);
         var moves = this.getPossibleMoves(board, player);
-        var rates = this.getRatesForPlayersMoves(moves, player, board)
+        var rates = /*this.getRatesForPlayersMoves(moves, player, board)*/[]
             .concat(this.getRatesForWallsMoves(moves, player, board));
 
         rates = _(rates).sort(function (move1, move2) {
@@ -157,12 +157,14 @@ var MegaBot = SmartBot.extend({
     selectWallsMoves: function () {
         var positions = [];
         var boardSize = this.board.get('boardSize');
+
         _([boardSize, boardSize - 1]).iter(function (i, j) {
             positions.push({x: i, y: j, type: 'H'});
         });
         _([boardSize - 1, boardSize]).iter(function (i, j) {
             positions.push({x: i, y: j, type: 'V'});
         });
+
         return positions;
     }
 

@@ -11,6 +11,7 @@ var Bot = Backbone.Model.extend({
 
     constructor: function (id) {
         this.id = id;
+
         this.playerId = id;
         if (Emitter) {
             this.emitter = new Emitter();
