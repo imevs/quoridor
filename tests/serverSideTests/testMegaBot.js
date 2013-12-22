@@ -1,5 +1,5 @@
 var nodeunit = require('nodeunit');
-var Bot = require('../../public/models/megaBot.js');
+var Bot = require('../../public/models/MegaBot.js');
 
 var bot, playersPositions = [
     {x: 1, y: 0, color: 'red', isWin: function (x, y) {

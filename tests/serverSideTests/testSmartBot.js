@@ -1,5 +1,5 @@
 var nodeunit = require('nodeunit');
-var Bot = require('../../public/models/smartBot.js');
+var Bot = require('../../public/models/SmartBot.js');
 
 var bot, playersPositions = [
     {x: 1, y: 0, color: 'red', isWin: function (x, y) {

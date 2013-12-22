@@ -1,6 +1,6 @@
 var nodeunit = require('nodeunit');
 var _ = require('underscore');
-var Bot = require('../../public/models/bot.js');
+var Bot = require('../../public/models/Bot.js');
 var gameHistory;
 
 var bot, originSettimeout;
