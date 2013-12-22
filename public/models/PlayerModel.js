@@ -35,7 +35,8 @@ var PlayersCollection = Backbone.Collection.extend({
 
     initialize: function (players) {
         var me = this;
-        _(players).each(function (player) {
+        _(players).each(function (player, i) {
+            player.url = i;
             if (!_.isUndefined(player.movedFences)) {
                 var fences = Math.round(me.fencesCount / players.length);
                 player.fencesRemaining = fences - player.movedFences;

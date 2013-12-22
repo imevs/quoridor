@@ -63,7 +63,7 @@ exports.bot = nodeunit.testCase({
     'getPossiblePosition - second - fullsizeboard - walls': function (test) {
         var satisfiedRate = -2;
         bot = new Bot(0, satisfiedRate);
-        bot.onStart(1, 1, [], 2);
+        bot.onStart(0, 0, [], 2);
 
         var fences = bot.board.fences;
         /**
@@ -81,9 +81,11 @@ exports.bot = nodeunit.testCase({
         fences.findWhere({x: 4, y: 7, type: 'V'}).set('state', 'busy');
         fences.findWhere({x: 4, y: 8, type: 'V'}).set('state', 'busy');
 
-//        var result = bot.getBestTurn();
-        // todo: random value
-        //test.deepEqual(result, {x: 2, y: 7, type: 'H', rate: -2});
+        var result = bot.getBestTurn();
+        test.equal(result.x, 2);
+        test.ok(result.y === 7 || result.y === 6);
+        test.equal(result.type, 'H');
+        test.equal(result.rate, -2);
         test.done();
     }
 

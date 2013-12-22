@@ -55,9 +55,9 @@ require.config({
         'models/BotWrapper': {
             deps: [
                 'libs/backbone',
-                'models/bot',
-                'models/smartBot',
-                'models/megaBot'
+                'models/Bot',
+                'models/SmartBot',
+                'models/MegaBot'
             ]
         },
         'models/BoardModel'       : {
