@@ -61,8 +61,8 @@ exports.bot = nodeunit.testCase({
     },
 
     'getPossiblePosition - second - fullsizeboard - walls': function (test) {
-        var satisfiedRate = -2;
-        bot = new Bot(0, satisfiedRate);
+        bot = new Bot(0);
+        bot.satisfiedRate = -2;
         bot.onStart(0, 0, [], 2);
 
         var fences = bot.board.fences;

@@ -52,6 +52,15 @@ require.config({
         'models/BoardSocketEvents': {
             deps: ['socket.io']
         },
+        'models/Bot': {
+            deps: ['libs/backbone']
+        },
+        'models/SmartBot': {
+            deps: ['models/Bot']
+        },
+        'models/MegaBot': {
+            deps: ['models/SmartBot']
+        },
         'models/BotWrapper': {
             deps: [
                 'libs/backbone',

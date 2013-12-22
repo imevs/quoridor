@@ -6,11 +6,7 @@ if (typeof module !== 'undefined') {
 var MegaBot = SmartBot.extend({
 
     possibleWallsMoves: false,
-
-    constructor: function (id, satisfiedRate) {
-        SmartBot.prototype.constructor.apply(this, arguments);
-        this.satisfiedRate = satisfiedRate || 1;
-    },
+    satisfiedRate: 1,
 
     doTurn     : function () {
         var turn = this.getBestTurn();
@@ -51,8 +47,8 @@ var MegaBot = SmartBot.extend({
         var minRatedMoves = _(rates).filter(function (move) {
             return move.rate === minRate;
         }).sort(function (a, b) {
-                return types[b.type] - types[a.type];
-            });
+            return types[b.type] - types[a.type];
+        });
         console.timeEnd('getBestTurn');
         return minRatedMoves[_.random(0, minRatedMoves.length - 1)];
     },
