@@ -39,7 +39,7 @@ var MegaBot = SmartBot.extend({
         var player = board.players.at(this.currentPlayer);
         this.initOthersPlayers(board);
         var moves = this.getPossibleMoves(board, player);
-        var rates = /*this.getRatesForPlayersMoves(moves, player, board)*/[]
+        var rates = this.getRatesForPlayersMoves(moves, player, board)
             .concat(this.getRatesForWallsMoves(moves, player, board));
 
         rates = _(rates).sort(function (move1, move2) {
