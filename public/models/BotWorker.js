@@ -2,9 +2,9 @@
 importScripts('../libs/underscore.js');
 importScripts('../libs/backbone.js');
 importScripts('../utils.js');
-importScripts('bot.js');
-importScripts('smartBot.js');
-importScripts('megaBot.js');
+importScripts('Bot.js');
+importScripts('SmartBot.js');
+importScripts('MegaBot.js');
 importScripts('TurnModel.js');
 importScripts('FenceModel.js');
 importScripts('BoardValidation.js');

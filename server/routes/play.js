@@ -1,4 +1,4 @@
-var Bot = require('../../public/models/bot.js');
+var Bot = require('../../public/models/Bot.js');
 var _ = require('underscore');
 
 module.exports = function (req, res) {
