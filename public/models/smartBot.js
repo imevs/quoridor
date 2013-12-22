@@ -1,7 +1,7 @@
 if (typeof module !== 'undefined') {
     var _ = require('underscore');
     var Backbone = require('backbone');
-    var Bot = require('./bot.js');
+    var Bot = require('./Bot.js');
     var PlayersCollection = require('../../public/models/PlayerModel.js');
     var FencesCollection = require('../../public/models/FenceModel.js');
     var BoardValidation = require('../../public/models/BoardValidation.js');
