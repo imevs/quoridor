@@ -17,6 +17,7 @@ var BoardModel = Backbone.Model.extend({
         this.fences.each(function (fence) {
             fence.set('state', '');
         });
+        this.history.get('turns').reset();
         this.players.initPlayerPositions();
         this.run();
     },
@@ -109,7 +110,7 @@ var BoardModel = Backbone.Model.extend({
     },
 
     emitEventToBots: function (eventName, param) {
-        var next = this.players.getNextActivePlayer(this.get('activePlayer'));
+        var next = this.players.at(this.get('activePlayer'));
         _(this.bots).each(function (bot) {
             if (next !== bot.currentPlayer) {
                 bot.trigger(eventName, param);

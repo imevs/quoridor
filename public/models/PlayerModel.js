@@ -71,7 +71,7 @@ var PlayersCollection = Backbone.Collection.extend({
             player.trigger('resetstate');
         });
         current = this.at(activePlayer);
-        current.trigger('setcurrent', activePlayer);
+        current.trigger('setcurrent');
         return activePlayer;
     },
 
