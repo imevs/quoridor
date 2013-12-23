@@ -339,7 +339,7 @@ BoardValidation.prototype = {
             currentPlayer: this.get('currentPlayer'),
             activePlayer: this.get('activePlayer')
         });
-        _.extend(board, BoardValidation);
+        _.extend(board, BoardValidation.prototype);
         board.fences = new FencesCollection(this.fences.toJSON());
         board.players = new PlayersCollection(this.players.toJSON());
         board.players.playersPositions = this.players.playersPositions;
