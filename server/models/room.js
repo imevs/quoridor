@@ -356,6 +356,6 @@ var Room = Backbone.Model.extend({
         return room;
     }
 });
-_.extend(Room.prototype, BoardValidation);
+_.extend(Room.prototype, BoardValidation.prototype);
 
 module.exports = Room;

@@ -1,11 +1,15 @@
-if (typeof module !== 'undefined') {
+var isNode = typeof module !== 'undefined';
+
+if (isNode) {
     var _ = require('../utils.js');
     var Backbone = require('backbone');
     var FencesCollection = require('./FenceModel');
     var PlayersCollection = require('./PlayerModel');
 }
 
-var BoardValidation = {
+var BoardValidation = function () { };
+
+BoardValidation.prototype = {
     isBetween: function (n1, n2, n3) {
         var min = Math.min(n1, n2);
         var max = Math.max(n1, n2);
@@ -344,6 +348,6 @@ var BoardValidation = {
     }
 };
 
-if (typeof module !== 'undefined') {
+if (isNode) {
     module.exports = BoardValidation;
 }

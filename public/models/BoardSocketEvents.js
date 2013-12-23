@@ -11,8 +11,9 @@ if (window.io) {
     };
     io.util.inherit(io.myconnect, io.connect);
 }
+var BoardSocketEvents = function () {};
 
-window.BoardSocketEvents = {
+BoardSocketEvents.prototype = {
 
     initSocket: function () {
         var host = 'http://' + document.location.host;

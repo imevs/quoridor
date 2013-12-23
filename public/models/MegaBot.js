@@ -1,4 +1,6 @@
-if (typeof module !== 'undefined') {
+var isNode = typeof module !== 'undefined';
+
+if (isNode) {
     var _ = require('underscore');
     var SmartBot = require('./SmartBot.js');
 }
@@ -166,6 +168,6 @@ var MegaBot = SmartBot.extend({
 
 });
 
-if (typeof module !== 'undefined') {
+if (isNode) {
     module.exports = MegaBot;
 }

@@ -1,4 +1,6 @@
-if (typeof module !== 'undefined') {
+var isNode = typeof module !== 'undefined';
+
+if (isNode) {
     var _ = require('underscore');
     var Emitter = require('events').EventEmitter;
     var GameHistoryModel = require('./TurnModel.js');
@@ -193,6 +195,6 @@ var Bot = Backbone.Model.extend({
 
 });
 
-if (typeof module !== 'undefined') {
+if (isNode) {
     module.exports = Bot;
 }

@@ -1,11 +1,13 @@
-if (typeof module !== 'undefined') {
+var isNode = typeof module !== 'undefined';
+
+if (isNode) {
     var Backbone = require('backbone');
     var _ = require('underscore');
 }
 
 var FieldModel = Backbone.Model.extend({});
 
-window.FieldsCollection = Backbone.Collection.extend({
+var FieldsCollection = Backbone.Collection.extend({
     model: FieldModel,
     selectField: function (x, y) {
         var field = this.findWhere({x: x, y: y});
@@ -18,3 +20,7 @@ window.FieldsCollection = Backbone.Collection.extend({
         });
     }
 });
+
+if (isNode) {
+    module.exports = FieldsCollection;
+}

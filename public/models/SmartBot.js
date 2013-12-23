@@ -1,4 +1,6 @@
-if (typeof module !== 'undefined') {
+var isNode = typeof module !== 'undefined';
+
+if (isNode) {
     var _ = require('underscore');
     var Backbone = require('backbone');
     var Bot = require('./Bot.js');
@@ -63,7 +65,7 @@ var SmartBot = Bot.extend({
             currentPlayer: currentPlayer,
             activePlayer: activePlayer
         });
-        _.extend(this.board, BoardValidation);
+        _.extend(this.board, BoardValidation.prototype);
         this.board.fences = new FencesCollection();
         this.board.fences.createFences(historyModel.get('boardSize'));
         this.board.players = new PlayersCollection(historyModel.getPlayerPositions());
@@ -192,6 +194,6 @@ var SmartBot = Bot.extend({
 
 });
 
-if (typeof module !== 'undefined') {
+if (isNode) {
     module.exports = SmartBot;
 }

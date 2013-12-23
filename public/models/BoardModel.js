@@ -1,4 +1,6 @@
-/* global BotWrapper, FencesCollection, FieldsCollection, PlayersCollection, GameHistoryModel */
+/* global BotWrapper, FencesCollection, FieldsCollection,
+PlayersCollection, GameHistoryModel, BoardValidation, BoardSocketEvents */
+
 var BoardModel = Backbone.Model.extend({
     isPlayerMoved: false,
     isFenceMoved: false,
@@ -254,5 +256,5 @@ var BoardModel = Backbone.Model.extend({
         }
     }
 });
-_.extend(BoardModel.prototype, window.BoardValidation);
-_.extend(BoardModel.prototype, window.BoardSocketEvents);
+_.extend(BoardModel.prototype, BoardValidation.prototype);
+_.extend(BoardModel.prototype, BoardSocketEvents.prototype);
