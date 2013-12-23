@@ -1,4 +1,4 @@
-/* global GameObject,$,_, PlayerView, FieldView, FenceView, GameHistoryView,InfoView */
+/* global GameObject,$,_, TimerView, PlayerView, FieldView, FenceView, GameHistoryView,InfoView */
 window.BoardView = GameObject.extend({
     selector: '#board',
     events: {
@@ -116,6 +116,9 @@ window.BoardView = GameObject.extend({
         });
         var info = new InfoView({
             model: me.infoModel
+        });
+        new TimerView({
+            model: me.timerModel
         });
         new GameHistoryView({
             model: me.history

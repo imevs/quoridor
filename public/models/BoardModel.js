@@ -1,4 +1,4 @@
-/* global BotWrapper, FencesCollection, FieldsCollection,
+/* global TimerModel, BotWrapper, FencesCollection, FieldsCollection,
 PlayersCollection, GameHistoryModel, BoardValidation, BoardSocketEvents */
 
 var BoardModel = Backbone.Model.extend({
@@ -27,6 +27,7 @@ var BoardModel = Backbone.Model.extend({
         this.fences = new FencesCollection();
         this.fields = new FieldsCollection();
         this.players = new PlayersCollection();
+        this.timerModel = new TimerModel();
         this.infoModel = new Backbone.Model();
         this.history = new GameHistoryModel({
             boardSize: this.get('boardSize'),
@@ -78,6 +79,10 @@ var BoardModel = Backbone.Model.extend({
             });
         }
         me.switchActivePlayer();
+        me.players.each(function (player) {
+            player.trigger('resetstate');
+        });
+        me.getActivePlayer().trigger('setcurrent');
         /**
          * if local mode game then automatic change currentPlayer
          */
@@ -145,6 +150,7 @@ var BoardModel = Backbone.Model.extend({
     },
 
     updateInfo: function () {
+        this.timerModel.start();
         this.infoModel.set({
             currentplayer: this.get('currentPlayer'),
             activeplayer : this.get('activePlayer'),
@@ -183,8 +189,8 @@ var BoardModel = Backbone.Model.extend({
             }
         });
         this.on('change:activePlayer', this.updateInfo, this);
-        this.on('change:currentPlayer', this.updateInfo, this);
-        this.players.on('change', this.updateInfo, this);
+        //this.on('change:currentPlayer', this.updateInfo, this);
+        //this.players.on('change', this.updateInfo, this);
 
         if (!this.isOnlineGame()) {
             this.players.on('win', function (player) {
@@ -196,7 +202,9 @@ var BoardModel = Backbone.Model.extend({
         this.fences.on({
             'selected'                     : _.bind(me.onFenceSelected, me),
             'highlight_current_and_sibling': function (model) {
-                if (me.canSelectFences()) {
+                if (me.canSelectFences() &&
+                    me.fences.validateFenceAndSibling(model) &&
+                    me.notBreakSomePlayerPath(model)) {
                     me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markfence');
                 }
             },

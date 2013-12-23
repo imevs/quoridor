@@ -69,10 +69,17 @@ require.config({
                 'models/MegaBot'
             ]
         },
+        'models/TimerModel': {
+            deps: ['libs/backbone']
+        },
+        'views/TimerView': {
+            deps: ['libs/backbone']
+        },
         'models/BoardModel'       : {
             deps: [
                 'libs/underscore',
                 'libs/backbone',
+                'models/TimerModel',
                 'models/BotWrapper',
                 'models/FenceModel',
                 'models/FieldModel',
@@ -118,6 +125,7 @@ require.config({
             deps: [
                 'libs/underscore',
                 'views/GameObject',
+                'views/TimerView',
                 'views/FieldView',
                 'views/GameHistoryView',
                 'views/FenceView',

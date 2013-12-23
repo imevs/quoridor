@@ -69,11 +69,6 @@ var PlayersCollection = Backbone.Collection.extend({
         var activePlayer = currentPlayer;
         activePlayer++;
         activePlayer = activePlayer < this.length ? activePlayer : 0;
-        this.each(function (player) {
-            player.trigger('resetstate');
-        });
-        current = this.at(activePlayer);
-        current.trigger('setcurrent');
         return activePlayer;
     },
 
