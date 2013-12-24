@@ -273,7 +273,6 @@ var Room = Backbone.Model.extend({
 
         process.nextTick(function () {
             console.log('room:emitEventToAllPlayers');
-            clearTimeout(room.turnTimeout);
             room.players.each(function (player) {
                 var index = room.players.indexOf(player);
                 if (room.get('activePlayer') === index) {
@@ -289,6 +288,7 @@ var Room = Backbone.Model.extend({
             });
             var activePlayer = room.players.at(room.get('activePlayer'));
             var socket = activePlayer.socket;
+            clearTimeout(room.turnTimeout);
             if (room.onTimeoutCount < 10) { // stop auto switch after 15 move passing
                 room.turnTimeout = setTimeout(_(room.onTimeout).bind(room), 15 * 1000);
             }

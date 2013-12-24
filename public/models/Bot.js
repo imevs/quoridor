@@ -54,14 +54,16 @@ var Bot = Backbone.Model.extend({
             playersCount: this.playersCount
         });
         historyModel.get('turns').reset(history);
-        var position = historyModel.getPlayerPositions()[currentPlayer];
-
-        this.x = position.x;
-        this.y = position.y;
-        this.newPositions = [];
-        this.fencesPositions = [];
-        this.currentPlayer = currentPlayer;
-        this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
+        var playerPositions = historyModel.getPlayerPositions();
+        var position = playerPositions[currentPlayer];
+        if (position) {
+            this.x = position.x;
+            this.y = position.y;
+            this.newPositions = [];
+            this.fencesPositions = [];
+            this.currentPlayer = currentPlayer;
+            this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
+        }
     },
 
     getNextActivePlayer: function (currentPlayer) {

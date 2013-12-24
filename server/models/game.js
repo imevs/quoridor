@@ -18,11 +18,10 @@ var Game = Backbone.Collection.extend({
                     room.players.each(function (player) {
                         player.reset();
                         if (player.isBot()) {
-                            var bot = new Bot(player.get('url'), room.get('playersCount'));
+                            var bot = new Bot(player.get('url'));
                             room.addPlayer(bot);
                         }
                     });
-
                 });
             }
         });

@@ -46,7 +46,7 @@ var SmartBot = Bot.extend({
     onStart: function (currentPlayer, activePlayer, history, playersCount, boardSize) {
         this.newPositions = [];
         this.fencesPositions = [];
-        this.currentPlayer = currentPlayer;
+        this.currentPlayer = +currentPlayer;
         this.playersCount = +playersCount;
 
         var historyModel = new GameHistoryModel({
@@ -62,8 +62,8 @@ var SmartBot = Bot.extend({
         this.board = new Backbone.Model({
             boardSize: historyModel.get('boardSize'),
             playersCount: historyModel.get('playersCount'),
-            currentPlayer: currentPlayer,
-            activePlayer: activePlayer
+            currentPlayer: this.currentPlayer,
+            activePlayer: this.activePlayer
         });
         _.extend(this.board, BoardValidation.prototype);
         this.board.fences = new FencesCollection();
@@ -71,11 +71,10 @@ var SmartBot = Bot.extend({
         this.board.players = new PlayersCollection(historyModel.getPlayerPositions());
         this.player = this.board.players.at(this.currentPlayer);
 
-        var position = historyModel.getPlayerPositions()[currentPlayer];
-
-        this.x = position.x;
-        this.y = position.y;
-        this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
+        var position = historyModel.getPlayerPositions()[this.currentPlayer];
+        if (position) {
+            this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
+        }
     },
 
     getPossiblePosition: function () {
