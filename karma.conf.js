@@ -21,6 +21,7 @@ module.exports = function (config) {
             'public/libs/underscore.js',
             'public/libs/backbone.js',
             'public/utils.js',
+            'public/models/TimerModel.js',
             'public/models/FieldModel.js',
             'public/models/TurnModel.js',
             'public/models/FenceModel.js',
