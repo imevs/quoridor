@@ -126,9 +126,11 @@ var GameHistoryModel = Backbone.Model.extend({
 
     initialize: function (params) {
         params = params || {};
-        this.set('boardSize', +params.boardSize || 9);
-        this.set('playersCount', +params.playersCount || 2);
-        this.set('turns', new TurnsCollection());
+        this.set({
+            boardSize: +params.boardSize || 9,
+            playersCount: +params.playersCount || 2,
+            turns: new TurnsCollection()
+        });
 
         TurnModel.boardSize = this.get('boardSize');
         this.playersPositions = [

@@ -136,8 +136,8 @@ var Room = Backbone.Model.extend({
         return this.get('state') === 'finished';
     },
     addPlayer: function (socket) {
-        var socketId = socket && socket.id && socket.id.toString();
-        var playerId = socket && socket.playerId && socket.playerId.toString();
+        var socketId = socket && !_.isUndefined(socket.id) && socket.id.toString();
+        var playerId = socket && !_.isUndefined(socket.playerId) && socket.playerId.toString();
 
         if (!playerId) {
             socket.emit('server_start',
