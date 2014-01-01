@@ -11,21 +11,22 @@
     "posttest": "nodeunit tests/serverSideTests"
   },
   "dependencies": {
-    "connect": "2.7.x",
-    "lmd": "1.10.15",
-    "backbone": "1.x",
+    "connect": "~2.7.11",
+    "lmd": "~1.10.15",
+    "backbone": "~1.1.0",
     "underscore": "*",
-    "express": "3.3.5",
-    "mongoose": "3.6.x",
+    "express": "~3.3.5",
+    "mongoose": "~3.6.20",
     "uuid": "1.4.x",
     "express3-handlebars": "0.5.x",
-    "socket.io": "0.9.x"
+    "socket.io": "0.9.x",
+    "lodash-node": "~2.4.1"
   },
   "devDependencies": {
-    "jshint": "*",
+    "jshint": "~2.4.0",
     "sinon": "*",
-    "nodeunit": "*",
-    "phantomjs": "0.2.x"
+    "nodeunit": "~0.8.2",
+    "phantomjs": "~0.2.6"
   },
   "analyze": false,
   "license": "MIT",
