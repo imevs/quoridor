@@ -10,6 +10,7 @@ importScripts('FenceModel.js');
 importScripts('BoardValidation.js');
 importScripts('PlayerModel.js');
 
+/*
 Backbone.Model.prototype.set = function (key, val) {
     var attrs;
     if (typeof key === 'object') {
@@ -21,6 +22,7 @@ Backbone.Model.prototype.set = function (key, val) {
         this.attributes[attr] = attrs[attr];
     }, this);
 };
+*/
 var bot;
 
 addEventListener('message', function (event) {
