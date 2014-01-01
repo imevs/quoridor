@@ -1,5 +1,5 @@
 if (typeof module !== 'undefined') {
-    var _ = require('underscore');
+    var _ = require('lodash-node/underscore');
 }
 
 _.mixin({iter: function (params, callback, ctx) {

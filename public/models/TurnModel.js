@@ -2,7 +2,7 @@ var isNode = typeof module !== 'undefined';
 
 if (isNode) {
     var Backbone = require('backbone');
-    var _ = require('underscore');
+    var _ = require('lodash-node/underscore');
 }
 
 var TurnModel = Backbone.Model.extend({

@@ -1,4 +1,4 @@
-var _ = require('underscore');
+var _ = require('lodash-node/underscore');
 var Backbone = require('../backbone.mongoose');
 
 var PlayersCollection = require('../../public/models/PlayerModel.js');

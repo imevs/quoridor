@@ -1,7 +1,7 @@
 var isNode = typeof module !== 'undefined';
 
 if (isNode) {
-    var _ = require('underscore');
+    var _ = require('lodash-node/underscore');
     var Backbone = require('backbone');
     var Bot = require('./Bot.js');
     var PlayersCollection = require('../../public/models/PlayerModel.js');

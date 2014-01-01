@@ -1,7 +1,7 @@
 var isNode = typeof module !== 'undefined';
 
 if (isNode) {
-    var _ = require('underscore');
+    var _ = require('lodash-node/underscore');
     var SmartBot = require('./SmartBot.js');
 }
 
@@ -33,6 +33,7 @@ var MegaBot = SmartBot.extend({
 
     getBestTurn: function () {
         console.time('getBestTurn');
+        //console.profile('getBestTurn');
         var board = this.board.copy();
         var player = board.players.at(this.currentPlayer);
         this.initOthersPlayers(board);
@@ -52,6 +53,7 @@ var MegaBot = SmartBot.extend({
             return types[b.type] - types[a.type];
         });
         console.timeEnd('getBestTurn');
+        //console.profileEnd('getBestTurn');
         return minRatedMoves[_.random(0, minRatedMoves.length - 1)];
     },
 
@@ -115,7 +117,7 @@ var MegaBot = SmartBot.extend({
     },
 
     othersPlayersHeuristic: function (board) {
-        var paths = this.othersPlayers.map(function (player) {
+        var paths = _(this.othersPlayers).map(function (player) {
             var path = this.findPathToGoal(player, board);
             return path ? path.length : 0;
         }, this);
