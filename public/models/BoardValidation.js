@@ -116,12 +116,13 @@ BoardValidation.prototype = {
             || Math.abs(prevY - pos.y) === 1 && prevX === pos.x;
     },
     isValidPlayerPosition: function (currentPos, newPos, busyFences) {
+        busyFences = this.getBusyFences(busyFences);
         return this.isBetween(0, this.get('boardSize'), newPos.x)
             && this.isBetween(0, this.get('boardSize'), newPos.y)
             && this.players.isFieldNotBusy(newPos)
             && this.noFenceBetweenPositions(currentPos, newPos, busyFences)
             && (
-            this.isNearestPosition(currentPos, newPos) ||
+                this.isNearestPosition(currentPos, newPos) ||
                 this.players.isFieldBehindOtherPlayer(currentPos, newPos) ||
                 this.players.isFieldNearOtherPlayer(currentPos, newPos) ||
                 this.isOtherPlayerAndFenceBehindHim(currentPos, newPos, busyFences)
