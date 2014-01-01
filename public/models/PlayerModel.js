@@ -126,7 +126,20 @@ var PlayersCollection = Backbone.Collection.extend({
     },
 
     isFieldBusy: function (pos) {
-        return this.findWhere(pos);
+        var p0 = this.at(0);
+        var p1 = this.at(1);
+        if (this.length === 2) {
+            return p0.get('x') === pos.x && p0.get('y') === pos.y ||
+                p1.get('x') === pos.x && p1.get('y') === pos.y;
+        } else { //if (this.length === 4) {
+            var p2 = this.at(2);
+            var p3 = this.at(3);
+            return p0.get('x') === pos.x && p0.get('y') === pos.y ||
+                p1.get('x') === pos.x && p1.get('y') === pos.y ||
+                p2.get('x') === pos.x && p2.get('y') === pos.y ||
+                p3.get('x') === pos.x && p3.get('y') === pos.y;
+        }
+        //return _(this.models).some(pos);
     },
     isBetween: function (n1, n2, n3) {
         var min = Math.min(n1, n2);
@@ -161,8 +174,7 @@ var PlayersCollection = Backbone.Collection.extend({
         if (!isDiagonal) {
             return false;
         }
-        return !!(this.hasTwoVerticalSibling(pos1, pos2)
-               || this.hasTwoHorizontalSiblings(pos1, pos2));
+        return !!(this.hasTwoVerticalSibling(pos1, pos2) || this.hasTwoHorizontalSiblings(pos1, pos2));
     },
 
     /**
@@ -177,15 +189,8 @@ var PlayersCollection = Backbone.Collection.extend({
     hasTwoVerticalSibling    : function (pos1, pos2) {
         var playerX = pos1.x, playerY = pos1.y, y = pos2.y;
         var diffY = playerY - y; // 1 or -1
-        var sibling1 = this.findWhere({
-            prev_x: playerX,
-            prev_y: playerY - diffY
-        });
-        var sibling2 = this.findWhere({
-            prev_x: playerX,
-            prev_y: playerY - diffY * 2
-        });
-        return sibling1 && sibling2;
+        return this.findWhere({ prev_x: playerX, prev_y: playerY - diffY})
+            && this.findWhere({ prev_x: playerX, prev_y: playerY - diffY * 2 });
     },
 
     /**
@@ -200,15 +205,8 @@ var PlayersCollection = Backbone.Collection.extend({
     hasTwoHorizontalSiblings : function (pos1, pos2) {
         var playerX = pos1.x, playerY = pos1.y, x = pos2.x;
         var diffX = playerX - x; //1 or -1
-        var sibling1 = this.findWhere({
-            x: playerX - diffX,
-            y: playerY
-        });
-        var sibling2 = this.findWhere({
-            x: playerX - diffX * 2,
-            y: playerY
-        });
-        return sibling1 && sibling2;
+        return this.findWhere({x: playerX - diffX, y: playerY })
+            && this.findWhere({x: playerX - diffX * 2, y: playerY});
     },
 
     updatePlayersPositions: function () {

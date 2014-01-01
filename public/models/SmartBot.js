@@ -124,9 +124,7 @@ var SmartBot = Bot.extend({
             deep: 0
         });
 
-        var busyFences;
-        busyFences = _(board.fences.toJSON()).where({state: 'busy'});
-        busyFences = _(busyFences);
+        var busyFences = board.getBusyFences();
 
         var addNewCoordinates = function (validMoveCoordinate) {
             var isNotUsed = !_(closed).findWhere(validMoveCoordinate)

@@ -61,7 +61,6 @@ BoardValidation.prototype = {
      */
     isOtherPlayerAndFenceBehindHimHorizontal: function (pos1, pos2, busyFences) {
         var playerX = pos1.x, playerY = pos1.y, x = pos2.x;
-
         var sibling1, sibling2;
         sibling1 = this.players.findWhere({ x: x, y: playerY });
         var wallX = x - (playerX < x ? 0 : 1);
@@ -89,42 +88,24 @@ BoardValidation.prototype = {
         var playerX = pos1.x, playerY = pos1.y,
             x = pos2.x, y = pos2.y;
 
-        if  (!busyFences) {
-            var fences = _(this.fences.toJSON());
-            busyFences = _(fences.where({state: 'busy'}));
-        }
+        busyFences = this.getBusyFences(busyFences);
 
-        var busyFencesOnLine;
         if (playerX === x) {
-            busyFencesOnLine = busyFences.where({
-                x: x,
-                type: 'H'
-            });
-            result = !_(busyFencesOnLine).find(function (fence) {
-                return me.isBetween(playerY, y, fence.y);
+            result = _(busyFences.where({x: x, type: 'H'})).every(function (fence) {
+                return !me.isBetween(playerY, y, fence.y);
             });
         } else if (playerY === y) {
-            busyFencesOnLine = busyFences.where({
-                y: y,
-                type: 'V'
-            });
-            result = !_(busyFencesOnLine).find(function (fence) {
-                return me.isBetween(playerX, x, fence.x);
+            result = _(busyFences.where({y: y, type: 'V'})).every(function (fence) {
+                return !me.isBetween(playerX, x, fence.x);
             });
         } else {
-            var horizontalBusyFences = busyFences.where({
-                y: Math.min(pos1.y, pos2.y),
-                type: 'H'
-            });
-            var verticalBusyFences = busyFences.where({
-                x: Math.min(pos1.x, pos2.x),
-                type: 'V'
-            });
+            var horizontalBusyFences = busyFences.where({y: Math.min(pos1.y, pos2.y), type: 'H'});
+            var verticalBusyFences = busyFences.where({x: Math.min(pos1.x, pos2.x), type: 'V'});
 
-            result = !_(horizontalBusyFences).some(function (fence) {
-                return fence.x === pos1.x || fence.x === pos2.x;
-            }) && !_(verticalBusyFences).some(function (fence) {
-                return fence.y === pos1.y || fence.y === pos2.y;
+            result = _(horizontalBusyFences).every(function (fence) {
+                return !(fence.x === pos1.x || fence.x === pos2.x);
+            }) && _(verticalBusyFences).every(function (fence) {
+                return !(fence.y === pos1.y || fence.y === pos2.y);
             });
         }
         return result;
@@ -134,27 +115,15 @@ BoardValidation.prototype = {
         return Math.abs(prevX - pos.x) === 1 && prevY === pos.y
             || Math.abs(prevY - pos.y) === 1 && prevX === pos.x;
     },
-    isValidPlayerPosition: function (currentPos, newPos) {
-        return this.isBetween(0, this.get('boardSize'), newPos.x)
-            && this.isBetween(0, this.get('boardSize'), newPos.y)
-            && this.players.isFieldNotBusy(newPos)
-            && this.noFenceBetweenPositions(currentPos, newPos)
-            && (
-            this.isNearestPosition(currentPos, newPos) ||
-                this.players.isFieldBehindOtherPlayer(currentPos, newPos) ||
-                this.players.isFieldNearOtherPlayer(currentPos, newPos) ||
-                this.isOtherPlayerAndFenceBehindHim(currentPos, newPos)
-            );
-    },
-    isValidPlayerPositionQuickCheck: function (currentPos, newPos, busyFences) {
+    isValidPlayerPosition: function (currentPos, newPos, busyFences) {
         return this.isBetween(0, this.get('boardSize'), newPos.x)
             && this.isBetween(0, this.get('boardSize'), newPos.y)
             && this.players.isFieldNotBusy(newPos)
             && this.noFenceBetweenPositions(currentPos, newPos, busyFences)
             && (
-            this.isNearestPosition(currentPos, newPos) ||
+                this.isNearestPosition(currentPos, newPos) ||
                 this.players.isFieldBehindOtherPlayer(currentPos, newPos) ||
-                //this.players.isFieldNearOtherPlayer(currentPos, newPos) ||
+                this.players.isFieldNearOtherPlayer(currentPos, newPos) ||
                 this.isOtherPlayerAndFenceBehindHim(currentPos, newPos, busyFences)
             );
     },
@@ -180,9 +149,9 @@ BoardValidation.prototype = {
         if (!this.isCurrentPlayerTurn()) {
             return false;
         }
-
+        var busyFences = this.getBusyFences();
         var currentPos = {x: activePlayer.get('prev_x'), y: activePlayer.get('prev_y')};
-        return this.isValidPlayerPosition(currentPos, {x: x, y: y});
+        return this.isValidPlayerPosition(currentPos, {x: x, y: y}, busyFences);
     },
     canSelectFences: function () {
         var activePlayer = this.getActivePlayer();
@@ -224,14 +193,22 @@ BoardValidation.prototype = {
         ];
     },
 
-    getValidPositions: function (pawn, busyFences) {
-        if  (!busyFences) {
-            var fences = _(this.fences.toJSON());
-            busyFences = _(fences.where({state: 'busy'}));
+    getBusyFences: function (busyFences) {
+        if (busyFences) {
+            return busyFences;
         }
+        var fences = _(this.fences.toJSON());
+//        var busyFences = _(board.fences.where({state: 'busy'})).map(function (f) {
+//            return f.toJSON();
+//        });
+        return _(fences.where({state: 'busy'}));
+    },
+
+    getValidPositions: function (pawn, busyFences) {
+        busyFences = this.getBusyFences(busyFences);
         var positions = this.getPossiblePositions(pawn);
         return _.filter(positions, function (pos) {
-            return this.isValidPlayerPositionQuickCheck(pawn, pos, busyFences);
+            return this.isValidPlayerPosition(pawn, pos, busyFences);
         }, this);
     },
 
@@ -248,12 +225,7 @@ BoardValidation.prototype = {
         fence.set('state', 'busy');
         sibling.set('state', 'busy');
 
-        var busyFences;
-        busyFences = _(board.fences.toJSON()).where({state: 'busy'});
-//        var busyFences = _(board.fences.where({state: 'busy'})).map(function (f) {
-//            return f.toJSON();
-//        });
-        busyFences = _(busyFences);
+        var busyFences = this.getBusyFences();
 
         var addNewCoordinates = function (validMoveCoordinate) {
             if (!_(closed).findWhere(validMoveCoordinate)) {
@@ -290,9 +262,9 @@ BoardValidation.prototype = {
     },
 
     hasWallsOrPawnsNear: function (wall) {
-        var busyFences = this.fences.where({state: 'busy'});
-        busyFences = _.map(busyFences, function (item) {
-            return item.get('type') + item.get('x') + item.get('y');
+        var busyFences = this.getBusyFences();
+        busyFences = busyFences.map(function (item) {
+            return item.type + item.x + item.y;
         });
         var nearestWalls = _.map(this.getNearestWalls(wall), function (item) {
             return item.type + item.x + item.y;
