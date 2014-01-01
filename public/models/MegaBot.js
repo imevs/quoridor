@@ -59,7 +59,6 @@ var MegaBot = SmartBot.extend({
 
     getRatesForPlayersMoves: function (moves, player, board) {
         var result = [];
-        var othersMinPathLength = this.othersPlayersHeuristic(board);
         _(moves).each(function (move) {
             if (move.type === 'P') {
                 var prevPosition = player.pick('x', 'y', 'prev_x', 'prev_y');
@@ -69,7 +68,7 @@ var MegaBot = SmartBot.extend({
                     prev_x: move.x,
                     prev_y: move.y
                 });
-                move.rate = this.calcHeuristic(player, board, othersMinPathLength);
+                move.rate = this.calcHeuristic(player, board);
                 player.set(prevPosition);
                 result.push(move);
             }
@@ -116,18 +115,18 @@ var MegaBot = SmartBot.extend({
         return result;
     },
 
-    othersPlayersHeuristic: function (board) {
-        var paths = _(this.othersPlayers).map(function (player) {
-            return this.getCountStepsToGoal(player, board);
+    calcHeuristic: function (player, board) {
+        var otherPlayersPaths = [];
+        var currentPlayerPathLength = 0;
+        board.players.each(function (player, index) {
+            if (this.currentPlayer === index) {
+                currentPlayerPathLength = this.getCountStepsToGoal(player, board) + 1;
+            } else {
+                otherPlayersPaths.push(this.getCountStepsToGoal(player, board));
+            }
         }, this);
-        return _(paths).min();
-    },
-
-    calcHeuristic: function (player, board, othersMinPathLength) {
-        var pathLength = this.getCountStepsToGoal(player, board) + 1;
-        othersMinPathLength = _.isUndefined(othersMinPathLength)
-            ? this.othersPlayersHeuristic(board) : othersMinPathLength;
-        return pathLength - othersMinPathLength;
+        var othersMinPathLength = _(otherPlayersPaths).min();
+        return currentPlayerPathLength - othersMinPathLength;
     },
 
     getCountStepsToGoal: function (player, board) {

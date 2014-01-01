@@ -124,6 +124,10 @@ var SmartBot = Bot.extend({
             deep: 0
         });
 
+        var busyFences;
+        busyFences = _(board.fences.toJSON()).where({state: 'busy'});
+        busyFences = _(busyFences);
+
         var addNewCoordinates = function (validMoveCoordinate) {
             var isNotUsed = !_(closed).findWhere(validMoveCoordinate)
                 && !_(open).findWhere(validMoveCoordinate);
@@ -149,7 +153,7 @@ var SmartBot = Bot.extend({
                 prev_x: currentCoordinate.x,
                 prev_y: currentCoordinate.y
             });
-            _(board.getValidPositions(currentCoordinate)).each(addNewCoordinates);
+            _(board.getValidPositions(currentCoordinate, busyFences)).each(addNewCoordinates);
         }
         return closed;
     },
