@@ -191,8 +191,8 @@ var PlayersCollection = Backbone.Collection.extend({
     hasTwoVerticalSibling    : function (pos1, pos2) {
         var playerX = pos1.x, playerY = pos1.y, y = pos2.y;
         var diffY = playerY - y; // 1 or -1
-        return this.findWhere({ prev_x: playerX, prev_y: playerY - diffY})
-            && this.findWhere({ prev_x: playerX, prev_y: playerY - diffY * 2 });
+        return this.isPrevFieldBusy({ x: playerX, y: playerY - diffY})
+            && this.isPrevFieldBusy({ x: playerX, y: playerY - diffY * 2 });
     },
 
     /**
@@ -207,10 +207,30 @@ var PlayersCollection = Backbone.Collection.extend({
     hasTwoHorizontalSiblings : function (pos1, pos2) {
         var playerX = pos1.x, playerY = pos1.y, x = pos2.x;
         var diffX = playerX - x; //1 or -1
-        return this.findWhere({x: playerX - diffX, y: playerY })
-            && this.findWhere({x: playerX - diffX * 2, y: playerY});
+        return this.isPrevFieldBusy({x: playerX - diffX, y: playerY })
+            && this.isPrevFieldBusy({x: playerX - diffX * 2, y: playerY});
     },
 
+    isPrevFieldBusy: function (pos) {
+        /* jshint maxcomplexity: 8 */
+        var p0 = this.at(0);
+        var p1 = this.at(1);
+        var nameX = 'prev_x';
+        var nameY = 'prev_y';
+        if (this.length === 2) {
+            return p0.get(nameX) === pos.x && p0.get(nameY) === pos.y ||
+                p1.get(nameX) === pos.x && p1.get(nameY) === pos.y;
+        }
+        if (this.length === 4) {
+            var p2 = this.at(2);
+            var p3 = this.at(3);
+            return p0.get(nameX) === pos.x && p0.get(nameY) === pos.y ||
+                p1.get(nameX) === pos.x && p1.get(nameY) === pos.y ||
+                p2.get(nameX) === pos.x && p2.get(nameY) === pos.y ||
+                p3.get(nameX) === pos.x && p3.get(nameY) === pos.y;
+        }
+        return false;
+    },
     updatePlayersPositions: function () {
         this.each(function (item) {
             if (item.get('x') !== item.get('prev_x') ||
