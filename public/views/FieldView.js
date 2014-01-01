@@ -29,17 +29,17 @@ window.FieldView = GameObject.extend({
 
     selectCurrent  : function () {
         this.model.set({color: 'black'});
-        this.el.toFront();
+        //this.el.toFront();
     },
 
     markCurrent  : function () {
         this.model.set({color: 'gray'});
-        this.el.toFront();
+        //this.el.toFront();
     },
 
     unSelectCurrent: function () {
         this.model.set({color: this.defaultColor});
-        this.el.toBack();
+        //this.el.toBack();
     },
 
     events: {
