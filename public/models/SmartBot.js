@@ -127,8 +127,11 @@ var SmartBot = Bot.extend({
         var busyFences = board.getBusyFences();
 
         var addNewCoordinates = function (validMoveCoordinate) {
-            var isNotUsed = !_(closed).findWhere(validMoveCoordinate)
-                && !_(open).findWhere(validMoveCoordinate);
+            var callback = function (item) {
+                return item.x === validMoveCoordinate.x && item.y === validMoveCoordinate.y;
+            };
+            var isNotUsed = !_(closed).some(callback) && !_(open).some(callback);
+
             if (isNotUsed) {
                 open.push({
                     x: validMoveCoordinate.x,
