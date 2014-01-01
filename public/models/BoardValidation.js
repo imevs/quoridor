@@ -89,21 +89,23 @@ BoardValidation.prototype = {
         busyFences = this.getBusyFences(busyFences);
 
         if (playerX === x) {
-            result = _(busyFences.where({x: x, type: 'H'})).every(function (fence) {
-                return !me.isBetween(playerY, y, fence.y);
+            result = !busyFences.some(function (fence) {
+                return fence.x === x && fence.type === 'H' && me.isBetween(playerY, y, fence.y);
             });
         } else if (playerY === y) {
-            result = _(busyFences.where({y: y, type: 'V'})).every(function (fence) {
-                return !me.isBetween(playerX, x, fence.x);
+            result = !busyFences.some(function (fence) {
+                return fence.y === y && fence.type === 'V' && me.isBetween(playerX, x, fence.x);
             });
         } else {
-            var horizontalBusyFences = busyFences.where({y: Math.min(pos1.y, pos2.y), type: 'H'});
+            var minY = Math.min(pos1.y, pos2.y);
+            var minX = Math.min(pos1.x, pos2.x);
 
-            result = _(horizontalBusyFences).every(function (fence) {
-                return !(fence.x === pos1.x || fence.x === pos2.x);
-            }) && _(busyFences.where({x: Math.min(pos1.x, pos2.x), type: 'V'}))
-                .every(function (fence) {
-                return !(fence.y === pos1.y || fence.y === pos2.y);
+            result = !busyFences.some(function (fence) {
+                return (fence.type === 'H' && fence.y === minY)
+                    && (fence.x === pos1.x || fence.x === pos2.x);
+            }) && !busyFences.some(function (fence) {
+                return (fence.type === 'V' && fence.x === minX)
+                    && (fence.y === pos1.y || fence.y === pos2.y);
             });
         }
         return result;
@@ -196,11 +198,10 @@ BoardValidation.prototype = {
         if (busyFences) {
             return busyFences;
         }
-        var fences = _(this.fences.toJSON());
-//        var busyFences = _(board.fences.where({state: 'busy'})).map(function (f) {
+        return _(_(this.fences.toJSON()).where({state: 'busy'}));
+//        return _(_(this.fences.where({state: 'busy'})).map(function (f) {
 //            return f.toJSON();
-//        });
-        return _(fences.where({state: 'busy'}));
+//        }));
     },
 
     getValidPositions: function (pawn, busyFences) {
