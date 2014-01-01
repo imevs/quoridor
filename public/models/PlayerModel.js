@@ -126,12 +126,14 @@ var PlayersCollection = Backbone.Collection.extend({
     },
 
     isFieldBusy: function (pos) {
+        /* jshint maxcomplexity: 8 */
         var p0 = this.at(0);
         var p1 = this.at(1);
         if (this.length === 2) {
             return p0.get('x') === pos.x && p0.get('y') === pos.y ||
                 p1.get('x') === pos.x && p1.get('y') === pos.y;
-        } else { //if (this.length === 4) {
+        }
+        if (this.length === 4) {
             var p2 = this.at(2);
             var p3 = this.at(3);
             return p0.get('x') === pos.x && p0.get('y') === pos.y ||
@@ -139,7 +141,7 @@ var PlayersCollection = Backbone.Collection.extend({
                 p2.get('x') === pos.x && p2.get('y') === pos.y ||
                 p3.get('x') === pos.x && p3.get('y') === pos.y;
         }
-        //return _(this.models).some(pos);
+        return false;
     },
     isBetween: function (n1, n2, n3) {
         var min = Math.min(n1, n2);

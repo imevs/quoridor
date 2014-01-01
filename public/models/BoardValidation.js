@@ -121,7 +121,7 @@ BoardValidation.prototype = {
             && this.players.isFieldNotBusy(newPos)
             && this.noFenceBetweenPositions(currentPos, newPos, busyFences)
             && (
-                this.isNearestPosition(currentPos, newPos) ||
+            this.isNearestPosition(currentPos, newPos) ||
                 this.players.isFieldBehindOtherPlayer(currentPos, newPos) ||
                 this.players.isFieldNearOtherPlayer(currentPos, newPos) ||
                 this.isOtherPlayerAndFenceBehindHim(currentPos, newPos, busyFences)
@@ -225,7 +225,7 @@ BoardValidation.prototype = {
         fence.set('state', 'busy');
         sibling.set('state', 'busy');
 
-        var busyFences = this.getBusyFences();
+        var busyFences = board.getBusyFences();
 
         var addNewCoordinates = function (validMoveCoordinate) {
             if (!_(closed).findWhere(validMoveCoordinate)) {
@@ -305,7 +305,7 @@ BoardValidation.prototype = {
         });
         return _.filter(unique, function (item) {
             return this.isBetween(0, this.get('boardSize'), item.x) ||
-                   this.isBetween(0, this.get('boardSize'), item.y);
+                this.isBetween(0, this.get('boardSize'), item.y);
         }, this);
     },
 
