@@ -1,6 +1,7 @@
 require.config({
     waitSeconds: 30,
     paths: {
+        'underscore': 'libs/lodash.underscore',
         'socket.io': 'libs/socket.io/socket.io',
         'text'     : 'libs/text'
     },
@@ -8,18 +9,18 @@ require.config({
         'libs/jquery-1.10.2'      : {
             exports: '$'
         },
-        'libs/underscore'         : {
+        'underscore'         : {
             exports: '_'
         },
         'libs/backbone'           : {
-            deps   : ['libs/underscore', 'libs/jquery-1.10.2'],
+            deps   : ['underscore', 'libs/jquery-1.10.2'],
             exports: 'Backbone'
         },
         'libs/backbone.raphael'   : {
-            deps: ['libs/underscore', 'libs/backbone']
+            deps: ['underscore', 'libs/backbone']
         },
         'utils'                   : {
-            deps: ['libs/underscore']
+            deps: ['underscore']
         },
         'models/bot'       : {
             deps: ['models/TurnModel', 'libs/backbone', 'utils']
@@ -35,7 +36,7 @@ require.config({
         },
         'models/FieldModel'       : {
             deps: [
-                'libs/underscore',
+                'underscore',
                 'utils',
                 'libs/backbone'
             ]
@@ -77,7 +78,7 @@ require.config({
         },
         'models/BoardModel'       : {
             deps: [
-                'libs/underscore',
+                'underscore',
                 'libs/backbone',
                 'models/TimerModel',
                 'models/BotWrapper',
@@ -123,7 +124,7 @@ require.config({
         },
         'views/BoardView'      : {
             deps: [
-                'libs/underscore',
+                'underscore',
                 'views/GameObject',
                 'views/TimerView',
                 'views/FieldView',
