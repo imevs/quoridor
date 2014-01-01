@@ -32,7 +32,7 @@ var MegaBot = SmartBot.extend({
     },
 
     getBestTurn: function () {
-        console.time('getBestTurn');
+        //console.time('getBestTurn');
         //console.profile('getBestTurn');
         var board = this.board.copy();
         var player = board.players.at(this.currentPlayer);
@@ -52,7 +52,7 @@ var MegaBot = SmartBot.extend({
         }).sort(function (a, b) {
             return types[b.type] - types[a.type];
         });
-        console.timeEnd('getBestTurn');
+        //console.timeEnd('getBestTurn');
         //console.profileEnd('getBestTurn');
         return minRatedMoves[_.random(0, minRatedMoves.length - 1)];
     },
@@ -118,17 +118,38 @@ var MegaBot = SmartBot.extend({
 
     othersPlayersHeuristic: function (board) {
         var paths = _(this.othersPlayers).map(function (player) {
-            var path = this.findPathToGoal(player, board);
-            return path ? path.length : 0;
+            return this.getCountStepsToGoal(player, board);
         }, this);
         return _(paths).min();
     },
 
     calcHeuristic: function (player, board, othersMinPathLength) {
-        var path = this.findPathToGoal(player, board);
+        var pathLength = this.getCountStepsToGoal(player, board) + 1;
         othersMinPathLength = _.isUndefined(othersMinPathLength)
             ? this.othersPlayersHeuristic(board) : othersMinPathLength;
-        return (path ? path.length  + 1 : 9999) - othersMinPathLength;
+        return pathLength - othersMinPathLength;
+    },
+
+    getCountStepsToGoal: function (player, board) {
+        var indexPlayer = board.players.indexOf(player);
+
+        /**
+         * leave out of account another players positions
+         */
+        var prevPositions = [];
+        board.players.each(function (p, i) {
+            prevPositions.push(p.pick('x', 'y', 'prev_x', 'prev_y'));
+            if (i !== indexPlayer) {
+                p.set({x: -1, y: -1, prev_x: -1, prev_y: -1});
+            }
+        });
+
+        var closed = this.processBoardForGoal(board, player);
+
+        var goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]);
+        board.players.each(function (p, i) { p.set(prevPositions[i]); });
+
+        return goal ? goal.deep : 9999;
     },
 
     initPossibleMoves: function () {
