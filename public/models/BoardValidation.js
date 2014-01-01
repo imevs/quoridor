@@ -37,16 +37,15 @@ BoardValidation.prototype = {
      */
     isOtherPlayerAndFenceBehindHimVertical: function (pos1, pos2, busyFences) {
         var playerX = pos1.x, playerY = pos1.y, y = pos2.y;
-        var sibling1, sibling2;
-        sibling1 = this.players.findWhere({x: playerX, y: y});
         var wallY = y - (playerY < y ? 0 : 1);
-        sibling2 = wallY === -1 || wallY === 8 || busyFences.findWhere({
+        var sibling1 = this.players.isFieldBusy({x: playerX, y: y});
+        var result = sibling1 && (wallY === -1 || wallY === 8 || busyFences.findWhere({
             x: playerX,
             y: wallY,
             type: 'H'
-        });
+        }));
 
-        return !!(sibling1 && sibling2);
+        return !!result;
     },
 
     /**
@@ -61,16 +60,15 @@ BoardValidation.prototype = {
      */
     isOtherPlayerAndFenceBehindHimHorizontal: function (pos1, pos2, busyFences) {
         var playerX = pos1.x, playerY = pos1.y, x = pos2.x;
-        var sibling1, sibling2;
-        sibling1 = this.players.findWhere({ x: x, y: playerY });
+        var sibling1 = this.players.isFieldBusy({ x: x, y: playerY });
         var wallX = x - (playerX < x ? 0 : 1);
-        sibling2 = wallX === -1 || wallX === 8 || busyFences.findWhere({
+        var result = sibling1 && (wallX === -1 || wallX === 8 || busyFences.findWhere({
             x: wallX,
             y: playerY,
             type: 'V'
-        });
+        }));
 
-        return !!(sibling1 && sibling2);
+        return !!result;
     },
     isOtherPlayerAndFenceBehindHim: function (pos1, pos2, busyFences) {
         var playerX = pos1.x, playerY = pos1.y, x = pos2.x, y = pos2.y;
@@ -100,11 +98,11 @@ BoardValidation.prototype = {
             });
         } else {
             var horizontalBusyFences = busyFences.where({y: Math.min(pos1.y, pos2.y), type: 'H'});
-            var verticalBusyFences = busyFences.where({x: Math.min(pos1.x, pos2.x), type: 'V'});
 
             result = _(horizontalBusyFences).every(function (fence) {
                 return !(fence.x === pos1.x || fence.x === pos2.x);
-            }) && _(verticalBusyFences).every(function (fence) {
+            }) && _(busyFences.where({x: Math.min(pos1.x, pos2.x), type: 'V'}))
+                .every(function (fence) {
                 return !(fence.y === pos1.y || fence.y === pos2.y);
             });
         }
