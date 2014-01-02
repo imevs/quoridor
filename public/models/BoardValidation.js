@@ -100,6 +100,14 @@ BoardValidation.prototype = {
             var minY = Math.min(pos1.y, pos2.y);
             var minX = Math.min(pos1.x, pos2.x);
 
+            result = busyFences.every(function (fence) {
+                return !(fence.type === 'H' && fence.y === minY
+                        && (fence.x === pos1.x || fence.x === pos2.x))
+                    && !(fence.type === 'V' && fence.x === minX
+                        && (fence.y === pos1.y || fence.y === pos2.y));
+            });
+
+/*
             result = !busyFences.some(function (fence) {
                 return (fence.type === 'H' && fence.y === minY)
                     && (fence.x === pos1.x || fence.x === pos2.x);
@@ -107,6 +115,7 @@ BoardValidation.prototype = {
                 return (fence.type === 'V' && fence.x === minX)
                     && (fence.y === pos1.y || fence.y === pos2.y);
             });
+*/
         }
         return result;
     },

@@ -161,6 +161,14 @@ var PlayersCollection = Backbone.Collection.extend({
         if (distanceBetweenPositions !== 2) {
             return false;
         }
+        var busyFieldsBetweenPosition = this.filter(function (item) {
+            var prevY = item.get('prev_y');
+            var prevX = item.get('prev_x');
+            return playerY === y && y === prevY && me.isBetween(playerX, x, prevX) ||
+                playerX === x && x === prevX && me.isBetween(playerY, y, prevY);
+        });
+
+/*
         var busyFieldsBetweenPosition = playerX === x
             ? this.filter(function (item) {
                 return playerY === y && y === item.get('prev_y')
@@ -170,6 +178,7 @@ var PlayersCollection = Backbone.Collection.extend({
                 return playerX === x && x === item.get('prev_x')
                     && me.isBetween(playerY, y, item.get('prev_y'));
             });
+*/
 
         return busyFieldsBetweenPosition.length === (distanceBetweenPositions - 1);
     },
@@ -210,8 +219,8 @@ var PlayersCollection = Backbone.Collection.extend({
     hasTwoHorizontalSiblings : function (pos1, pos2) {
         var playerX = pos1.x, playerY = pos1.y, x = pos2.x;
         var diffX = playerX - x; //1 or -1
-        return this.isPrevFieldBusy({x: playerX - diffX, y: playerY })
-            && this.isPrevFieldBusy({x: playerX - diffX * 2, y: playerY});
+        return this.isFieldBusy({x: playerX - diffX, y: playerY })
+            && this.isFieldBusy({x: playerX - diffX * 2, y: playerY});
     },
 
     isPrevFieldBusy: function (pos) {
