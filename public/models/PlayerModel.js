@@ -144,13 +144,20 @@ var PlayersCollection = Backbone.Collection.extend({
         return false;
     },
     isBetween: function (n1, n2, n3) {
-        return Math.min(n1, n2) < n3 && n3 < Math.max(n1, n2);
+        var min, max;
+        if (n1 > n2) {
+            min = n2;
+            max = n1;
+        } else {
+            min = n1;
+            max = n2;
+        }
+        return min < n3 && n3 < max;
     },
 
     isFieldBehindOtherPlayer: function (pos1, pos2) {
         var me = this;
-        var playerX = pos1.x, playerY = pos1.y,
-            x = pos2.x, y = pos2.y;
+        var playerX = pos1.x, playerY = pos1.y, x = pos2.x, y = pos2.y;
 
         var distanceBetweenPositions =
             playerX === x ? Math.abs(playerY - y) :
@@ -159,15 +166,20 @@ var PlayersCollection = Backbone.Collection.extend({
         if (distanceBetweenPositions !== 2) {
             return false;
         }
-        var busyFieldsBetweenPosition = playerY === y
-            ? this.filter(function (item) {
-                return y === item.get('prev_y') && me.isBetween(playerX, x, item.get('prev_x'));
-            })
-            : this.filter(function (item) {
-                return x === item.get('prev_x') && me.isBetween(playerY, y, item.get('prev_y'));
-            });
-
-        return busyFieldsBetweenPosition.length === (distanceBetweenPositions - 1);
+        var callback1 = function (item) {
+            return y === item.get('prev_y') && me.isBetween(playerX, x, item.get('prev_x'));
+        };
+        var callback2 = function (item) {
+            return x === item.get('prev_x') && me.isBetween(playerY, y, item.get('prev_y'));
+        };
+        var callback = playerY === y ? callback1 : callback2;
+        var busyFieldsBetweenPositionLength = 0;
+        for (var i = 0, len = this.length; i < len; i++) {
+            if (callback(this.at(i))) {
+                busyFieldsBetweenPositionLength++;
+            }
+        }
+        return busyFieldsBetweenPositionLength === (distanceBetweenPositions - 1);
     },
 
     isFieldNearOtherPlayer: function (pos1, pos2) {

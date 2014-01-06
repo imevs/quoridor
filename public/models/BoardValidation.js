@@ -82,27 +82,27 @@ BoardValidation.prototype = {
             || this.isOtherPlayerAndFenceBehindHimHorizontal(pos1, pos2, busyFences);
     },
     noFenceBetweenPositions: function (pos1, pos2, busyFences) {
-        var me = this, playerX = pos1.x, playerY = pos1.y, x = pos2.x, y = pos2.y;
+        var me = this, playerX = pos1.x, playerY = pos1.y, x = pos2.x, y = pos2.y, callback;
 
         busyFences = this.getBusyFences(busyFences);
 
         if (playerX === x) {
-            return !busyFences.some(function callback1(fence) {
+            callback = function (fence) {
                 return fence.x === x && fence.type === 'H' && me.isBetween(playerY, y, fence.y);
-            });
+            };
         } else if (playerY === y) {
-            return !busyFences.some(function callback2(fence) {
+            callback = function (fence) {
                 return fence.y === y && fence.type === 'V' && me.isBetween(playerX, x, fence.x);
-            });
+            };
         } else {
             var minY = Math.min(playerY, y);
             var minX = Math.min(playerX, x);
-            return !busyFences.some(function callback3(fence) {
-                return fence.type === 'H' && fence.y === minY && (fence.x === playerX || fence.x === x);
-            }) && !busyFences.some(function callback4(fence) {
-                return fence.type === 'V' && fence.x === minX && (fence.y === playerY || fence.y === y);
-            });
+            callback = function (fence) {
+                return (fence.type === 'V' && fence.x === minX && (fence.y === playerY || fence.y === y))
+                    || (fence.type === 'H' && fence.y === minY && (fence.x === playerX || fence.x === x));
+            };
         }
+        return !busyFences.some(callback);
     },
     isNearestPosition: function (currentPos, pos) {
         var prevX = currentPos.x, prevY = currentPos.y;
@@ -195,13 +195,16 @@ BoardValidation.prototype = {
         var callback = function (item) {
             return item.get('state') === 'busy';
         };
-        return _(_(this.fences.filter(callback)).map(function (f) { return f.toJSON(); }));
+        var result = _(this.fences.filter(callback)).map(function (f) {
+            return f.toJSON();
+        });
+        return _(result);
     },
 
     getValidPositions: function (pawn, busyFences) {
         busyFences = this.getBusyFences(busyFences);
         var positions = this.getPossiblePositions(pawn);
-        return _.filter(positions, function (pos) {
+        return _(positions).filter(function (pos) {
             return this.isValidPlayerPosition(pawn, pos, busyFences);
         }, this);
     },
@@ -239,7 +242,7 @@ BoardValidation.prototype = {
             _(board.getValidPositions(currentCoordinate, busyFences)).each(addNewCoordinates);
         }
 
-        var canWin = _.some(closed, function (item) {
+        var canWin = _(closed).some(function (item) {
             return this.players.playersPositions[indexPlayer].isWin(item.x, item.y);
         }, this);
         return !canWin;
@@ -297,7 +300,7 @@ BoardValidation.prototype = {
         var unique = _.uniq(all, function (a) {
             return a.type + a.x + a.y;
         });
-        return _.filter(unique, function (item) {
+        return _(unique).filter(function (item) {
             return this.isBetween(0, this.get('boardSize'), item.x) ||
                 this.isBetween(0, this.get('boardSize'), item.y);
         }, this);

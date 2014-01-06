@@ -10,19 +10,20 @@ importScripts('FenceModel.js');
 importScripts('BoardValidation.js');
 importScripts('PlayerModel.js');
 
-/*
 Backbone.Model.prototype.set = function (key, val) {
-    var attrs;
+    var attrs, attr;
     if (typeof key === 'object') {
         attrs = key;
     } else {
         (attrs = {})[key] = val;
     }
-    _(attrs).each(function (attr) {
-        this.attributes[attr] = attrs[attr];
-    }, this);
+
+    for (attr in attrs)  {
+        if  (attrs.hasOwnProperty(attr)) {
+            this.attributes[attr] = attrs[attr];
+        }
+    }
 };
-*/
 var bot;
 
 addEventListener('message', function (event) {
