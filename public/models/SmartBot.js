@@ -114,9 +114,16 @@ var SmartBot = Bot.extend({
         return path;
     },
 
+    generatePositions: function (boardSize) {
+        var notVisitedPositions = {};
+        _([boardSize, boardSize]).iter(function (i, j) {
+            notVisitedPositions[10 * i + j] = 1;
+        });
+        return notVisitedPositions;
+    },
     processBoardForGoal: function (board, player) {
         var open = [], closed = [];
-        var currentCoordinate;
+        var currentCoordinate, newDeep;
 
         open.push({
             x: player.get('x'),
@@ -125,24 +132,24 @@ var SmartBot = Bot.extend({
         });
 
         var busyFences = board.getBusyFences();
+        var notVisitedPositions = this.generatePositions(board.get('boardSize'));
+        delete notVisitedPositions[10 * player.get('x') + player.get('y')];
 
         var addNewCoordinates = function (validMoveCoordinate) {
-            var callback = function (item) {
-                return item.x === validMoveCoordinate.x && item.y === validMoveCoordinate.y;
-            };
-            var isNotUsed = !_(closed).some(callback) && !_(open).some(callback);
-
-            if (isNotUsed) {
+            var hash = validMoveCoordinate.x * 10 + validMoveCoordinate.y;
+            if (notVisitedPositions[hash]) {
                 open.push({
                     x: validMoveCoordinate.x,
                     y: validMoveCoordinate.y,
-                    deep: currentCoordinate.deep + 1
+                    deep: newDeep
                 });
+                delete notVisitedPositions[hash];
             }
         };
 
         while (open.length) {
             currentCoordinate = open.shift();
+            newDeep = currentCoordinate.deep + 1;
             closed.push({
                 x: currentCoordinate.x,
                 y: currentCoordinate.y,

@@ -82,42 +82,27 @@ BoardValidation.prototype = {
             || this.isOtherPlayerAndFenceBehindHimHorizontal(pos1, pos2, busyFences);
     },
     noFenceBetweenPositions: function (pos1, pos2, busyFences) {
-        var me = this, result;
-        var playerX = pos1.x, playerY = pos1.y,
-            x = pos2.x, y = pos2.y;
+        var me = this, playerX = pos1.x, playerY = pos1.y, x = pos2.x, y = pos2.y;
 
         busyFences = this.getBusyFences(busyFences);
 
         if (playerX === x) {
-            result = !busyFences.some(function (fence) {
+            return !busyFences.some(function callback1(fence) {
                 return fence.x === x && fence.type === 'H' && me.isBetween(playerY, y, fence.y);
             });
         } else if (playerY === y) {
-            result = !busyFences.some(function (fence) {
+            return !busyFences.some(function callback2(fence) {
                 return fence.y === y && fence.type === 'V' && me.isBetween(playerX, x, fence.x);
             });
         } else {
-            var minY = Math.min(pos1.y, pos2.y);
-            var minX = Math.min(pos1.x, pos2.x);
-
-            result = busyFences.every(function (fence) {
-                return !(fence.type === 'H' && fence.y === minY
-                        && (fence.x === pos1.x || fence.x === pos2.x))
-                    && !(fence.type === 'V' && fence.x === minX
-                        && (fence.y === pos1.y || fence.y === pos2.y));
+            var minY = Math.min(playerY, y);
+            var minX = Math.min(playerX, x);
+            return !busyFences.some(function callback3(fence) {
+                return fence.type === 'H' && fence.y === minY && (fence.x === playerX || fence.x === x);
+            }) && !busyFences.some(function callback4(fence) {
+                return fence.type === 'V' && fence.x === minX && (fence.y === playerY || fence.y === y);
             });
-
-/*
-            result = !busyFences.some(function (fence) {
-                return (fence.type === 'H' && fence.y === minY)
-                    && (fence.x === pos1.x || fence.x === pos2.x);
-            }) && !busyFences.some(function (fence) {
-                return (fence.type === 'V' && fence.x === minX)
-                    && (fence.y === pos1.y || fence.y === pos2.y);
-            });
-*/
         }
-        return result;
     },
     isNearestPosition: function (currentPos, pos) {
         var prevX = currentPos.x, prevY = currentPos.y;
@@ -207,10 +192,10 @@ BoardValidation.prototype = {
         if (busyFences) {
             return busyFences;
         }
-        return _(_(this.fences.toJSON()).where({state: 'busy'}));
-//        return _(_(this.fences.where({state: 'busy'})).map(function (f) {
-//            return f.toJSON();
-//        }));
+        var callback = function (item) {
+            return item.get('state') === 'busy';
+        };
+        return _(_(this.fences.filter(callback)).map(function (f) { return f.toJSON(); }));
     },
 
     getValidPositions: function (pawn, busyFences) {

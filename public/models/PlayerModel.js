@@ -144,9 +144,7 @@ var PlayersCollection = Backbone.Collection.extend({
         return false;
     },
     isBetween: function (n1, n2, n3) {
-        var min = Math.min(n1, n2);
-        var max = Math.max(n1, n2);
-        return min < n3 && n3 < max;
+        return Math.min(n1, n2) < n3 && n3 < Math.max(n1, n2);
     },
 
     isFieldBehindOtherPlayer: function (pos1, pos2) {
@@ -161,24 +159,13 @@ var PlayersCollection = Backbone.Collection.extend({
         if (distanceBetweenPositions !== 2) {
             return false;
         }
-        var busyFieldsBetweenPosition = this.filter(function (item) {
-            var prevY = item.get('prev_y');
-            var prevX = item.get('prev_x');
-            return playerY === y && y === prevY && me.isBetween(playerX, x, prevX) ||
-                playerX === x && x === prevX && me.isBetween(playerY, y, prevY);
-        });
-
-/*
-        var busyFieldsBetweenPosition = playerX === x
+        var busyFieldsBetweenPosition = playerY === y
             ? this.filter(function (item) {
-                return playerY === y && y === item.get('prev_y')
-                    && me.isBetween(playerX, x, item.get('prev_x'));
+                return y === item.get('prev_y') && me.isBetween(playerX, x, item.get('prev_x'));
             })
             : this.filter(function (item) {
-                return playerX === x && x === item.get('prev_x')
-                    && me.isBetween(playerY, y, item.get('prev_y'));
+                return x === item.get('prev_x') && me.isBetween(playerY, y, item.get('prev_y'));
             });
-*/
 
         return busyFieldsBetweenPosition.length === (distanceBetweenPositions - 1);
     },
