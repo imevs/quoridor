@@ -121,10 +121,6 @@ var PlayersCollection = Backbone.Collection.extend({
         });
     },
 
-    isFieldNotBusy: function (pos) {
-        return !this.isFieldBusy(pos);
-    },
-
     isFieldBusy: function (pos) {
         /* jshint maxcomplexity: 8 */
         var p0 = this.at(0);
@@ -159,9 +155,8 @@ var PlayersCollection = Backbone.Collection.extend({
         var me = this;
         var playerX = pos1.x, playerY = pos1.y, x = pos2.x, y = pos2.y;
 
-        var distanceBetweenPositions =
-            playerX === x ? Math.abs(playerY - y) :
-           (playerY === y ? Math.abs(playerX - x) : 0);
+        var distanceBetweenPositions = playerX === x && Math.abs(playerY - y)
+            || playerY === y && Math.abs(playerX - x) || 0;
 
         if (distanceBetweenPositions !== 2) {
             return false;
@@ -172,14 +167,17 @@ var PlayersCollection = Backbone.Collection.extend({
         var callback2 = function (item) {
             return x === item.get('prev_x') && me.isBetween(playerY, y, item.get('prev_y'));
         };
-        var callback = playerY === y ? callback1 : callback2;
+        return this.getCountByCondition(playerY === y ? callback1 : callback2) === 1;
+    },
+
+    getCountByCondition: function (callback) {
         var busyFieldsBetweenPositionLength = 0;
         for (var i = 0, len = this.length; i < len; i++) {
             if (callback(this.at(i))) {
                 busyFieldsBetweenPositionLength++;
             }
         }
-        return busyFieldsBetweenPositionLength === (distanceBetweenPositions - 1);
+        return busyFieldsBetweenPositionLength;
     },
 
     isFieldNearOtherPlayer: function (pos1, pos2) {

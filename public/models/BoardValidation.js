@@ -113,7 +113,7 @@ BoardValidation.prototype = {
         busyFences = this.getBusyFences(busyFences);
         return this.isBetween(0, this.get('boardSize'), newPos.x)
             && this.isBetween(0, this.get('boardSize'), newPos.y)
-            && this.players.isFieldNotBusy(newPos)
+            && !this.players.isFieldBusy(newPos)
             && this.noFenceBetweenPositions(currentPos, newPos, busyFences)
             && (
                 this.isNearestPosition(currentPos, newPos) ||
@@ -203,7 +203,11 @@ BoardValidation.prototype = {
 
     getValidPositions: function (pawn, busyFences) {
         busyFences = this.getBusyFences(busyFences);
-        var positions = this.getPossiblePositions(pawn);
+        this._getPossiblePositions = this._getPossiblePositions ||
+            _.memoize(this.getPossiblePositions, function (pawn) {
+                return pawn.x * 10 + pawn.y;
+            });
+        var positions = this._getPossiblePositions(pawn);
         return _(positions).filter(function (pos) {
             return this.isValidPlayerPosition(pawn, pos, busyFences);
         }, this);
