@@ -18,7 +18,7 @@ module.exports = function (config) {
             'tests/TestCase.js',
 
             'public/libs/jquery-1.10.2.js',
-            'public/libs/underscore.js',
+            'public/libs/lodash.underscore.js',
             'public/libs/backbone.js',
             'public/utils.js',
             'public/models/TimerModel.js',

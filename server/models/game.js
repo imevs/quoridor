@@ -11,6 +11,7 @@ var Game = Backbone.Collection.extend({
     mongooseModel: 'Room',
 
     initialize: function () {
+/*
         var game = this;
         this.fetch({
             success: function () {
@@ -25,6 +26,7 @@ var Game = Backbone.Collection.extend({
                 });
             }
         });
+*/
     },
     start: function (io) {
         var self = this;

@@ -213,6 +213,29 @@ BoardValidation.prototype = {
         }, this);
     },
 
+    generatePositions: function (boardSize) {
+        var notVisitedPositions = {};
+        _([boardSize, boardSize]).iter(function (i, j) {
+            notVisitedPositions[10 * i + j] = 1;
+        });
+        return notVisitedPositions;
+    },
+
+    getAddNewCoordinateFunc: function (notVisitedPositions, open, newDeep) {
+        newDeep = newDeep || { value: 0};
+        return function (validMoveCoordinate) {
+            var hash = validMoveCoordinate.x * 10 + validMoveCoordinate.y;
+            if (notVisitedPositions[hash]) {
+                open.push({
+                    x: validMoveCoordinate.x,
+                    y: validMoveCoordinate.y,
+                    deep: newDeep.value
+                });
+                delete notVisitedPositions[hash];
+            }
+        };
+    },
+
     doesFenceBreakPlayerPath: function (pawn, coordinate) {
         var open = [pawn.pick('x', 'y')], closed = [];
         var board = this.copy();
@@ -227,15 +250,15 @@ BoardValidation.prototype = {
         sibling.set('state', 'busy');
 
         var busyFences = board.getBusyFences();
-
-        var addNewCoordinates = function (validMoveCoordinate) {
-            if (!_(closed).findWhere(validMoveCoordinate)) {
-                open.push(validMoveCoordinate);
-            }
-        };
+        var notVisitedPositions = board.generatePositions(board.get('boardSize'));
+        delete notVisitedPositions[10 * player.get('x') + player.get('y')];
+        var addNewCoordinates = board.getAddNewCoordinateFunc(notVisitedPositions, open);
 
         while (open.length) {
             var currentCoordinate = open.pop();
+            if (this.players.playersPositions[indexPlayer].isWin(currentCoordinate.x, currentCoordinate.y)) {
+                return false;
+            }
             closed.push(currentCoordinate);
             player.set({
                 x: currentCoordinate.x,
@@ -245,11 +268,7 @@ BoardValidation.prototype = {
             });
             _(board.getValidPositions(currentCoordinate, busyFences)).each(addNewCoordinates);
         }
-
-        var canWin = _(closed).some(function (item) {
-            return this.players.playersPositions[indexPlayer].isWin(item.x, item.y);
-        }, this);
-        return !canWin;
+        return true;
     },
 
     notBreakSomePlayerPath: function (wall) {

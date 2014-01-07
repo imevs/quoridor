@@ -114,16 +114,10 @@ var SmartBot = Bot.extend({
         return path;
     },
 
-    generatePositions: function (boardSize) {
-        var notVisitedPositions = {};
-        _([boardSize, boardSize]).iter(function (i, j) {
-            notVisitedPositions[10 * i + j] = 1;
-        });
-        return notVisitedPositions;
-    },
     processBoardForGoal: function (board, player) {
         var open = [], closed = [];
-        var currentCoordinate, newDeep;
+        var indexPlayer = board.players.indexOf(player);
+        var currentCoordinate, newDeep = { value: 0};
 
         open.push({
             x: player.get('x'),
@@ -132,29 +126,25 @@ var SmartBot = Bot.extend({
         });
 
         var busyFences = board.getBusyFences();
-        var notVisitedPositions = this.generatePositions(board.get('boardSize'));
+        var notVisitedPositions = board.generatePositions(board.get('boardSize'));
         delete notVisitedPositions[10 * player.get('x') + player.get('y')];
-
-        var addNewCoordinates = function (validMoveCoordinate) {
-            var hash = validMoveCoordinate.x * 10 + validMoveCoordinate.y;
-            if (notVisitedPositions[hash]) {
-                open.push({
-                    x: validMoveCoordinate.x,
-                    y: validMoveCoordinate.y,
-                    deep: newDeep
-                });
-                delete notVisitedPositions[hash];
-            }
-        };
+        var addNewCoordinates = board.getAddNewCoordinateFunc(notVisitedPositions, open, newDeep);
+        var winPositionsCount = 0;
 
         while (open.length) {
             currentCoordinate = open.shift();
-            newDeep = currentCoordinate.deep + 1;
+            newDeep.value = currentCoordinate.deep + 1;
             closed.push({
                 x: currentCoordinate.x,
                 y: currentCoordinate.y,
                 deep: currentCoordinate.deep
             });
+            if (board.players.playersPositions[indexPlayer].isWin(currentCoordinate.x, currentCoordinate.y)) {
+                winPositionsCount++;
+            }
+            if (winPositionsCount >= board.get('boardSize')) {
+                return closed;
+            }
             player.set({
                 x: currentCoordinate.x,
                 y: currentCoordinate.y,
