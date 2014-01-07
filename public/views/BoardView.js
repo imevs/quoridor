@@ -78,9 +78,9 @@ window.BoardView = GameObject.extend({
         });
     },
 
-    afterRender: function () {
-        var me = this.model,
-            cls = this.constructor,
+    drawBorders: function () {
+        var me = this.model;
+        var cls = this.constructor,
             d = cls.squareDistance,
             w = me.get('boardSize') * (d + cls.squareWidth),
             h = me.get('boardSize') * (d + cls.squareHeight),
@@ -97,17 +97,21 @@ window.BoardView = GameObject.extend({
         borderRight.attr('fill', '#c75');
         borderTop.attr('fill', '#c75');
         borderBottom.attr('fill', '#c75');
+
         this.renderLegend(y, x, w, h);
+    },
+
+    afterRender: function () {
+        var me = this.model;
+
+        this.drawBorders();
+
         me.fields.each(function (model) {
             var params = {model: model};
-            if (model.get('y') === 0) {
-                params.defaultColor = 'lightgray';
-            }
-            if (model.get('y') === me.get('boardSize') - 1) {
-                params.defaultColor = 'red';
-            }
+            params.defaultColor = model.getColor(me.players.playersPositions);
             new FieldView(params);
         });
+
         me.fences.each(function (model) {
             FenceView.createFenceView(model);
         });
