@@ -18,7 +18,7 @@ _.mixin({
 
 
 _.prototype.some = function (callback, thisArg) {
-    var collection = this.__wrapped__;
+    var collection = this.__wrapped__ || [];
     for (var i = 0, len = collection.length; i < len; i++) {
         if (callback.call(thisArg, collection[i])) {
             return true;
@@ -26,6 +26,33 @@ _.prototype.some = function (callback, thisArg) {
     }
     return false;
 };
+/*
+ _.prototype.filter = function (callback, thisArg) {
+ var collection = this.__wrapped__  || [], result = [];
+ for (var i = 0, len = collection.length; i < len; i++) {
+ if (callback.call(thisArg, collection[i])) {
+ result.push(collection[i]);
+ }
+ }
+ return result;
+ };
+
+ _.prototype.forEach = _.prototype.each = function (callback, thisArg) {
+ var collection = this.__wrapped__ || [];
+ for (var i = 0, len = collection.length; i < len; i++) {
+ callback.call(thisArg, collection[i]);
+ }
+ };
+
+ _.prototype.map = function (callback, thisArg) {
+ var collection = this.__wrapped__  || [], result = [];
+ for (var i = 0, len = collection.length; i < len; i++) {
+ result.push(callback.call(thisArg, collection[i]));
+ }
+ return result;
+ };
+ */
+
 
 if (typeof module !== 'undefined') {
     module.exports = _;

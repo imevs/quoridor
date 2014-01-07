@@ -19,105 +19,110 @@ window.BoardView = GameObject.extend({
     initialize: function () {
         this.render(this.afterRender);
     },
-    renderLegend  : function (y, x, w, h) {
-        var me = this.model,
-            cls = this.constructor,
+    renderLegend  : function () {
+        var me = this.model;
+        var cls = this.constructor,
             d = cls.squareDistance,
-            boardSize = me.get('boardSize');
+            boardSize = me.get('boardSize'),
+            depth = cls.borderDepth,
+            w = boardSize * (d + cls.squareWidth),
+            h = boardSize * (d + cls.squareHeight),
+            x = cls.startX + depth / 2,
+            y = cls.startY + depth / 2;
+        var largeFontSize = depth;
+        var smallFontSize = depth / 2;
 
         _(_.range(boardSize)).each(function (i) {
-            var _xv, _yh, text, value = i;
-            var _yv = y + (i + 0.5) * (cls.squareHeight + d);
-            var _xh = x + (i + 0.5) * (cls.squareWidth + d);
+            var text;
+            var _yv = y + i * (cls.squareHeight + d) + cls.squareHeight / 2 + depth / 2;
+            var _xh = x + i * (cls.squareWidth + d) + cls.squareWidth / 2 + depth / 2;
 
-            _xv = x - 10;
-            text = cls.getPaper().text(_xv, _yv, me.get('boardSize') - value);
-            text.attr('fill', 'black');
-            text.attr('font-size', 20);
+            text = cls.getPaper().text(x, _yv, me.intToInt(i));
+            text.attr('fill', 'white');
+            text.attr('font-size', largeFontSize);
 
-            _xv = x + w + 10;
-            text = cls.getPaper().text(_xv, _yv, me.get('boardSize') - value);
+            text = cls.getPaper().text(x + w + depth - d, _yv, me.intToInt(i));
             text.attr('fill', 'black');
-            text.attr('font-size', 20);
+            text.attr('font-size', largeFontSize);
 
-            _yh = y - 15;
-            text = cls.getPaper().text(_xh, _yh, me.intToChar(value));
+            text = cls.getPaper().text(_xh, y, me.intToChar(i));
             text.attr('fill', 'black');
-            text.attr('font-size', 20);
+            text.attr('font-size', largeFontSize);
 
-            _yh = y + h + 15;
-            text = cls.getPaper().text(_xh, _yh, me.intToChar(value));
+            text = cls.getPaper().text(_xh, y + h + depth - d, me.intToChar(i));
             text.attr('fill', 'black');
-            text.attr('font-size', 20);
+            text.attr('font-size', largeFontSize);
         });
 
         _(_.range(boardSize - 1)).each(function (i) {
-            var _xv, _yh, text, value = i;
-            var _yv = y + (i + 1) * (cls.squareHeight + d);
-            var _xh = x + (i + 1) * (cls.squareWidth + d);
+            var text;
+            var _yv = y + i * (cls.squareHeight + d) + cls.squareHeight + d / 2 + depth / 2;
+            var _xh = x + i * (cls.squareWidth + d) + cls.squareWidth + d / 2 + depth / 2;
 
-            _xv = x - 10;
-            text = cls.getPaper().text(_xv, _yv, me.get('boardSize') - value - 1);
-            text.attr('fill', 'black');
-            text.attr('font-size', 10);
+            text = cls.getPaper().text(x, _yv, me.intToInt(i));
+            text.attr('fill', 'white');
+            text.attr('font-size', smallFontSize);
 
-            _xv = x + w + 10;
-            text = cls.getPaper().text(_xv, _yv, me.get('boardSize') - value - 1);
+            text = cls.getPaper().text(x + w + depth - d, _yv, me.intToInt(i));
             text.attr('fill', 'black');
-            text.attr('font-size', 10);
+            text.attr('font-size', smallFontSize);
 
-            _yh = y - 15;
-            text = cls.getPaper().text(_xh, _yh, me.intToChar(value));
+            text = cls.getPaper().text(_xh, y, me.intToChar(i));
             text.attr('fill', 'black');
-            text.attr('font-size', 10);
+            text.attr('font-size', smallFontSize);
 
-            _yh = y + h + 15;
-            text = cls.getPaper().text(_xh, _yh, me.intToChar(value));
+            text = cls.getPaper().text(_xh, y + h + depth - d, me.intToChar(i));
             text.attr('fill', 'black');
-            text.attr('font-size', 10);
+            text.attr('font-size', smallFontSize);
         });
     },
 
     drawBorders: function () {
         var me = this.model;
         var cls = this.constructor,
+            depth = cls.borderDepth,
             d = cls.squareDistance,
-            w = me.get('boardSize') * (d + cls.squareWidth),
-            h = me.get('boardSize') * (d + cls.squareHeight),
-            x = cls.startX - d / 2,
-            y = cls.startY - d / 2;
+            w = me.get('boardSize') * (d + cls.squareWidth) - d + depth,
+            h = me.get('boardSize') * (d + cls.squareHeight) - d,
+            x = cls.startX,
+            y = cls.startY;
 
         var p = cls.getPaper();
-        var borderLeft = p.rect(x, y, 7, h + 1);
-        var borderRight = p.rect(x + w - 5, y, 7, h + 1);
-        var borderTop = p.rect(x, y - 2, w + 2, 7);
-        var borderBottom = p.rect(x, y + h - 5, w + 2, 7);
+        var borderLeft = p.rect(x, y + depth, depth, h);
+        var borderRight = p.rect(x + w, y + depth, depth, h);
+        var borderTop = p.rect(x, y, w + depth, depth);
+        var borderBottom = p.rect(x, y + h + depth, w + depth, depth);
 
-        borderLeft.attr('fill', '#c75');
-        borderRight.attr('fill', '#c75');
-        borderTop.attr('fill', '#c75');
-        borderBottom.attr('fill', '#c75');
+        var defColor = '#c75';
+        var positions = me.players.playersPositions;
+        if (me.get('playersCount') === 2) {
+            borderTop.attr('fill', positions[1].color);
+            borderRight.attr('fill', defColor);
+            borderBottom.attr('fill', positions[0].color);
+            borderLeft.attr('fill', defColor);
+        } else if (me.get('playersCount') === 4) {
+            borderTop.attr('fill', positions[2].color);
+            borderRight.attr('fill', positions[3].color);
+            borderBottom.attr('fill', positions[0].color);
+            borderLeft.attr('fill', positions[1].color);
+        }
 
-        this.renderLegend(y, x, w, h);
+        this.renderLegend();
     },
 
     afterRender: function () {
         var me = this.model;
 
-        this.drawBorders();
-
         me.fields.each(function (model) {
-            var params = {model: model};
-            params.defaultColor = model.getColor(me.players.playersPositions);
-            new FieldView(params);
+            new FieldView({model: model});
         });
-
         me.fences.each(function (model) {
             FenceView.createFenceView(model);
         });
         me.players.each(function (model) {
             new PlayerView({model: model});
         });
+        this.drawBorders();
         var info = new InfoView({
             model: me.infoModel
         });

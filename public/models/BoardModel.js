@@ -30,6 +30,7 @@ var BoardModel = Backbone.Model.extend({
         this.timerModel = new TimerModel();
         this.infoModel = new Backbone.Model();
         this.history = new GameHistoryModel({
+            debug: this.get('debug'),
             boardSize: this.get('boardSize'),
             playersCount: this.get('playersCount')
         });

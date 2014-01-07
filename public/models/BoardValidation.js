@@ -22,8 +22,17 @@ BoardValidation.prototype = {
         return min <= n3 && n3 < max;
     },
     intToChar: function (i) {
+        if (this.get('debug')) {
+            return i + '';
+        }
         var a = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k'];
         return a[i];
+    },
+    intToInt: function (i) {
+        if (this.get('debug')) {
+            return i + '';
+        }
+        return this.get('boardSize') - i;
     },
     /**
      *   f

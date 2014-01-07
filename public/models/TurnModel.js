@@ -18,10 +18,16 @@ var TurnModel = Backbone.Model.extend({
     },
 
     getX: function (x) {
+        if (this.get('debug')) {
+            return x + ':';
+        }
         return this.intToChar(x);
     },
 
     getY: function (y) {
+        if (this.get('debug')) {
+            return y + '';
+        }
         return TurnModel.boardSize - y;
     },
 
@@ -81,6 +87,7 @@ var GameHistoryModel = Backbone.Model.extend({
     },
 
     add: function (turnInfo) {
+        turnInfo.debug = this.get('debug');
         var turn = new TurnModel(turnInfo);
         this.get('turns').add(turn);
 

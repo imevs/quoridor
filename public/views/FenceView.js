@@ -60,8 +60,8 @@ FenceHView = FenceView.extend({
             j = this.model.get('y'),
             color = this.model.get('color');
 
-        var x = (w + dw) * i + cls.startX - dw / 2;
-        var y = (h + dh) * j + cls.startY + dh;
+        var x = (w + dw) * i + cls.startX - dw / 2 + cls.borderDepth;
+        var y = (h + dh) * j + cls.startY + dh + cls.borderDepth;
         var obj = cls.getPaper().rect(x, y, w + dw + 1, h);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
@@ -82,8 +82,8 @@ FenceVView = FenceView.extend({
             h = cls.squareHeight,
             dh = cls.squareDistance,
             dw = cls.squareWidth;
-        var x = (w + dw) * i + cls.startX + dw;
-        var y = (h + dh) * j + cls.startY - dh / 2;
+        var x = (w + dw) * i + cls.startX + dw + cls.borderDepth;
+        var y = (h + dh) * j + cls.startY - dh / 2 + cls.borderDepth;
         var obj = cls.getPaper().rect(x, y, w, h + dh + 1);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);

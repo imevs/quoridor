@@ -110,9 +110,9 @@ var Bot = Backbone.Model.extend({
     makeTurn: function () {
         var bot = this;
         this.attemptsCount++;
-        console.log('bot:attemptsCount', this.attemptsCount);
-        console.log('bot:currentPlayer', this.currentPlayer);
-        console.log('----------------');
+        //console.log('bot:attemptsCount', this.attemptsCount);
+        //console.log('bot:currentPlayer', this.currentPlayer);
+        //console.log('----------------');
         if (this.attemptsCount > 50) {
             console.log('bot can`t make a turn');
             return;

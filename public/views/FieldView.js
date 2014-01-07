@@ -19,8 +19,8 @@ window.FieldView = GameObject.extend({
             d = cls.squareDistance,
             color = model.get('color');
         var i = model.get('x'), j = model.get('y');
-        var x = (w + d) * i + cls.startX;
-        var y = (h + d) * j + cls.startY;
+        var x = (w + d) * i + cls.startX + cls.borderDepth;
+        var y = (h + d) * j + cls.startY + cls.borderDepth;
         var obj = cls.getPaper().rect(x, y, w, h);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
