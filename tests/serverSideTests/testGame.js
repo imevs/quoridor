@@ -538,7 +538,6 @@ exports['test-game'] = nodeunit.testCase({
             { x: 4, y: 0, t: 'p' }, // start position
             { x: 4, y: 8, t: 'p' }, // start position
             { x: 4, y: 2, x2: 3, y2: 2, t: 'f' } // move fence
-            //{ x: 4, y: 8, t: 'p' } // start position
         ]);
         test.done();
     },

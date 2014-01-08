@@ -37,6 +37,12 @@ var TurnModel = Backbone.Model.extend({
             ? this.getX(this.get('x')) + this.getY(this.get('y')) + ''
             : this.getX(this.get('x')) + this.getY(this.get('y') + dy) +
             this.getX(this.get('x2')) + this.getY(this.get('y2') + dy) +  '';
+    },
+
+    toJSON: function () {
+        var result = _.clone(this.attributes);
+        delete result.debug;
+        return result;
     }
 
 });
