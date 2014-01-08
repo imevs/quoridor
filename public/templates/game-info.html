@@ -1,15 +1,10 @@
 <% if (typeof data.currentplayer != "undefined") { %>
 
     <% if (data.currentplayer >= 0) { %>
-        <p>You play as a player number: <strong><%= (data.currentplayer + 1) %></strong></p>
         <p><button class="move btn btn-large btn-primary">Complete the move</button></p>
     <%} else { %>
         <p><strong>You may to view game only (choose who to play from links above)</strong></p>
     <%} %>
-
-    <p>Current player number:
-        <strong><%= data.activeplayer + 1 %> <%=(data.activeplayer == data.currentplayer ? '(your move)': '')%></strong>
-    </p>
 <%} else { %>
     <p>Connecting to game server...</p>
 <%}%>

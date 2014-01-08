@@ -11,6 +11,7 @@ window.InfoView = GameObject.extend({
             me.listenTo(me.model, 'change', me.render);
             me.render();
         });
+        this.displayCurrentPlayer();
     },
     render: function () {
         var me = this;
@@ -20,6 +21,7 @@ window.InfoView = GameObject.extend({
         });
         this.clearFences();
         this.drawRemainingFences();
+        this.displayActivePlayer();
     },
 
     drawRemainingFences: function () {
@@ -61,5 +63,38 @@ window.InfoView = GameObject.extend({
             var f = this.fences.pop();
             f.remove();
         }
+    },
+
+    displayActivePlayer: function () {
+        var cls = this.constructor;
+        if (this.active) {
+            this.active[0].remove();
+            this.active[1].remove();
+        }
+        this.active = this.displayPlayer(this.model.get('activeplayer'), cls.squareWidth * 4, 70, 'Active');
+    },
+
+    displayCurrentPlayer: function () {
+        var cls = this.constructor;
+        this.displayPlayer(this.model.get('currentplayer'), cls.squareWidth, 70, 'You');
+    },
+
+    displayPlayer: function (index, dx, dy, text) {
+        dx += 70;
+        var me = this,
+            cls = me.constructor,
+            color = me.playersPositions[index].color,
+            w = cls.squareWidth,
+            h = cls.squareHeight,
+            x = cls.startX + dx,
+            y = cls.startY - dy;
+
+        var textObj = cls.getPaper().text(x - 70, y, text + ' -');
+        textObj.attr('fill', 'black');
+        textObj.attr('font-size', 20);
+
+        var obj = cls.getPaper().ellipse(x, y, w / 2, h / 2);
+        obj.attr('fill', color);
+        return [obj, textObj];
     }
 });
