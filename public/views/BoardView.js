@@ -28,8 +28,8 @@ window.BoardView = GameObject.extend({
             w = boardSize * (d + cls.squareWidth),
             h = boardSize * (d + cls.squareHeight),
             x = cls.startX + depth / 2,
-            y = cls.startY + depth / 2;
-        var largeFontSize = depth;
+            y = cls.startY + depth / 2 - 2;
+        var largeFontSize = depth - 3;
         var smallFontSize = depth / 2;
 
         _(_.range(boardSize)).each(function (i) {

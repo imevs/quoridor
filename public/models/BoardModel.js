@@ -27,7 +27,9 @@ var BoardModel = Backbone.Model.extend({
         this.fences = new FencesCollection();
         this.fields = new FieldsCollection();
         this.players = new PlayersCollection();
-        this.timerModel = new TimerModel();
+        this.timerModel = new TimerModel({
+            playersCount: this.get('playersCount')
+        });
         this.infoModel = new Backbone.Model();
         this.history = new GameHistoryModel({
             debug: this.get('debug'),

@@ -58,6 +58,10 @@ var TurnsCollection = Backbone.Collection.extend({
 
 var GameHistoryModel = Backbone.Model.extend({
 
+    defaults: {
+        turns: []
+    },
+
     getPlayerPositions: function () {
         var positions = [], self = this;
 

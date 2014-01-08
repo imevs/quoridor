@@ -1,10 +1,20 @@
-<p>
+<table class="table table-bordered">
+    <caption>
+        <h3>Timer</h3>
+    </caption>
 
-<strong>
-    Prev time: <%= data.timePrev%> seconds
-</strong>
-</p>
-
-<strong>
-    Time: <%= data.time%> seconds
-</strong>
+    <%_(data.times).each(function (time, i) {%>
+        <tr>
+            <th><%=(i+1)%></th>
+            <td><%= time%> seconds</td>
+        </tr>
+    <%});%>
+    <tr>
+        <th>Last time</th>
+        <td><%= data.timePrev%> seconds</td>
+    </tr>
+    <tr>
+        <th>Time</th>
+        <td><%= data.time%> seconds</td>
+    </tr>
+</table>

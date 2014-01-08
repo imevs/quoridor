@@ -1,6 +1,30 @@
-<h3>Moves history</h3>
-<ol>
-    <%_.each(data, function(turn) {%>
-        <li><%=turn%></li>
-    <%}); %>
-</ol>
+<table class="table table-bordered">
+    <caption>
+        <h3>
+            Moves history
+        </h3>
+    </caption>
+    <thead>
+        <tr>
+            <th>#</th>
+            <% _(data.playersCount).times(function (index) { %>
+            <th><%=(index+1)%></th>
+            <%}); %>
+        </tr>
+    </thead>
+    <tbody>
+        <%_.each(data.turns, function(turn, index) {%>
+
+            <% if (index % data.playersCount === 0) {%>
+            <tr>
+                <td><%= (index / data.playersCount) + 1 %></td>
+            <%}%>
+
+            <td><%=turn%></td>
+
+            <% if ((index + 1) % data.playersCount === 0) {%></tr><%}%>
+        <%}); %>
+    </tbody>
+
+
+</table>

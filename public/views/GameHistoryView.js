@@ -10,10 +10,8 @@ window.GameHistoryView = Backbone.View.extend({
         });
     },
     render: function () {
-        var data = [];
-        _(_.range(this.model.getLength())).each(function (i) {
-            data.push(this.model.at(i));
-        }, this);
+        var data = this.model.toJSON();
+        data.turns = data.turns.models;
         this.$el.html(_.template(this.template, data, {variable: 'data'}));
     }
 });

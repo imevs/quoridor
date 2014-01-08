@@ -1,10 +1,11 @@
+<p>
 <% if (typeof data.currentplayer != "undefined") { %>
-
     <% if (data.currentplayer >= 0) { %>
-        <p><button class="move btn btn-large btn-primary">Complete the move</button></p>
+        <button class="move btn btn-large btn-primary">Complete the move</button>
     <%} else { %>
-        <p><strong>You may to view game only (choose who to play from links above)</strong></p>
+        <strong>You may to view game only (choose who to play from links above)</strong>
     <%} %>
 <%} else { %>
-    <p>Connecting to game server...</p>
+    Connecting to game server...
 <%}%>
+</p>
