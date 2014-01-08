@@ -114,7 +114,7 @@ require.config({
         },
         'views/InfoView'       : {
             deps: [
-                'libs/backbone'
+                'views/GameObject'
             ]
         },
         'views/GameHistoryView': {

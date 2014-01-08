@@ -34,8 +34,8 @@ window.BoardView = GameObject.extend({
 
         _(_.range(boardSize)).each(function (i) {
             var text;
-            var _yv = y + i * (cls.squareHeight + d) + cls.squareHeight / 2 + depth / 2;
-            var _xh = x + i * (cls.squareWidth + d) + cls.squareWidth / 2 + depth / 2;
+            var _yv = y + i * (cls.squareHeight + d) + (cls.squareHeight + depth) / 2;
+            var _xh = x + i * (cls.squareWidth + d) + (cls.squareWidth + depth) / 2;
 
             text = cls.getPaper().text(x, _yv, me.intToInt(i));
             text.attr('fill', 'white');
@@ -56,8 +56,8 @@ window.BoardView = GameObject.extend({
 
         _(_.range(boardSize - 1)).each(function (i) {
             var text;
-            var _yv = y + i * (cls.squareHeight + d) + cls.squareHeight + d / 2 + depth / 2;
-            var _xh = x + i * (cls.squareWidth + d) + cls.squareWidth + d / 2 + depth / 2;
+            var _yv = y + i * (cls.squareHeight + d) + cls.squareHeight + (d + depth) / 2;
+            var _xh = x + i * (cls.squareWidth + d) + cls.squareWidth + (d + depth) / 2;
 
             text = cls.getPaper().text(x, _yv, me.intToInt(i));
             text.attr('fill', 'white');
@@ -124,7 +124,8 @@ window.BoardView = GameObject.extend({
         });
         this.drawBorders();
         var info = new InfoView({
-            model: me.infoModel
+            model: me.infoModel,
+            playersPositions: me.players.playersPositions
         });
         new TimerView({
             model: me.timerModel

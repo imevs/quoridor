@@ -8,11 +8,8 @@
     <%} %>
 
     <p>Current player number:
-        <strong><%= data.activeplayer + 1 %> <%=(data.activeplayer == data.currentplayer ? '(your move)': '')%></strong></p>
-    <% _(data.fences).each(function(fence, index) {%>
-        <p><%=index + 1 %>-player remaining walls count: <strong><%=fence%></strong></p>
-    <%}); %>
-
+        <strong><%= data.activeplayer + 1 %> <%=(data.activeplayer == data.currentplayer ? '(your move)': '')%></strong>
+    </p>
 <%} else { %>
     <p>Connecting to game server...</p>
 <%}%>
