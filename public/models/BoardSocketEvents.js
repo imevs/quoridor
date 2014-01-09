@@ -41,8 +41,8 @@ BoardSocketEvents.prototype = {
         socket.on('server_win', _(this.onWin).bind(this));
     },
     onWin: function (playerNumber) {
-        alert('Игрок номер ' + (playerNumber + 1) + ' выиграл, ' +
-            'вы можете создать новую игру или выбрать из списка');
+        alert('Player № ' + (playerNumber + 1) + ' is winner, ' +
+            'you can create new game or choose existent from list');
         document.location = '/';
     },
     onTurnSendSocketEvent: function () {

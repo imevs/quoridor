@@ -198,8 +198,9 @@ var BoardModel = Backbone.Model.extend({
 
         if (!this.isOnlineGame()) {
             this.players.on('win', function (player) {
-                if (window.confirm(player + ' выиграл. Начать сначала?')) {
-                    me.resetModels();
+                var message = 'Player № ' + (player + 1) + ' is winner. Do you want to start new game?';
+                if (window.confirm(message)) {
+                    document.location.reload();
                 }
             });
         }
