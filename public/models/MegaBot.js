@@ -77,7 +77,7 @@ var MegaBot = SmartBot.extend({
     },
 
     getRatesForWallsMoves: function (moves, player, board) {
-        if (!player.hasFences()) {
+        if (!this.canMoveFence()) {
             return [];
         }
         var satisfiedCount = 0, result = [];
