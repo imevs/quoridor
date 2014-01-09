@@ -88,7 +88,7 @@ new TestCase('Test testValidatePlayerPositionNearFences', {
         this.board.fences.findWhere({x: 2, y: 3, type: 'H'}).set('state', 'busy');
 
         var res = this.board.isValidPlayerPosition(player1.pick('x', 'y'), { x: 2, y: 4 });
-        assertFalse(res);
+        assertTrue(res);
     },
     'test Valid Position With Two Players and Horizontal Wall near border': new TestWithProvider({
         data: [
@@ -105,7 +105,7 @@ new TestCase('Test testValidatePlayerPositionNearFences', {
             this.board.fences.findWhere({x: 1, y: 2, type: 'H'}).set('state', 'busy');
 
             var res = this.board.isValidPlayerPosition(player2.pick('x', 'y'), { x: 0, y: 2 });
-            assertFalse(res);
+            assertTrue(res);
         }
     })
 });

@@ -37,7 +37,7 @@ new TestCase('Test testValidateFencePositions', {
         room.fences.findWhere({x: 6, y: 5, type: 'H'}).set('state', 'busy');
 
         var fence = room.fences.findWhere({x: 8, y: 5, type: 'H'});
-        assertTrue(room.doesFenceBreakPlayerPath(room.players.at(0), fence));
+        assertFalse(room.doesFenceBreakPlayerPath(room.players.at(0), fence));
         assertFalse(room.doesFenceBreakPlayerPath(room.players.at(1), fence));
     }
 

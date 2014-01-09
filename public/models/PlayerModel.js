@@ -216,8 +216,8 @@ var PlayersCollection = Backbone.Collection.extend({
     hasTwoHorizontalSiblings : function (pos1, pos2) {
         var playerX = pos1.x, playerY = pos1.y, x = pos2.x;
         var diffX = playerX - x; //1 or -1
-        return this.isFieldBusy({x: playerX - diffX, y: playerY })
-            && this.isFieldBusy({x: playerX - diffX * 2, y: playerY});
+        return this.isPrevFieldBusy({x: playerX - diffX, y: playerY })
+            && this.isPrevFieldBusy({x: playerX - diffX * 2, y: playerY});
     },
 
     isPrevFieldBusy: function (pos) {

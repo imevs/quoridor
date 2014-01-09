@@ -129,9 +129,9 @@ new TestCase('Test Validate Player Position', {
             {input: {x: 7, y: 5}, expected: false}
         ],
         test: function (input, expected) {
-            var player1 = this.board.players.at(0).set({x: 4, y: 4});
-            this.board.players.at(1).set({x: 5, y: 4});
-            this.board.players.at(2).set({x: 6, y: 4});
+            var player1 = this.board.players.at(0).set({x: 4, y: 4, prev_x: 4, prev_y: 4 });
+            this.board.players.at(1).set({x: 5, y: 4, prev_x: 5, prev_y: 4 });
+            this.board.players.at(2).set({x: 6, y: 4, prev_x: 6, prev_y: 4});
             var res = this.board.isValidPlayerPosition(player1.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
@@ -196,9 +196,9 @@ new TestCase('Test Validate Player Position', {
             {input: {x: 7, y: 5}, expected: false}
         ],
         test: function (input, expected) {
-            this.board.players.at(0).set({x: 4, y: 4});
-            this.board.players.at(1).set({x: 5, y: 4});
-            var player3 = this.board.players.at(2).set({x: 6, y: 4});
+            this.board.players.at(0).set({x: 4, y: 4, prev_x: 4, prev_y: 4 });
+            this.board.players.at(1).set({x: 5, y: 4, prev_x: 5, prev_y: 4});
+            var player3 = this.board.players.at(2).set({x: 6, y: 4, prev_x: 6, prev_y: 4});
             var res = this.board.isValidPlayerPosition(player3.pick('x', 'y'), input);
             assertEquals(res, expected);
         }
