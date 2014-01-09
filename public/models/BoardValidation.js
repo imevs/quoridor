@@ -104,7 +104,12 @@ BoardValidation.prototype = {
                 return fence.y === y && fence.type === 'V' && me.isBetween(playerX, x, fence.x);
             };
         } else {
-            return true;
+            var minY = Math.min(playerY, y);
+            var minX = Math.min(playerX, x);
+            callback = function (fence) {
+                return (fence.type === 'V' && fence.x === minX && (fence.y === y))
+                    || (fence.type === 'H' && fence.y === minY && (fence.x === x));
+            };
         }
         return !busyFences.some(callback);
     },
