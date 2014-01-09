@@ -5,3 +5,8 @@ body {
 .container {
     max-width: 880px;
 }
+
+.b-history_wrapper {
+    height: 350px;
+    overflow: auto;
+}

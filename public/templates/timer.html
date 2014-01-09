@@ -1,20 +1,22 @@
-<table class="table table-bordered">
-    <caption>
-        <h3>Timer</h3>
-    </caption>
+<div class="b-timer_wrapper">
+    <table class="table table-bordered">
+        <caption>
+            <h3>Timer</h3>
+        </caption>
 
-    <%_(data.playersCount).times(function (i) {%>
+        <%_(data.playersCount).times(function (i) {%>
         <tr>
-            <th><%=(i+1)%></th>
+            <th><%=(i+1)%> player</th>
             <td><%= data.times[i]%> seconds</td>
         </tr>
-    <%});%>
-    <tr>
-        <th>Last time</th>
-        <td><%= data.timePrev%> seconds</td>
-    </tr>
-    <tr>
-        <th>Time</th>
-        <td><%= data.time%> seconds</td>
-    </tr>
-</table>
+        <%});%>
+        <tr>
+            <th>Last time</th>
+            <td><%= data.timePrev%> seconds</td>
+        </tr>
+        <tr>
+            <th>Time</th>
+            <td><%= data.time%> seconds</td>
+        </tr>
+    </table>
+</div>
