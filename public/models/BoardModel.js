@@ -153,7 +153,10 @@ var BoardModel = Backbone.Model.extend({
     },
 
     updateInfo: function () {
-        this.timerModel.start();
+        if (this.history.get('turns').length > this.get('playersCount')) {
+            this.timerModel.next(this.get('currentPlayer'));
+        }
+
         this.infoModel.set({
             currentplayer: this.get('currentPlayer'),
             activeplayer : this.get('activePlayer'),
@@ -192,8 +195,6 @@ var BoardModel = Backbone.Model.extend({
             }
         });
         this.on('change:activePlayer', this.updateInfo, this);
-        //this.on('change:currentPlayer', this.updateInfo, this);
-        //this.players.on('change', this.updateInfo, this);
 
         if (!this.isOnlineGame()) {
             this.players.on('win', function (player) {
