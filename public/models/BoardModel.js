@@ -232,6 +232,7 @@ var BoardModel = Backbone.Model.extend({
         _(this.bots).each(function (bot) {
             bot.terminate();
         });
+        this.timerModel.stop();
     },
     connectBots: function () {
         if (_.isUndefined(this.get('botsCount'))) {

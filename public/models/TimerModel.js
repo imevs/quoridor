@@ -3,13 +3,20 @@ window.TimerModel = Backbone.Model.extend({
 
     defaults: {
         timePrev: 0,
+        allTime: 0,
         times: [0, 0, 0, 0],
         time: 0
     },
 
+    isStopped: false,
+
     next: function (current) {
+        if (this.isStopped) {
+            return;
+        }
         var timer = this;
         this.get('times')[current] = this.get('times')[current] + this.get('time');
+        timer.set('allTime', timer.get('allTime') + this.get('time'));
         timer.set('timePrev', timer.get('time'));
         timer.set('time', 0);
         clearInterval(this.interval);
@@ -21,10 +28,12 @@ window.TimerModel = Backbone.Model.extend({
     reset: function () {
         this.set('timePrev', this.get('time'));
         this.set('time', 0);
+        this.set('allTime', 0);
         this.set('times', [0, 0, 0, 0]);
     },
 
     stop: function () {
+        this.isStopped = true;
         clearInterval(this.interval);
     }
 
