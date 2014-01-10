@@ -201,6 +201,8 @@ var BoardModel = Backbone.Model.extend({
                 var message = 'Player № ' + (player + 1) + ' is winner. Do you want to start new game?';
                 if (window.confirm(message)) {
                     document.location.reload();
+                } else {
+                    me.stop();
                 }
             });
         }
@@ -225,6 +227,11 @@ var BoardModel = Backbone.Model.extend({
         });
         this.history.initPlayers();
         this.connectBots();
+    },
+    stop: function () {
+        _(this.bots).each(function (bot) {
+            bot.terminate();
+        });
     },
     connectBots: function () {
         if (_.isUndefined(this.get('botsCount'))) {

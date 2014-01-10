@@ -50,6 +50,13 @@ window.BotWrapper = Backbone.Model.extend({
         } else {
             this.bot.trigger.apply(this.bot, arguments);
         }
+    },
+
+    terminate: function () {
+        if (this.bot.terminate) {
+            this.bot.terminate();
+        }
+        this.trigger = function () {}; // do not trigger any events
     }
 
 });
