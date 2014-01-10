@@ -11,7 +11,6 @@ window.InfoView = GameObject.extend({
             me.listenTo(me.model, 'change', me.render);
             me.render();
         });
-        this.displayCurrentPlayer();
     },
     render: function () {
         var me = this;
@@ -21,6 +20,7 @@ window.InfoView = GameObject.extend({
         });
         this.clearFences();
         this.drawRemainingFences();
+        this.displayCurrentPlayer();
         this.displayActivePlayer();
     },
 
@@ -29,7 +29,8 @@ window.InfoView = GameObject.extend({
             cls = this.constructor,
             w = cls.squareDistance,
             h = cls.squareHeight,
-            playersCount = me.model.get('fences').length,
+            fences = me.model.get('fences'),
+            playersCount = fences ? fences.length : 0,
             y0 = cls.startY - w - cls.squareHeight,
             x0 = cls.startX - w + cls.borderDepth,
             boardSize = 9,
@@ -71,16 +72,25 @@ window.InfoView = GameObject.extend({
             this.active[0].remove();
             this.active[1].remove();
         }
-        this.active = this.displayPlayer(this.model.get('activeplayer'), cls.squareWidth * 4, 70, 'Active');
+        var active = this.model.get('activeplayer');
+        this.active = this.displayPlayer(active, cls.squareWidth * 4, 70, 'Active');
     },
 
     displayCurrentPlayer: function () {
         var cls = this.constructor;
-        this.displayPlayer(this.model.get('currentplayer'), cls.squareWidth, 70, 'You');
+        if (this.current) {
+            this.current[0].remove();
+            this.current[1].remove();
+        }
+        var current = this.model.get('currentplayer');
+        this.current = this.displayPlayer(current, cls.squareWidth, 70, 'You');
     },
 
     displayPlayer: function (index, dx, dy, text) {
         dx += 70;
+        if (_.isUndefined(index) || index < 0) {
+            return;
+        }
         var me = this,
             cls = me.constructor,
             color = me.playersPositions[index].color,
