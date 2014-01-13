@@ -1,6 +1,7 @@
 /* global MegaBot, SmartBot, Bot, postMessage, addEventListener, importScripts */
 importScripts('../libs/lodash.underscore.js');
 importScripts('../libs/backbone.js');
+importScripts('../libs/async.js');
 importScripts('../utils.js');
 importScripts('Bot.js');
 importScripts('SmartBot.js');

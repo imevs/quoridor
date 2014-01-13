@@ -3,6 +3,7 @@ var isNode = typeof module !== 'undefined';
 if (isNode) {
     var _ = require('lodash-node/underscore');
     var SmartBot = require('./SmartBot.js');
+    var async = require('async');
 }
 
 var MegaBot = SmartBot.extend({
@@ -11,18 +12,20 @@ var MegaBot = SmartBot.extend({
     satisfiedRate: 1,
 
     doTurn     : function () {
-        var turn = this.getBestTurn();
-        var eventInfo = {
-            x: turn.x,
-            y: turn.y,
-            type: turn.type,
-            playerIndex: this.id
-        };
-        if (turn.type === 'P') {
-            this.trigger('client_move_player', eventInfo);
-        } else {
-            this.trigger('client_move_fence', eventInfo);
-        }
+        var self = this;
+        self.getBestTurn(function (turn) {
+            var eventInfo = {
+                x: turn.x,
+                y: turn.y,
+                type: turn.type,
+                playerIndex: this.id
+            };
+            if (turn.type === 'P') {
+                self.trigger('client_move_player', eventInfo);
+            } else {
+                self.trigger('client_move_fence', eventInfo);
+            }
+        });
     },
 
     initOthersPlayers: function (board) {
@@ -31,33 +34,34 @@ var MegaBot = SmartBot.extend({
         }, this);
     },
 
-    getBestTurn: function () {
-        //console.time('getBestTurn');
-        //console.profile && console.profile('getBestTurn');
+    getBestTurn: function (callback) {
         var board = this.board.copy();
         var player = board.players.at(this.currentPlayer);
         this.initOthersPlayers(board);
         var moves = this.getPossibleMoves(board, player);
-        var rates = this.getRatesForPlayersMoves(moves, player, board)
-            .concat(this.getRatesForWallsMoves(moves, player, board));
+        async.waterfall([
+            function (callback) {
+                callback(null, moves, player, board, []);
+            },
+            _(this.getRatesForPlayersMoves).bind(this),
+            _(this.getRatesForWallsMoves).bind(this)
+        ], function (moves, player, board, rates) {
+            rates = _(rates).sort(function (move1, move2) {
+                return move1.rate - move2.rate;
+            });
 
-        rates = _(rates).sort(function (move1, move2) {
-            return move1.rate - move2.rate;
+            var minRate = _(_(rates).pluck('rate')).min();
+            var types = {'H': 0, 'V': 1, 'P': 2 };
+            var minRatedMoves = _(rates).filter(function (move) {
+                return move.rate === minRate;
+            }).sort(function (a, b) {
+                return types[b.type] - types[a.type];
+            });
+            callback(minRatedMoves[_.random(0, minRatedMoves.length - 1)]);
         });
-
-        var minRate = _(_(rates).pluck('rate')).min();
-        var types = {'H': 0, 'V': 1, 'P': 2 };
-        var minRatedMoves = _(rates).filter(function (move) {
-            return move.rate === minRate;
-        }).sort(function (a, b) {
-            return types[b.type] - types[a.type];
-        });
-        //console.timeEnd('getBestTurn');
-        //console.profile && console.profileEnd('getBestTurn');
-        return minRatedMoves[_.random(0, minRatedMoves.length - 1)];
     },
 
-    getRatesForPlayersMoves: function (moves, player, board) {
+    getRatesForPlayersMoves: function (moves, player, board, rates, callback) {
         var result = [];
         _(moves).each(function (move) {
             if (move.type === 'P') {
@@ -73,12 +77,12 @@ var MegaBot = SmartBot.extend({
                 result.push(move);
             }
         }, this);
-        return result;
+        callback(null, moves, player, board, rates.concat(result));
     },
 
-    getRatesForWallsMoves: function (moves, player, board) {
+    getRatesForWallsMoves: function (moves, player, board, rates, callback) {
         if (!this.canMoveFence()) {
-            return [];
+            callback(rates.concat([]));
         }
         var satisfiedCount = 0, result = [];
         _(moves).some(function (item) {
@@ -112,7 +116,7 @@ var MegaBot = SmartBot.extend({
             return satisfiedCount >= 2;
         }, this);
         this.satisfiedRate = 0;
-        return result;
+        callback(moves, player, board, rates.concat(result));
     },
 
     calcHeuristic: function (player, board) {

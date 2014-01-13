@@ -2,6 +2,7 @@ require.config({
     waitSeconds: 30,
     paths: {
         'underscore': 'libs/lodash.underscore',
+        'async': 'libs/async',
         'socket.io': 'libs/socket.io/socket.io',
         'text'     : 'libs/text'
     },
@@ -22,14 +23,14 @@ require.config({
         'utils'                   : {
             deps: ['underscore']
         },
-        'models/bot'       : {
+        'models/Bot'       : {
             deps: ['models/TurnModel', 'libs/backbone', 'utils']
         },
-        'models/smartBot'       : {
-            deps: ['models/TurnModel', 'libs/backbone', 'utils', 'models/bot']
+        'models/SmartBot'       : {
+            deps: ['models/TurnModel', 'libs/backbone', 'utils', 'models/Bot']
         },
-        'models/megaBot'       : {
-            deps: ['models/TurnModel', 'libs/backbone', 'utils', 'models/smartBot']
+        'models/MegaBot'       : {
+            deps: ['models/TurnModel', 'libs/backbone', 'utils', 'async', 'models/SmartBot']
         },
         'models/FenceModel'       : {
             deps: ['libs/backbone', 'utils']
@@ -52,15 +53,6 @@ require.config({
         },
         'models/BoardSocketEvents': {
             deps: ['socket.io']
-        },
-        'models/Bot': {
-            deps: ['libs/backbone']
-        },
-        'models/SmartBot': {
-            deps: ['models/Bot']
-        },
-        'models/MegaBot': {
-            deps: ['models/SmartBot']
         },
         'models/BotWrapper': {
             deps: [
