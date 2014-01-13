@@ -10,3 +10,12 @@ body {
     height: 300px;
     overflow: auto;
 }
+
+@media
+only screen and (max-width: 1200px), (max-device-width: 1200px)  {
+
+    .b-history_wrapper {
+        height: 100%;
+    }
+
+}

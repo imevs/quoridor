@@ -5,6 +5,12 @@ window.FieldView = GameObject.extend({
         color: '#742'
     },
 
+    events: {
+        'click'      : 'movePlayer',
+        'mouseover'  : 'onSelectFieldBefore',
+        'mouseout'   : 'unSelectCurrent'
+    },
+
     initialize: function (options) {
         var cls = this.constructor;
         var model = this.model;
@@ -14,6 +20,7 @@ window.FieldView = GameObject.extend({
         this.listenTo(model, 'change', this.render);
         this.listenTo(model, 'selectfield', this.selectCurrent);
         this.listenTo(model, 'markfield', this.markCurrent);
+
         var w = cls.squareWidth,
             h = cls.squareHeight,
             d = cls.squareDistance,
@@ -29,23 +36,14 @@ window.FieldView = GameObject.extend({
 
     selectCurrent  : function () {
         this.model.set({color: 'black'});
-        //this.el.toFront();
     },
 
     markCurrent  : function () {
         this.model.set({color: 'gray'});
-        //this.el.toFront();
     },
 
     unSelectCurrent: function () {
         this.model.set({color: this.defaultColor});
-        //this.el.toBack();
-    },
-
-    events: {
-        'click'      : 'movePlayer',
-        'mouseover'  : 'onSelectFieldBefore',
-        'mouseout'   : 'unSelectCurrent'
     },
 
     movePlayer     : function () {
