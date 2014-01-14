@@ -72,7 +72,7 @@ window.InfoView = GameObject.extend({
             this.active[0].remove();
             this.active[1].remove();
         }
-        var active = this.model.get('activeplayer');
+        var active = this.model.get('activePlayer');
         this.active = this.displayPlayer(active, cls.squareWidth * 4, 70, 'Active');
     },
 
@@ -82,7 +82,7 @@ window.InfoView = GameObject.extend({
             this.current[0].remove();
             this.current[1].remove();
         }
-        var current = this.model.get('currentplayer');
+        var current = this.model.get('currentPlayer');
         this.current = this.displayPlayer(current, cls.squareWidth, 70, 'You');
     },
 

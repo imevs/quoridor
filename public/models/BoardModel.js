@@ -54,7 +54,7 @@ var BoardModel = Backbone.Model.extend({
     },
 
     makeTurn: function () {
-        /* jshint maxcomplexity:8 */
+        /* jshint maxcomplexity:9 */
         var me = this;
         if (!(me.isPlayerMoved || me.isFenceMoved)) {
             return;
@@ -86,11 +86,13 @@ var BoardModel = Backbone.Model.extend({
             player.trigger('resetstate');
         });
         me.getActivePlayer().trigger('setcurrent');
-        /**
-         * if local mode game then automatic change currentPlayer
-         */
         if (!me.isOnlineGame()) {
-            me.set('currentPlayer', me.get('activePlayer'));
+            if (!me.getNextActiveBot(me.get('activePlayer'))) {
+                /**
+                 * if local mode game then automatic change currentPlayer
+                 */
+                me.set('currentPlayer', me.get('activePlayer'));
+            }
 
             if (me.isFenceMoved) {
                 me.emitEventToBots('server_move_fence', {
@@ -158,8 +160,8 @@ var BoardModel = Backbone.Model.extend({
         }
 
         this.infoModel.set({
-            currentplayer: this.get('currentPlayer'),
-            activeplayer : this.get('activePlayer'),
+            currentPlayer: this.get('currentPlayer'),
+            activePlayer : this.get('activePlayer'),
             fences       : this.players.pluck('fencesRemaining')
         });
     },
@@ -195,6 +197,7 @@ var BoardModel = Backbone.Model.extend({
             }
         });
         this.on('change:activePlayer', this.updateInfo, this);
+        this.on('change:currentPlayer', this.updateInfo, this);
 
         if (!this.isOnlineGame()) {
             this.players.on('win', function (player) {
