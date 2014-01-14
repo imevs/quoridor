@@ -84,16 +84,18 @@ var MegaBot = SmartBot.extend({
         if (!this.canMoveFence()) {
             callback(rates.concat([]));
         }
+        var self = this;
         var satisfiedCount = 0, result = [];
-        _(moves).some(function (item) {
+        async.some(moves, function (item, callback) {
             var move = {x: item.x, y: item.y, type: item.type };
             if (move.type === 'P') {
+                callback(false);
                 return false;
             }
             var fence = board.fences.findWhere(move);
 
             if (!board.fences.validateFenceAndSibling(fence)) {
-                this.removePossibleWallsMove(move);
+                self.removePossibleWallsMove(move);
             } else if (!board.breakSomePlayerPath(fence)) {
                 var sibling = board.fences.getSibling(fence);
 
@@ -103,20 +105,22 @@ var MegaBot = SmartBot.extend({
                 fence.set({state: 'busy'});
                 sibling.set({state: 'busy'});
 
-                move.rate = this.calcHeuristic(player, board);
+                move.rate = self.calcHeuristic(player, board);
                 result.push(move);
 
                 fence.set({state: prevStateFence});
                 sibling.set({state: prevStateSibling});
 
-                if (move.rate <= this.satisfiedRate) {
+                if (move.rate <= self.satisfiedRate) {
                     satisfiedCount++;
                 }
             }
+            callback(satisfiedCount >= 2);
             return satisfiedCount >= 2;
-        }, this);
-        this.satisfiedRate = 0;
-        callback(moves, player, board, rates.concat(result));
+        }, function () {
+            self.satisfiedRate = 0;
+            callback(moves, player, board, rates.concat(result));
+        });
     },
 
     calcHeuristic: function (player, board) {
