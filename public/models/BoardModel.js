@@ -28,13 +28,11 @@ var BoardModel = Backbone.Model.extend({
         this.fields = new FieldsCollection();
         this.players = new PlayersCollection();
         this.timerModel = new TimerModel({
-            playerNames: this.players.getPlayerNames(),
             playersCount: this.get('playersCount')
         });
         this.infoModel = new Backbone.Model();
         this.history = new GameHistoryModel({
             debug: this.get('debug'),
-            playerNames: this.players.getPlayerNames(),
             boardSize: this.get('boardSize'),
             playersCount: this.get('playersCount')
         });
@@ -49,9 +47,16 @@ var BoardModel = Backbone.Model.extend({
         me.fields.createFields(+me.get('boardSize'));
         me.fences.createFences(+me.get('boardSize'));
         me.players.createPlayers(+me.get('playersCount'));
+
+        this.history.set('playerNames', this.players.getPlayerNames());
+        this.timerModel.set('playerNames', this.players.getPlayerNames());
     },
 
     switchActivePlayer: function () {
+        if (this.history.get('turns').length > this.get('playersCount')) {
+            this.timerModel.next(this.get('activePlayer'));
+        }
+
         this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
     },
 
@@ -157,10 +162,6 @@ var BoardModel = Backbone.Model.extend({
     },
 
     updateInfo: function () {
-        if (this.history.get('turns').length > this.get('playersCount')) {
-            this.timerModel.next(this.get('currentPlayer'));
-        }
-
         this.infoModel.set({
             currentPlayer: this.get('currentPlayer'),
             activePlayer : this.get('activePlayer'),
