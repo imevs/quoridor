@@ -2,6 +2,7 @@
 window.TimerModel = Backbone.Model.extend({
 
     defaults: {
+        playerNames: [],
         timePrev: 0,
         allTime: 0,
         times: [0, 0, 0, 0],

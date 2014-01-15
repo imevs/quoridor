@@ -45,16 +45,20 @@ var PlayersCollection = Backbone.Collection.extend({
             }
         });
         me.playersPositions = [
-            {x: 4, y: 0, color: '#d2322d', isWin: function (x, y) { return y === 8; } },
-            {x: 8, y: 4, color: '#3477B2', isWin: function (x) { return x === 0; } },
-            {x: 4, y: 8, color: 'white', isWin: function (x, y) { return y === 0; } },
-            {x: 0, y: 4, color: '#ed9c28', isWin: function (x) { return x === 8; } }
+            {x: 4, y: 0, color: '#d2322d', name: 'red', isWin: function (x, y) { return y === 8; } },
+            {x: 8, y: 4, color: '#3477B2', name: 'blue', isWin: function (x) { return x === 0; } },
+            {x: 4, y: 8, color: 'green', name: 'green', isWin: function (x, y) { return y === 0; } },
+            {x: 0, y: 4, color: '#ed9c28', name: 'orange', isWin: function (x) { return x === 8; } }
         ];
 
         if (players && players.length === 2 && me.playersPositions.length === 4) {
             me.playersPositions.splice(3, 1);
             me.playersPositions.splice(1, 1);
         }
+    },
+
+    getPlayerNames: function () {
+        return _(this.playersPositions).pluck('name');
     },
 
     getNextActivePlayer: function (currentPlayer) {

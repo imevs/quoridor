@@ -18,7 +18,7 @@
         <tr>
             <th>#</th>
             <% _(data.playersCount).times(function (index) { %>
-            <th><%=(index+1)%></th>
+            <th style="color:<%= data.playerNames[index]%>" ><%=data.playerNames[index]%></th>
             <%}); %>
         </tr>
         </thead>

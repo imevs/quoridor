@@ -35,6 +35,7 @@ var MegaBot = SmartBot.extend({
     },
 
     getBestTurn: function (callback) {
+        //console.time('getBestTurn');
         var board = this.board.copy();
         var player = board.players.at(this.currentPlayer);
         this.initOthersPlayers(board);
@@ -57,6 +58,7 @@ var MegaBot = SmartBot.extend({
             }).sort(function (a, b) {
                 return types[b.type] - types[a.type];
             });
+            //console.timeEnd('getBestTurn');
             callback(minRatedMoves[_.random(0, minRatedMoves.length - 1)]);
         });
     },

@@ -6,7 +6,7 @@
 
         <%_(data.playersCount).times(function (i) {%>
         <tr>
-            <th><%=(i+1)%> player</th>
+            <th style="color:<%= data.playerNames[i]%>"><%= data.playerNames[i]%> player</th>
             <td><%= data.times[i]%> seconds</td>
         </tr>
         <%});%>

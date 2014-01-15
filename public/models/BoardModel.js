@@ -28,11 +28,13 @@ var BoardModel = Backbone.Model.extend({
         this.fields = new FieldsCollection();
         this.players = new PlayersCollection();
         this.timerModel = new TimerModel({
+            playerNames: this.players.getPlayerNames(),
             playersCount: this.get('playersCount')
         });
         this.infoModel = new Backbone.Model();
         this.history = new GameHistoryModel({
             debug: this.get('debug'),
+            playerNames: this.players.getPlayerNames(),
             boardSize: this.get('boardSize'),
             playersCount: this.get('playersCount')
         });

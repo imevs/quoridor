@@ -59,6 +59,7 @@ var TurnsCollection = Backbone.Collection.extend({
 var GameHistoryModel = Backbone.Model.extend({
 
     defaults: {
+        playerNames: [],
         turns: []
     },
 
