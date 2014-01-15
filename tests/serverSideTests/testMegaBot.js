@@ -41,23 +41,29 @@ exports.bot = nodeunit.testCase({
         bot.onStart(0, 0, [{x: 1, y: 0, t: 'p'}, {x: 1, y: 2, t: 'p'}], 2, 3);
         bot.board.players.playersPositions = playersPositions;
 
-        test.deepEqual(bot.getBestTurn(), {x: 1, y: 1, type: 'P', rate: 0});
-        test.done();
+        bot.getBestTurn(function (res) {
+            test.deepEqual(res, {x: 1, y: 1, type: 'P', rate: 0});
+            test.done();
+        });
     },
 
     'getPossiblePosition - first - fullsizeboard': function (test) {
         bot = new Bot(0);
         bot.onStart(0, 0, [], 2);
 
-        test.deepEqual(bot.getBestTurn(), {x: 4, y: 1, type: 'P', rate: 0});
-        test.done();
+        bot.getBestTurn(function (res) {
+            test.deepEqual(res, {x: 4, y: 1, type: 'P', rate: 0});
+            test.done();
+        });
     },
 
     'getPossiblePosition - second - fullsizeboard': function (test) {
         bot = new Bot(0);
         bot.onStart(1, 1, [], 2);
-        test.deepEqual(bot.getBestTurn(), {x: 4, y: 7, type: 'P', rate: 0});
-        test.done();
+        bot.getBestTurn(function (res) {
+            test.deepEqual(res, {x: 4, y: 7, type: 'P', rate: 0});
+            test.done();
+        });
     },
 
     'getPossiblePosition - second - fullsizeboard - walls': function (test) {
@@ -81,12 +87,13 @@ exports.bot = nodeunit.testCase({
         fences.findWhere({x: 4, y: 7, type: 'V'}).set('state', 'busy');
         fences.findWhere({x: 4, y: 8, type: 'V'}).set('state', 'busy');
 
-        var result = bot.getBestTurn();
-        test.equal(result.x, 2);
-        test.ok(result.y === 7 || result.y === 6);
-        test.equal(result.type, 'H');
-        test.equal(result.rate, -2);
-        test.done();
+        bot.getBestTurn(function (result) {
+            test.equal(result.x, 2);
+            test.ok(result.y === 7 || result.y === 6);
+            test.equal(result.type, 'H');
+            test.equal(result.rate, -2);
+            test.done();
+        });
     }
 
 });
