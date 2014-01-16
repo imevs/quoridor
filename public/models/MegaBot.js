@@ -53,9 +53,10 @@ var MegaBot = SmartBot.extend({
 
             var minRate = _(_(rates).pluck('rate')).min();
             var types = {'H': 0, 'V': 1, 'P': 2 };
-            var minRatedMoves = _(rates).filter(function (move) {
+            var filtered = _(rates).filter(function (move) {
                 return move.rate === minRate;
-            }).sort(function (a, b) {
+            });
+            var minRatedMoves = filtered.sort(function (a, b) {
                 return types[b.type] - types[a.type];
             });
             //console.timeEnd('getBestTurn');
@@ -83,11 +84,13 @@ var MegaBot = SmartBot.extend({
     },
 
     getRatesForWallsMoves: function (moves, player, board, rates, callback) {
-        if (!this.canMoveFence()) {
-            callback(rates.concat([]));
-        }
         var self = this;
         var satisfiedCount = 0, result = [];
+
+        if (!this.canMoveFence()) {
+            callback(moves, player, board, rates.concat(result));
+            return;
+        }
         async.some(moves, function (item, callback) {
             var move = {x: item.x, y: item.y, type: item.type };
             if (move.type === 'P') {

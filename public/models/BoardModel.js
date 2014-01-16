@@ -204,7 +204,8 @@ var BoardModel = Backbone.Model.extend({
 
         if (!this.isOnlineGame()) {
             this.players.on('win', function (player) {
-                var message = 'Player № ' + (player + 1) + ' is winner. Do you want to start new game?';
+                var names = me.getPlayerNames();
+                var message = names[player] + ' player ' + 'is winner. Do you want to start new game?';
                 if (window.confirm(message)) {
                     document.location.reload();
                 } else {
