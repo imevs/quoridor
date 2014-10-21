@@ -1,7 +1,7 @@
 /**
  * add to standard io.connect function extra params
  */
-if (window.io) {
+if (this.window && window.io) {
     io.myconnect = function (host, options, your_info) {
         var socket = io.connect.apply(this, [host, options]);
         socket.on('connect', function () {
@@ -35,10 +35,10 @@ BoardSocketEvents.prototype = {
 
         this.on('confirmturn', this.onTurnSendSocketEvent);
 
-        socket.on('server_move_fence', _(this.onSocketMoveFence).bind(this));
-        socket.on('server_move_player', _(this.onSocketMovePlayer).bind(this));
-        socket.on('server_start', _(this.onStart).bind(this));
-        socket.on('server_win', _(this.onWin).bind(this));
+        socket.on('server_move_fence', _.bind(this.onSocketMoveFence, this));
+        socket.on('server_move_player', _.bind(this.onSocketMovePlayer, this));
+        socket.on('server_start', _.bind(this.onStart, this));
+        socket.on('server_win', _.bind(this.onWin, this));
     },
     onWin: function (playerNumber) {
         alert('Player № ' + (playerNumber + 1) + ' is winner, ' +

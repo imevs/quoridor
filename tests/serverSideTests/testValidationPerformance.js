@@ -1,19 +1,19 @@
-var nodeunit = require('nodeunit');
-var Room = require('../../server/models/room.js');
+var assert = this.chai ? chai.assert : require('chai').assert;
+var Room = this.Room || require('../../server/models/room.js');
 
 var room;
 
-exports['validation performance'] = nodeunit.testCase({
+describe('validation performance', function () {
 
 /*
     'notBreakSomePlayerPath': function(test) {
         room = Room.createRoom({playersCount: 2});
 
-        test.ok(room.notBreakSomePlayerPath(
+        assert.ok(room.notBreakSomePlayerPath(
             room.fences.findWhere({x: 1, y: 1, type: 'H'})
         ));
 
-        test.done();
+        test();
     },
 
     'breakSomePlayerPath - 2 players': function(test) {
@@ -29,11 +29,11 @@ exports['validation performance'] = nodeunit.testCase({
 
         var fence = room.fences.findWhere({x: 8, y: 5, type: 'H'});
 
-        test.ok(room.breakSomePlayerPath(fence));
-        test.ok(room.doesFenceBreakPlayerPath(room.players.at(0), fence));
-        test.ok(room.doesFenceBreakPlayerPath(room.players.at(1), fence));
+        assert.ok(room.breakSomePlayerPath(fence));
+        assert.ok(room.doesFenceBreakPlayerPath(room.players.at(0), fence));
+        assert.ok(room.doesFenceBreakPlayerPath(room.players.at(1), fence));
 
-        test.done();
+        test();
     },
 
     'breakSomePlayerPath - 4 players': function(test) {
@@ -49,19 +49,19 @@ exports['validation performance'] = nodeunit.testCase({
 
         var fence = room.fences.findWhere({x: 8, y: 5, type: 'H'});
 
-        test.ok(room.breakSomePlayerPath(fence));
-        test.deepEqual([
+        assert.ok(room.breakSomePlayerPath(fence));
+        assert.deepEqual([
             room.doesFenceBreakPlayerPath(room.players.at(0), fence),
             room.doesFenceBreakPlayerPath(room.players.at(1), fence),
             room.doesFenceBreakPlayerPath(room.players.at(2), fence),
             room.doesFenceBreakPlayerPath(room.players.at(3), fence)
         ], [true, false, true, false]);
 
-        test.done();
+        test();
     },
 */
 
-    'breakSomePlayerPath - 4 players - temp': function (test) {
+    it('breakSomePlayerPath - 4 players - temp', function (test) {
         console.time('0');
         room = Room.createRoom({playersCount: 4});
 
@@ -77,10 +77,10 @@ exports['validation performance'] = nodeunit.testCase({
         console.timeEnd('0');
 
         console.time('1');
-        test.ok(room.doesFenceBreakPlayerPath(room.players.at(0), fence));
+        assert.ok(room.doesFenceBreakPlayerPath(room.players.at(0), fence));
         console.timeEnd('1');
 
-        test.done();
-    }
+        test();
+    });
 
 });

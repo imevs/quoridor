@@ -1,11 +1,15 @@
-var _ = require('lodash-node/underscore');
-var Backbone = require('../backbone.mongoose');
+var _ = this._ || require('lodash-node/underscore');
+var Backbone = this.Backbone || require('../backbone.mongoose');
 
-var PlayersCollection = require('../../public/models/PlayerModel.js');
-var FencesCollection = require('../../public/models/FenceModel.js');
-var BoardValidation = require('../../public/models/BoardValidation.js');
-var History = require('../../public/models/TurnModel.js');
-var uuid = require('uuid');
+var FencesCollection = this.FencesCollection || require('../../public/models/FenceModel.js');
+var PlayersCollection = this.PlayersCollection || require('../../public/models/PlayerModel.js');
+var BoardValidation = this.BoardValidation || require('../../public/models/BoardValidation.js');
+var History = this.GameHistoryModel || require('../../public/models/TurnModel.js');
+var uuid = this.uuid || require('node-uuid');
+
+var process = this.process || { nextTick: function (callback) {
+        setTimeout(callback, 0);
+    }};
 
 var Room = Backbone.Model.extend({
 
@@ -165,9 +169,9 @@ var Room = Backbone.Model.extend({
         player.set('state', 'busy');
         player.socket = socket;
 
-        socket.on('disconnect', _(this.disconnectPlayer).bind(this, socket));
-        socket.on('client_move_player', _(this.onMovePlayer).partial(player).bind(this));
-        socket.on('client_move_fence', _(this.onMoveFence).partial(player).bind(this));
+        socket.on('disconnect', _.bind(this.disconnectPlayer, this, socket));
+        socket.on('client_move_player', _.bind(_(this.onMovePlayer).partial(player), this));
+        socket.on('client_move_fence', _.bind(_(this.onMoveFence).partial(player), this));
 
         socket.emit('server_start',
             this.players.indexOf(player),
@@ -358,4 +362,8 @@ var Room = Backbone.Model.extend({
 });
 _.extend(Room.prototype, BoardValidation.prototype);
 
-module.exports = Room;
+var isNode = typeof module !== 'undefined';
+
+if (isNode) {
+    module.exports = Room;
+}

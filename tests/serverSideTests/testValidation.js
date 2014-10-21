@@ -1,13 +1,13 @@
-var nodeunit = require('nodeunit');
+var assert = this.chai ? chai.assert : require('chai').assert;
 
-var PlayersCollection = require('../../public/models/PlayerModel.js');
-var Room = require('../../server/models/room.js');
+var PlayersCollection = this.PlayersCollection || require('../../public/models/PlayerModel.js');
+var Room = this.Room || require('../../server/models/room.js');
 
 var board;
 
-exports['test-validation'] = nodeunit.testCase({
+describe('test-validation', function () {
 
-    setUp: function (test) {
+    beforeEach(function (test) {
         /* _ _ _
          0|_|x|_|
          1|_|_|_|
@@ -32,46 +32,46 @@ exports['test-validation'] = nodeunit.testCase({
         ];
 
         test();
-    },
+    });
 
-    'getValidPositions items (top center)': function (test) {
+    it('getValidPositions items (top center)', function (test) {
         var expected = [
             { x: 0, y: 0 },
             { x: 2, y: 0 },
             { x: 1, y: 1 }
         ];
-        test.deepEqual(board.getValidPositions({x: 1, y: 0}), expected);
-        test.done();
-    },
+        assert.deepEqual(board.getValidPositions({x: 1, y: 0}), expected);
+        test();
+    });
 
-    'getValidPositions items (top left)': function (test) {
+    it('getValidPositions items (top left)', function (test) {
         var expected = [
             { x: 0, y: 1 },
             { x: 2, y: 0 }
         ];
-        test.deepEqual(board.getValidPositions({x: 0, y: 0}), expected);
-        test.done();
-    },
+        assert.deepEqual(board.getValidPositions({x: 0, y: 0}), expected);
+        test();
+    });
 
-    'getValidPositions items (top left) - empty board': function (test) {
+    it('getValidPositions items (top left) - empty board', function (test) {
         board.players = new PlayersCollection([]);
         var expected = [
             { x: 1, y: 0 },
             { x: 0, y: 1 }
         ];
-        test.deepEqual(board.getValidPositions({x: 0, y: 0}), expected);
-        test.done();
-    },
+        assert.deepEqual(board.getValidPositions({x: 0, y: 0}), expected);
+        test();
+    });
 
-    'getValidPositions items (center of the board)': function (test) {
+    it('getValidPositions items (center of the board)', function (test) {
         var expected = [
             { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 2, y: 0 }, { x: 2, y: 1 }
         ];
-        test.deepEqual(board.getValidPositions({x: 1, y: 1}), expected);
-        test.done();
-    },
+        assert.deepEqual(board.getValidPositions({x: 1, y: 1}), expected);
+        test();
+    });
 
-    'getValidPositions items (center of the board) - empty board': function (test) {
+    it('getValidPositions items (center of the board) - empty board', function (test) {
         board.players = new PlayersCollection([]);
         var expected = [
             { x: 0, y: 1 },
@@ -79,86 +79,86 @@ exports['test-validation'] = nodeunit.testCase({
             { x: 1, y: 0 },
             { x: 1, y: 2 }
         ];
-        test.deepEqual(board.getValidPositions({x: 1, y: 1}), expected);
-        test.done();
-    },
+        assert.deepEqual(board.getValidPositions({x: 1, y: 1}), expected);
+        test();
+    });
 
-    'doesFenceBreakPlayerPath - first player - false': function (test) {
-        test.ok(!board.doesFenceBreakPlayerPath(
+    it('doesFenceBreakPlayerPath - first player - false', function (test) {
+        assert.ok(!board.doesFenceBreakPlayerPath(
             board.players.at(0),
             board.fences.findWhere({x: 1, y: 1, type: 'H'})
         ));
 
-        test.done();
-    },
+        test();
+    });
 
-    'doesFenceBreakPlayerPath - second player - false': function (test) {
-        test.ok(!board.doesFenceBreakPlayerPath(
+    it('doesFenceBreakPlayerPath - second player - false', function (test) {
+        assert.ok(!board.doesFenceBreakPlayerPath(
             board.players.at(0),
             board.fences.findWhere({x: 1, y: 1, type: 'H'})
         ));
 
-        test.done();
-    },
+        test();
+    });
 
-    'notBreakSomePlayerPath - all players - true': function (test) {
-        test.ok(board.notBreakSomePlayerPath(
+    it('notBreakSomePlayerPath - all players - true', function (test) {
+        assert.ok(board.notBreakSomePlayerPath(
             board.fences.findWhere({x: 1, y: 1, type: 'H'})
         ));
 
-        test.done();
-    },
+        test();
+    });
 
-    'doesFenceBreakPlayerPath - first player - true': function (test) {
+    it('doesFenceBreakPlayerPath - first player - true', function (test) {
         board.fences.findWhere({x: 2, y: 1, type: 'H'}).set('state', 'busy');
 
-        test.ok(board.doesFenceBreakPlayerPath(
+        assert.ok(board.doesFenceBreakPlayerPath(
             board.players.at(0),
             board.fences.findWhere({x: 1, y: 1, type: 'H'})
         ));
 
-        test.done();
-    },
+        test();
+    });
 
-    'doesFenceBreakPlayerPath - second player - true': function (test) {
+    it('doesFenceBreakPlayerPath - second player - true', function (test) {
         board.fences.findWhere({x: 2, y: 1, type: 'H'}).set('state', 'busy');
 
-        test.ok(board.doesFenceBreakPlayerPath(
+        assert.ok(board.doesFenceBreakPlayerPath(
             board.players.at(0),
             board.fences.findWhere({x: 1, y: 1, type: 'H'})
         ));
 
-        test.done();
-    },
+        test();
+    });
 
-    'breakSomePlayerPath - all players - true': function (test) {
+    it('breakSomePlayerPath - all players - true', function (test) {
         board.fences.findWhere({x: 2, y: 1, type: 'H'}).set('state', 'busy');
 
-        test.ok(board.breakSomePlayerPath(
+        assert.ok(board.breakSomePlayerPath(
             board.fences.findWhere({x: 1, y: 1, type: 'H'})
         ));
 
-        test.done();
-    },
+        test();
+    });
 
-    'test isWallNearBorder - false': function (test) {
+    it('test isWallNearBorder - false', function (test) {
         var wall = {x: 4, y: 4, type: 'H'};
-        test.ok(!board.isWallNearBorder(wall));
+        assert.ok(!board.isWallNearBorder(wall));
 
-        test.done();
-    },
+        test();
+    });
 
-    'test isWallNearBorder - OK': function (test) {
+    it('test isWallNearBorder - OK', function (test) {
         var wall = {x: 0, y: 4, type: 'H'};
-        test.ok(board.isWallNearBorder(wall));
+        assert.ok(board.isWallNearBorder(wall));
 
-        test.done();
-    },
+        test();
+    });
 
-    'test getNearestWalls - Horizontal': function (test) {
+    it('test getNearestWalls - Horizontal', function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9 });
         var wall = {x: 4, y: 3, type: 'H'};
-        test.deepEqual(board.getNearestWalls(wall), [
+        assert.deepEqual(board.getNearestWalls(wall), [
             {x: 5, y: 3, type: 'H'},
             {x: 3, y: 3, type: 'V'},
             {x: 3, y: 4, type: 'V'},
@@ -169,13 +169,13 @@ exports['test-validation'] = nodeunit.testCase({
             {x: 2, y: 4, type: 'V'}
         ]);
 
-        test.done();
-    },
+        test();
+    });
 
-    'test getNearestWalls - Vertical': function (test) {
+    it('test getNearestWalls - Vertical', function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9 });
         var wall = {x: 1, y: 4, type: 'V'};
-        test.deepEqual(board.getNearestWalls(wall), [
+        assert.deepEqual(board.getNearestWalls(wall), [
             {x: 1, y: 5, type: 'V'},
             {x: 1, y: 3, type: 'H'},
             {x: 2, y: 3, type: 'H'},
@@ -186,26 +186,26 @@ exports['test-validation'] = nodeunit.testCase({
             {x: 2, y: 2, type: 'H'}
         ]);
 
-        test.done();
-    },
+        test();
+    });
 
-    'test hasWallsOrPawnsNear - false': function (test) {
+    it('test hasWallsOrPawnsNear - false', function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9 });
         var wall = {x: 1, y: 4, type: 'V'};
 
-        test.ok(!board.hasWallsOrPawnsNear(wall));
+        assert.ok(!board.hasWallsOrPawnsNear(wall));
 
-        test.done();
-    },
+        test();
+    });
 
-    'test hasWallsOrPawnsNear - OK': function (test) {
+    it('test hasWallsOrPawnsNear - OK', function (test) {
         board = Room.createRoom({playersCount: 2, boardSize: 9 });
         var wall = {x: 1, y: 4, type: 'V'};
 
         board.fences.findWhere({x: 1, y: 3, type: 'H'}).set('state', 'busy');
-        test.ok(board.hasWallsOrPawnsNear(wall));
+        assert.ok(board.hasWallsOrPawnsNear(wall));
 
-        test.done();
-    }
+        test();
+    });
 
 });

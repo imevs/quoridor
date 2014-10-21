@@ -1,5 +1,11 @@
+var isNode = typeof module !== 'undefined';
 
-window.TimerModel = Backbone.Model.extend({
+if (isNode) {
+    var Backbone = require('backbone');
+    var _ = require('lodash-node/underscore');
+}
+
+var TimerModel = Backbone.Model.extend({
 
     defaults: {
         playerNames: [],
@@ -39,3 +45,7 @@ window.TimerModel = Backbone.Model.extend({
     }
 
 });
+
+if (isNode) {
+    module.exports = TimerModel;
+}
