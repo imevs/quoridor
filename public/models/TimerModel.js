@@ -2,7 +2,6 @@ var isNode = typeof module !== 'undefined';
 
 if (isNode) {
     var Backbone = require('backbone');
-    var _ = require('lodash-node/underscore');
 }
 
 var TimerModel = Backbone.Model.extend({

@@ -1,5 +1,4 @@
-/* global TimerModel, BotWrapper, FencesCollection, FieldsCollection,
-PlayersCollection, GameHistoryModel, BoardValidation, BoardSocketEvents */
+/* global BotWrapper */
 var Backbone = this.Backbone || require('backbone');
 var _ = this._ || require('underscore');
 var BoardValidation = this.BoardValidation || require('./BoardValidation');
@@ -275,7 +274,8 @@ var GameHistoryModel = this.GameHistoryModel || require('./TurnModel');
                         }
                     }
                 }, me);
-                bot.trigger('server_start', botIndex, this.get('activePlayer'), turns, this.get('playersCount'));
+                bot.trigger('server_start', botIndex,
+                    this.get('activePlayer'), turns, this.get('playersCount'));
 
                 this.bots.push(bot);
             }, this);

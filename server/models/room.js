@@ -6,8 +6,7 @@ var PlayersCollection = this.PlayersCollection || require('../../public/models/P
 var BoardValidation = this.BoardValidation || require('../../public/models/BoardValidation.js');
 var History = this.GameHistoryModel || require('../../public/models/TurnModel.js');
 var uuid = this.uuid || require('node-uuid');
-
-var process = this.process || { nextTick: function (callback) {
+var proc = this.process || { nextTick: function (callback) {
         setTimeout(callback, 0);
     }};
 
@@ -275,7 +274,7 @@ var Room = Backbone.Model.extend({
     emitEventToAllPlayers: function (eventInfo, eventName) {
         var room = this;
 
-        process.nextTick(function () {
+        proc.nextTick(function () {
             console.log('room:emitEventToAllPlayers');
             room.players.each(function (player) {
                 var index = room.players.indexOf(player);
