@@ -1,10 +1,10 @@
-var _ = require('lodash-node/underscore');
-var Backbone = require('../backbone.mongoose');
-var Room = require('./room.js');
-var Bot = require('./../../public/models/Bot.js');
-var SmartBot = require('./../../public/models/SmartBot.js');
-var MegaBot = require('./../../public/models/MegaBot.js');
-var uuid = require('uuid');
+var _ = this._ || require('lodash-node/underscore');
+var Backbone = this.Backbone || require('../backbone.mongoose');
+var Room = this.Room || require('./room.js');
+var Bot = this.Bot || require('./../../public/models/Bot.js');
+var SmartBot = this.SmartBot || require('./../../public/models/SmartBot.js');
+var MegaBot = this.MegaBot || require('./../../public/models/MegaBot.js');
+var uuid = this.uuid || require('node-uuid');
 
 var Game = Backbone.Collection.extend({
     model: Room,
@@ -32,7 +32,7 @@ var Game = Backbone.Collection.extend({
         var self = this;
         self.io = io;
         io.sockets.on('connection', function (client) {
-            client.on('myconnection', _(self.addPlayer).partial(client).bind(self));
+            client.on('myconnection', _.bind(_(self.addPlayer).partial(client), self));
         });
     },
     findPlayerRoom: function (socket) {
@@ -118,4 +118,8 @@ var Game = Backbone.Collection.extend({
     }
 });
 
-module.exports = Game;
+var isNode = typeof module !== 'undefined';
+
+if (isNode) {
+    module.exports = Game;
+}

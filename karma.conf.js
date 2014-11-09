@@ -9,18 +9,24 @@ module.exports = function (config) {
 
 
         // frameworks to use
-        frameworks: ['jasmine'],
+        frameworks: ['mocha'],
 
 
         // list of files / patterns to load in the browser
         files: [
-            'tests/jstd-adapter.js',
-            'tests/TestCase.js',
-
+            'node_modules/chai/chai.js',
+            'node_modules/async/lib/async.js',
+            'node_modules/wolfy87-eventemitter/EventEmitter.js',
+            'node_modules/sinon/pkg/sinon.js',
+            'node_modules/node-uuid/uuid.js',
             'public/libs/jquery-1.10.2.js',
             'public/libs/lodash.underscore.js',
             'public/libs/backbone.js',
             'public/utils.js',
+
+            'public/models/Bot.js',
+            'public/models/SmartBot.js',
+            'public/models/MegaBot.js',
             'public/models/TimerModel.js',
             'public/models/FieldModel.js',
             'public/models/TurnModel.js',
@@ -30,7 +36,11 @@ module.exports = function (config) {
             'public/models/BoardSocketEvents.js',
             'public/models/BoardModel.js',
 
-            {pattern: 'tests/clientSideTests/test*.js'}
+            'server/models/room.js',
+            'server/models/game.js',
+
+            {pattern: 'tests/mochaTests/*.js'},
+            {pattern: 'tests/serverSideTests/*.js'}
         ],
 
 
@@ -80,6 +90,6 @@ module.exports = function (config) {
 
         // Continuous Integration mode
         // if true, it capture browsers, run tests and exit
-        singleRun: false
+        singleRun: true
     });
 };

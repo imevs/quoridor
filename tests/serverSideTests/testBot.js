@@ -1,13 +1,14 @@
-var nodeunit = require('nodeunit');
-var _ = require('underscore');
-var Bot = require('../../public/models/Bot.js');
-var gameHistory;
+var assert = this.chai ? chai.assert : require('chai').assert;
+var _ = this._ || require('underscore');
+var Bot = this.Bot || require('../../public/models/Bot.js');
 
-var bot, originSettimeout;
+describe('simple bot', function () {
 
-exports.bot = nodeunit.testCase({
+    var gameHistory;
 
-    setUp: function (test) {
+    var bot, originSettimeout;
+
+    beforeEach(function (test) {
         bot = new Bot(1);
         gameHistory = [
             {
@@ -28,43 +29,43 @@ exports.bot = nodeunit.testCase({
         };
 
         test();
-    },
+    });
 
-    tearDown: function (test) {
+    afterEach(function (test) {
         global.setTimeout = originSettimeout;
 
         test();
-    },
+    });
 
-    'create bot': function (test) {
-        test.equal(bot.id, 1);
+    it('create bot', function (test) {
+        assert.equal(bot.id, 1);
 
-        test.done();
-    },
+        test();
+    });
 
-    'start first': function (test) {
+    it('start first', function (test) {
         global.setTimeout = function () {};
 
         bot.startGame(0, 0, gameHistory, 2);
 
-        test.equal(bot.fencesRemaining, 10);
-        test.equal(bot.x, 4);
-        test.equal(bot.y, 2);
-        test.equal(bot.newPositions.length, 4);
-        test.done();
-    },
+        assert.equal(bot.fencesRemaining, 10);
+        assert.equal(bot.x, 4);
+        assert.equal(bot.y, 2);
+        assert.equal(bot.newPositions.length, 4);
+        test();
+    });
 
-    'start second': function (test) {
+    it('start second', function (test) {
         bot.onStart(1, 0, gameHistory, 2);
 
-        test.equal(bot.fencesRemaining, 10);
-        test.equal(bot.x, 5);
-        test.equal(bot.y, 1);
-        test.equal(bot.newPositions.length, 0);
-        test.done();
-    },
+        assert.equal(bot.fencesRemaining, 10);
+        assert.equal(bot.x, 5);
+        assert.equal(bot.y, 1);
+        assert.equal(bot.newPositions.length, 0);
+        test();
+    });
 
-    'start 2players game': function (test) {
+    it('start 2players game', function (test) {
         var gameHistory = [
             {
                 x: 4,
@@ -90,13 +91,13 @@ exports.bot = nodeunit.testCase({
 
         bot.onStart(1, 0, gameHistory, 2);
 
-        test.equal(bot.fencesRemaining, 10);
-        test.equal(bot.x, 3);
-        test.equal(bot.y, 2);
-        test.done();
-    },
+        assert.equal(bot.fencesRemaining, 10);
+        assert.equal(bot.x, 3);
+        assert.equal(bot.y, 2);
+        test();
+    });
 
-    'start 4players game': function (test) {
+    it('start 4players game', function (test) {
         bot = new Bot(1);
         var gameHistory = [
             {
@@ -123,50 +124,50 @@ exports.bot = nodeunit.testCase({
 
         bot.onStart(3, 0, gameHistory, 4);
 
-        test.equal(bot.fencesRemaining, 5);
-        test.equal(bot.x, 3);
-        test.equal(bot.y, 2);
-        test.done();
-    },
+        assert.equal(bot.fencesRemaining, 5);
+        assert.equal(bot.x, 3);
+        assert.equal(bot.y, 2);
+        test();
+    });
 
-    'first:getJumpPositions': function (test) {
+    it('first:getJumpPositions', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
 
-        test.deepEqual(bot.getJumpPositions(), [
+        assert.deepEqual(bot.getJumpPositions(), [
             { x: 5, y: 2 },
             { x: 3, y: 2 },
             { x: 4, y: 3 },
             { x: 4, y: 1 }
         ]);
-        test.done();
-    },
+        test();
+    });
 
-    'second:getJumpPositions': function (test) {
+    it('second:getJumpPositions', function (test) {
         bot.onStart(1, 0, gameHistory, 2);
 
-        test.deepEqual(bot.getJumpPositions(), [
+        assert.deepEqual(bot.getJumpPositions(), [
             { x: 6, y: 1 },
             { x: 4, y: 1 },
             { x: 5, y: 2 },
             { x: 5, y: 0 }
         ]);
-        test.done();
-    },
+        test();
+    });
 
-    'getJumpPositions': function (test) {
+    it('getJumpPositions', function (test) {
         bot.onStart(1, 0, gameHistory, 2);
 
-        test.equal(bot.getJumpPositions().length, 4);
-        test.deepEqual(bot.getJumpPositions(), [
+        assert.equal(bot.getJumpPositions().length, 4);
+        assert.deepEqual(bot.getJumpPositions(), [
             { x: 6, y: 1 },
             { x: 4, y: 1 },
             { x: 5, y: 2 },
             { x: 5, y: 0 }
         ]);
-        test.done();
-    },
+        test();
+    });
 
-    'test getPossiblePosition': function (test) {
+    it('test getPossiblePosition', function (test) {
         bot.newPositions = [
             { x: 6, y: 1 },
             { x: 4, y: 1 },
@@ -174,77 +175,77 @@ exports.bot = nodeunit.testCase({
             { x: 5, y: 0 }
         ];
         var result = bot.getPossiblePosition();
-        test.ok(!_().contains(result));
-        test.equal(bot.newPositions.length, 3);
-        test.done();
-    },
+        assert.ok(!_().contains(result));
+        assert.equal(bot.newPositions.length, 3);
+        test();
+    });
 
-    'canMovePlayer - true': function (test) {
+    it('canMovePlayer - true', function (test) {
         bot.newPositions = [
             { x: 6, y: 1 },
             { x: 4, y: 1 },
             { x: 5, y: 2 },
             { x: 5, y: 0 }
         ];
-        test.ok(bot.canMovePlayer());
+        assert.ok(bot.canMovePlayer());
 
-        test.done();
-    },
+        test();
+    });
 
-    'canMovePlayer - false': function (test) {
+    it('canMovePlayer - false', function (test) {
         bot.newPositions = [];
-        test.ok(!bot.canMovePlayer());
+        assert.ok(!bot.canMovePlayer());
 
-        test.done();
-    },
+        test();
+    });
 
-    'can`t Move Player after getPossiblePosition': function (test) {
+    it('can`t Move Player after getPossiblePosition', function (test) {
         bot.newPositions = [
             { x: 6, y: 1 }
         ];
 
-        test.ok(bot.canMovePlayer());
+        assert.ok(bot.canMovePlayer());
         bot.getPossiblePosition();
-        test.ok(!bot.canMovePlayer());
+        assert.ok(!bot.canMovePlayer());
 
-        test.done();
-    },
+        test();
+    });
 
-    'canMoveFence - ok': function (test) {
+    it('canMoveFence - ok', function (test) {
         bot.onStart(1, 0, gameHistory, 2);
-        test.ok(bot.canMoveFence());
-        test.done();
-    },
+        assert.ok(bot.canMoveFence());
+        test();
+    });
 
-    'canMoveFence - notOk': function (test) {
+    it('canMoveFence - notOk', function (test) {
         bot.onStart(1, 0, gameHistory, 2);
         bot.fencesRemaining = 0;
-        test.ok(!bot.canMoveFence());
-        test.done();
-    },
+        assert.ok(!bot.canMoveFence());
+        test();
+    });
 
-    'isCurrent - ok': function (test) {
+    it('isCurrent - ok', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
-        test.ok(!bot.isPlayerCanMakeTurn(0));
-        test.ok(bot.isPlayerCanMakeTurn(1));
-        test.done();
-    },
+        assert.ok(!bot.isPlayerCanMakeTurn(0));
+        assert.ok(bot.isPlayerCanMakeTurn(1));
+        test();
+    });
 
-    'isCurrent - not ok': function (test) {
+    it('isCurrent - not ok', function (test) {
         bot.onStart(1, 0, gameHistory, 2);
-        test.ok(bot.isPlayerCanMakeTurn(0));
-        test.ok(!bot.isPlayerCanMakeTurn(1));
-        test.done();
-    },
+        assert.ok(bot.isPlayerCanMakeTurn(0));
+        assert.ok(!bot.isPlayerCanMakeTurn(1));
+        test();
+    });
 
-    'getNextActivePlayer - two players game': function (test) {
+    it('getNextActivePlayer - two players game', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
-        test.equal(bot.getNextActivePlayer(0), 1);
-        test.equal(bot.getNextActivePlayer(1), 0);
-        test.done();
-    },
+        assert.equal(bot.getNextActivePlayer(0), 1);
+        assert.equal(bot.getNextActivePlayer(1), 0);
+        test();
+    });
 
-    'getNextActivePlayer - four players game': function (test) {
+    it('getNextActivePlayer - four players game', function (test) {
         bot = new Bot(1);
         var gameHistory = [
             {
@@ -270,48 +271,48 @@ exports.bot = nodeunit.testCase({
         ];
 
         bot.onStart(0, 1, gameHistory, 4);
-        test.equal(bot.getNextActivePlayer(0), 1);
-        test.equal(bot.getNextActivePlayer(1), 2);
-        test.equal(bot.getNextActivePlayer(2), 3);
-        test.equal(bot.getNextActivePlayer(3), 0);
-        test.done();
-    },
+        assert.equal(bot.getNextActivePlayer(0), 1);
+        assert.equal(bot.getNextActivePlayer(1), 2);
+        assert.equal(bot.getNextActivePlayer(2), 3);
+        assert.equal(bot.getNextActivePlayer(3), 0);
+        test();
+    });
 
-    'movePlayer if no fences': function (test) {
+    it('movePlayer if no fences', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
         bot.fencesRemaining = 0;
 
         bot.on('client_move_player', function (params) {
-            test.ok(!!params);
-            test.equal(bot.attemptsCount, 1);
-            test.done();
+            assert.ok(!!params);
+            assert.equal(bot.attemptsCount, 1);
+            test();
         });
 
         bot.onMovePlayer({
             playerIndex: 1
         });
-    },
+    });
 
-    'test moveFence': function (test) {
+    it('test moveFence', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return [];
         };
-        test.ok(!bot.canMovePlayer());
-        test.ok(bot.canMoveFence());
+        assert.ok(!bot.canMovePlayer());
+        assert.ok(bot.canMoveFence());
 
         bot.on('client_move_fence', function (params) {
-            test.ok(!!params);
-            test.equal(bot.attemptsCount, 1);
-            test.done();
+            assert.ok(!!params);
+            assert.equal(bot.attemptsCount, 1);
+            test();
         });
 
         bot.onMovePlayer({
             playerIndex: 1
         });
-    },
+    });
 
-    'attemptsCount - 1': function (test) {
+    it('attemptsCount - 1', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return [];
@@ -319,11 +320,11 @@ exports.bot = nodeunit.testCase({
 
         bot.onMovePlayer({playerIndex: 1});
 
-        test.equal(bot.attemptsCount, 1);
-        test.done();
-    },
+        assert.equal(bot.attemptsCount, 1);
+        test();
+    });
 
-    'attemptsCount - 2': function (test) {
+    it('attemptsCount - 2', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return [];
@@ -332,12 +333,12 @@ exports.bot = nodeunit.testCase({
         bot.onMovePlayer({playerIndex: 1});
         bot.makeTurn();
 
-        test.equal(bot.attemptsCount, 2);
+        assert.equal(bot.attemptsCount, 2);
 
-        test.done();
-    },
+        test();
+    });
 
-    'check fences count after start': function (test) {
+    it('check fences count after start', function (test) {
         var gameHistory = [
             {
                 x: 4,
@@ -372,17 +373,17 @@ exports.bot = nodeunit.testCase({
             }
         ];
         bot.onStart(0, 1, gameHistory, 2);
-        test.equals(bot.fencesRemaining, 8);
+        assert.equal(bot.fencesRemaining, 8);
 
         bot.onStart(1, 0, gameHistory, 2);
-        test.equals(bot.fencesRemaining, 9);
+        assert.equal(bot.fencesRemaining, 9);
 
-        test.equals(bot.fencesPositions.length, 0);
+        assert.equal(bot.fencesPositions.length, 0);
 
-        test.done();
-    },
+        test();
+    });
 
-    'test fencesPositions': function (test) {
+    it('test fencesPositions', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return []; // no possible player positions
@@ -391,12 +392,12 @@ exports.bot = nodeunit.testCase({
         bot.onMovePlayer({playerIndex: 1});
         bot.onMovePlayer({playerIndex: 1});
 
-        test.equals(bot.fencesPositions.length, 2);
+        assert.equal(bot.fencesPositions.length, 2);
 
-        test.done();
-    },
+        test();
+    });
 
-    'test fencesPositions 1': function (test) {
+    it('test fencesPositions 1', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return []; // no possible player positions
@@ -405,12 +406,12 @@ exports.bot = nodeunit.testCase({
         bot.onMovePlayer({playerIndex: 0});
         bot.onMovePlayer({playerIndex: 1});
 
-        test.equals(bot.fencesPositions.length, 1);
+        assert.equal(bot.fencesPositions.length, 1);
 
-        test.done();
-    },
+        test();
+    });
 
-    'test fencesPositions 2': function (test) {
+    it('test fencesPositions 2', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return []; // no possible player positions
@@ -419,12 +420,12 @@ exports.bot = nodeunit.testCase({
         bot.onMoveFence({playerIndex: 1});
         bot.onMoveFence({playerIndex: 1});
 
-        test.equals(bot.fencesPositions.length, 2);
+        assert.equal(bot.fencesPositions.length, 2);
 
-        test.done();
-    },
+        test();
+    });
 
-    'test fencesPositions 3': function (test) {
+    it('test fencesPositions 3', function (test) {
         bot.onStart(0, 1, gameHistory, 2);
         bot.getJumpPositions = function () {
             return []; // no possible player positions
@@ -433,9 +434,9 @@ exports.bot = nodeunit.testCase({
         bot.onMoveFence({playerIndex: 0});
         bot.onMoveFence({playerIndex: 1});
 
-        test.equals(bot.fencesPositions.length, 1);
+        assert.equal(bot.fencesPositions.length, 1);
 
-        test.done();
-    }
+        test();
+    });
 
 });

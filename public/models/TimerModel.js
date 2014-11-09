@@ -1,5 +1,10 @@
+var isNode = typeof module !== 'undefined';
 
-window.TimerModel = Backbone.Model.extend({
+if (isNode) {
+    var Backbone = require('backbone');
+}
+
+var TimerModel = Backbone.Model.extend({
 
     defaults: {
         playerNames: [],
@@ -39,3 +44,7 @@ window.TimerModel = Backbone.Model.extend({
     }
 
 });
+
+if (isNode) {
+    module.exports = TimerModel;
+}
