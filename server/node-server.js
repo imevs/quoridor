@@ -2,10 +2,15 @@ var express = require('express');
 var routes = require('./routes');
 var http = require('http');
 var path = require('path');
-var exphbs  = require('express3-handlebars');
+var exphbs  = require('express-handlebars');
 var Backbone = require('./backbone.mongoose');
 var Game = require('./models/game');
 var io = require('socket.io');
+var bodyParser = require('body-parser');
+var static = require('serve-static');
+var favicon = require('serve-favicon');
+var methodOverride = require('method-override');
+var errorHandler = require('express-error-handler');
 
 var app = express();
 
@@ -17,26 +22,28 @@ app.engine('handlebars', exphbs({
     defaultLayout: 'main'
 }));
 app.set('view engine', 'handlebars');
-app.use(express.favicon());
+app.use(favicon(path.join(__dirname, '../public/img', 'favicon.ico')));
 //app.use(express.logger('dev'));
-app.use(express.bodyParser());
-app.use(express.methodOverride());
-app.use(app.router);
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(methodOverride());
+
 if ('development' === app.get('env')) {
-    app.use(express.static(path.join(__dirname, '/../public')));
+    app.use(static(path.join(__dirname, '/../public')));
 }
 if ('production' === app.get('env')) {
-    app.use(express.static(path.join(__dirname, '/../build')));
+    app.use(static(path.join(__dirname, '/../build')));
 }
 
-app.use(function (err, req, res) {
-    res.status(err.status || 500);
-    console.log('Internal error(%d): %s', res.statusCode, err.message);
-    res.send({ error: err.message });
-});
+// app.use(function (err, req, res) {
+//     // res.status(err.status || 500);
+//     console.log('Internal error,', res.statusCode, err.message);
+//     console.log(Object.keys(err));
+//     // res.send({ error: err.message });
+// });
+
 // development only
 if ('development' === app.get('env')) {
-    app.use(express.errorHandler());
+    app.use(errorHandler());
 }
 
 routes.init(app);
