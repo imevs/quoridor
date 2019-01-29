@@ -41,7 +41,7 @@
     "load-grunt-tasks": "^4.0.0",
     "mocha": "^5.2.0",
     "nodeunit": "~0.8.2",
-    "phantomjs": "~0.2.6",
+    "phantomjs-prebuilt": "^2.1.16",
     "sinon": "*"
   },
   "analyze": false,
