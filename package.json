@@ -24,7 +24,7 @@
     "node-uuid": "~1.4.1",
     "serve-favicon": "^2.5.0",
     "serve-static": "^1.13.2",
-    "socket.io": "^2.2.0",
+    "socket.io": "~0.9",
     "underscore": "*",
     "uuid": "~1.4",
     "wolfy87-eventemitter": "~4.2.9"
