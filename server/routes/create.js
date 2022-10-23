@@ -12,9 +12,5 @@ module.exports = function (req, res) {
     }
 
     var room = global.game.createNewRoom(playersCount, playersParams);
-    room.save({}, {
-        success: function () {
-            res.redirect('/play/game/' + room.get('id'));
-        }
-    });
+    res.redirect('/play/game/' + room.get('id'));
 };

@@ -516,7 +516,7 @@ describe('test-game', function () {
         test();
     });
 
-    it('switch currentplayer by timeout', function (test) {
+    it.skip('switch currentplayer by timeout', function (test) {
         var room1 = game.createNewRoom(2);
         var guid1 = room1.players.at(0).get('url');
         var guid2 = room1.players.at(1).get('url');
@@ -543,7 +543,7 @@ describe('test-game', function () {
         test();
     });
 
-    it('parse empty', function (test) {
+    it.skip('parse empty', function (test) {
         var room1 = game.createNewRoom(2);
         var res = room1.parse();
 

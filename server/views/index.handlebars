@@ -1,6 +1,12 @@
+{{#if games.length}}
+{{else}}
+    <h1>Create your game board: </h1>
+    <hr>
+{{/if}}
+
 <div class="btn-group">
     <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-        Local game
+        Offline game (state is not stored on server)
         <span class="caret"></span>
     </button>
     <ul class="dropdown-menu">
@@ -17,21 +23,7 @@
 </div>
 <div class="btn-group">
     <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-        Custom game
-        <span class="caret"></span>
-    </button>
-    <ul class="dropdown-menu">
-        <li>
-            <a href="/new/playersCount/2">2 players</a>
-        </li>
-        <li>
-            <a href="/new/playersCount/4">4 players</a>
-        </li>
-    </ul>
-</div>
-<div class="btn-group">
-    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-        Multiplayer game
+        Multiplayer game with another human
         <span class="caret"></span>
     </button>
     <ul class="dropdown-menu">
@@ -40,6 +32,20 @@
         </li>
         <li>
             <a href="/create/playersCount/4">4 players</a>
+        </li>
+    </ul>
+</div>
+<div class="btn-group">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+        Custom game (select human or bot for each player)
+        <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu">
+        <li>
+            <a href="/new/playersCount/2">2 players</a>
+        </li>
+        <li>
+            <a href="/new/playersCount/4">4 players</a>
         </li>
     </ul>
 </div>
@@ -58,7 +64,9 @@
     </ul>
 </div>
 
-<h1>Active games</h1>
+{{#if games.length}}
+    <h1>Active games</h1>
+{{/if}}
 
 <div id="games">
     {{#each games}}

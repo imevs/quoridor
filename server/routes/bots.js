@@ -4,11 +4,5 @@ module.exports = function (req, res) {
 
     var playerTypes = ['smartbot', 'smartbot', 'smartbot', 'smartbot'];
     var room = global.game.createNewRoom(playersCount, playerTypes);
-
-    room.save({}, {
-        success: function () {
-            res.redirect('/play/game/' +
-                room.get('id'));
-        }
-    });
+    res.redirect('/play/game/' + room.get('id'));
 };

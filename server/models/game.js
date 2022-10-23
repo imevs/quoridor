@@ -1,5 +1,5 @@
 var _ = this._ || require('lodash-node/underscore');
-var Backbone = this.Backbone || require('../backbone.mongoose');
+var Backbone = this.Backbone || require('backbone');
 var Room = this.Room || require('./room.js');
 var Bot = this.Bot || require('./../../public/models/Bot.js');
 var SmartBot = this.SmartBot || require('./../../public/models/SmartBot.js');
@@ -8,25 +8,7 @@ var uuid = this.uuid || require('node-uuid');
 
 var Game = Backbone.Collection.extend({
     model: Room,
-    mongooseModel: 'Room',
-
     initialize: function () {
-/*
-        var game = this;
-        this.fetch({
-            success: function () {
-                game.each(function (room) {
-                    room.players.each(function (player) {
-                        player.reset();
-                        if (player.isBot()) {
-                            var bot = new Bot(player.get('url'));
-                            room.addPlayer(bot);
-                        }
-                    });
-                });
-            }
-        });
-*/
     },
     start: function (io) {
         var self = this;

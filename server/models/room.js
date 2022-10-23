@@ -1,5 +1,5 @@
 var _ = this._ || require('lodash-node/underscore');
-var Backbone = this.Backbone || require('../backbone.mongoose');
+var Backbone = this.Backbone || require('backbone');
 
 var FencesCollection = this.FencesCollection || require('../../public/models/FenceModel.js');
 var PlayersCollection = this.PlayersCollection || require('../../public/models/PlayerModel.js');
@@ -27,8 +27,6 @@ var Room = Backbone.Model.extend({
         state       : ''
     },
 
-    mongooseModel: 'Room',
-
     parse: function (data) {
         var room = this;
         var doc = data && data._doc;
@@ -50,7 +48,7 @@ var Room = Backbone.Model.extend({
             });
             doc.fences = room.history.getFencesPositions();
         } else {
-            console.log('parse error');
+            console.log('parse error', doc.history);
         }
 
         var hasPlayers = doc && doc.players && doc.players.length;
@@ -191,9 +189,7 @@ var Room = Backbone.Model.extend({
     switchActivePlayer: function (callback) {
         console.log('switchActivePlayer', this.get('activePlayer'));
         this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
-        this.save({}, {
-            success: callback
-        });
+        callback();
         console.log('switchActivePlayer', this.get('activePlayer'));
         console.log('----------------');
     },
