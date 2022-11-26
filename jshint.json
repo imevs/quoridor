@@ -48,7 +48,7 @@
     "maxlen":       110,
     "passfail":     false,
     "latedef":      true,
-    "quotmark":     "single",
+    "esversion":    "7",
     "maxstatements":30,
     "maxcomplexity":6,
     "maxdepth":     3,

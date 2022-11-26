@@ -24,14 +24,6 @@ var GameHistoryModel = this.GameHistoryModel || require('./TurnModel');
             activePlayer    : null
         },
 
-        resetModels: function () {
-            this.fences.each(function (fence) {
-                fence.set('state', '');
-            });
-            this.history.get('turns').reset();
-            this.players.initPlayerPositions();
-            this.run();
-        },
         createModels: function () {
             this.fences = new FencesCollection();
             this.fields = new FieldsCollection();
@@ -72,9 +64,9 @@ var GameHistoryModel = this.GameHistoryModel || require('./TurnModel');
         makeTurn: function () {
             /* jshint maxcomplexity:9 */
             var me = this;
-            if (!(me.isPlayerMoved || me.isFenceMoved)) {
-                return;
-            }
+            // if (!(me.isPlayerMoved || me.isFenceMoved)) {
+            //     return;
+            // }
             var active = me.getActivePlayer();
             var preBusy = me.fences.getMovedFence();
             var index = me.get('activePlayer');
@@ -102,13 +94,14 @@ var GameHistoryModel = this.GameHistoryModel || require('./TurnModel');
                 player.trigger('resetstate');
             });
             me.getActivePlayer().trigger('setcurrent');
-            if (!me.isOnlineGame()) {
-                if (!me.getNextActiveBot(me.get('activePlayer'))) {
+
+            // if (!me.isOnlineGame()) {
+            //     if (!me.getNextActiveBot(me.get('activePlayer'))) {
                     /**
                      * if local mode game then automatic change currentPlayer
                      */
-                    me.set('currentPlayer', me.get('activePlayer'));
-                }
+                    // me.set('currentPlayer', me.get('activePlayer'));
+                // }
 
                 if (me.isFenceMoved) {
                     me.emitEventToBots('server_move_fence', {
@@ -125,7 +118,7 @@ var GameHistoryModel = this.GameHistoryModel || require('./TurnModel');
                         playerIndex: index
                     });
                 }
-            }
+            // }
 
             me.isPlayerMoved = false;
             me.isFenceMoved = false;
@@ -200,7 +193,7 @@ var GameHistoryModel = this.GameHistoryModel || require('./TurnModel');
         initEvents: function () {
             var me = this;
 
-            this.on('maketurn', this.makeTurn);
+            me.on('maketurn', this.makeTurn);
 
             this.fields.on('moveplayer', me.onMovePlayer, this);
             this.fields.on('beforeselectfield', function (x, y) {
@@ -211,17 +204,15 @@ var GameHistoryModel = this.GameHistoryModel || require('./TurnModel');
             this.on('change:activePlayer', this.updateInfo, this);
             this.on('change:currentPlayer', this.updateInfo, this);
 
-            if (!this.isOnlineGame()) {
-                this.players.on('win', function (player) {
-                    var names = me.players.getPlayerNames();
-                    var message = names[player] + ' player ' + 'is winner. Do you want to start new game?';
-                    if (window.confirm(message)) {
-                        document.location.reload();
-                    } else {
-                        me.stop();
-                    }
-                });
-            }
+            this.players.on('win', function (player) {
+                var names = me.players.getPlayerNames();
+                var message = names[player] + ' player ' + 'is winner. Do you want to start new game?';
+                if (window.confirm(message)) {
+                    document.location.reload();
+                } else {
+                    me.stop();
+                }
+            });
             this.fences.on({
                 'selected'                     : _.bind(me.onFenceSelected, me),
                 'highlight_current_and_sibling': function (model) {
@@ -241,7 +232,9 @@ var GameHistoryModel = this.GameHistoryModel || require('./TurnModel');
                 activePlayer: activePlayer,
                 currentPlayer: _.isUndefined(currentPlayer) ? activePlayer : currentPlayer
             });
-            this.history.initPlayers();
+            if (!this.isOnlineGame()) {
+                this.history.initPlayers();
+            }
             this.connectBots();
         },
         stop: function () {
@@ -289,7 +282,7 @@ var GameHistoryModel = this.GameHistoryModel || require('./TurnModel');
             this.initEvents();
             this.initModels();
             if (this.isOnlineGame()) {
-                this.socketEvents();
+                this.remoteEvents(this.get('currentPlayer'));
             } else {
                 this.on('confirmturn', this.makeTurn);
                 this.run(0, 0);

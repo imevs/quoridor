@@ -28,17 +28,9 @@ var MegaBot = SmartBot.extend({
         });
     },
 
-    initOthersPlayers: function (board) {
-        this.othersPlayers = _(board.players.models).reject(function (v) {
-            return v.get('url') === this.playerId;
-        }, this);
-    },
-
     getBestTurn: function (callback) {
-        //console.time('getBestTurn');
         var board = this.board.copy();
         var player = board.players.at(this.currentPlayer);
-        this.initOthersPlayers(board);
         var moves = this.getPossibleMoves(board, player);
         async.waterfall([
             function (callback) {
@@ -59,7 +51,6 @@ var MegaBot = SmartBot.extend({
             var minRatedMoves = filtered.sort(function (a, b) {
                 return types[b.type] - types[a.type];
             });
-            //console.timeEnd('getBestTurn');
             callback(minRatedMoves[_.random(0, minRatedMoves.length - 1)]);
         });
     },

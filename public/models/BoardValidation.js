@@ -338,10 +338,6 @@ BoardValidation.prototype = {
         }, this);
     },
 
-    getNearestFields: function () {
-        return [];
-    },
-
     breakSomePlayerPath: function (wall) {
         var me = this;
         return this.hasWallsOrPawnsNear(wall.pick('x', 'y', 'type')) &&
