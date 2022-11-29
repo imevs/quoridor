@@ -144,7 +144,7 @@ var GameHistoryModel = this.GameHistoryModel || require('./TurnModel');
         },
 
         isOnlineGame: function () {
-            return this.get('playerId') || this.get('roomId');
+            return this.get('roomId');
         },
 
         onMovePlayer: function (x, y) {

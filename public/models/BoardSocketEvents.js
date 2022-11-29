@@ -8,23 +8,42 @@ var boardState = {
 
 var SERVICE_PATH = "https://api.jsonbin.io/v3";
 var accessToken = "$2b$10$YE9Sljt4vjsX7w1GzojOVOkibhD.DRrH7eAGncSpfhmStD6Dp/kPO";
-const gameId = "636975d12b3499323bf8cea7";
 
 var saveData = (path, resourceID, data) => {
     const req = new XMLHttpRequest();
 
-    req.onreadystatechange = () => {
-        if (req.readyState === XMLHttpRequest.DONE) {
-            console.log("Signalling data saved");
-        }
-    };
-
-    req.open("PUT", `${path}/b/${resourceID}`, true);
+    if (resourceID) {
+        req.open("PUT", `${path}/b/${resourceID}`, true);
+        req.onreadystatechange = () => {
+            if (req.readyState === XMLHttpRequest.DONE) {
+                console.log("Signalling data saved");
+            }
+        };
+    } else {
+        req.open("POST", `${path}/b`, true);
+    }
     req.setRequestHeader("Content-type", "application/json");
     req.setRequestHeader("X-Access-Key", accessToken);
     req.setRequestHeader("X-Bin-Private", "true");
-    // req.setRequestHeader("X-Bin-Name", resourceID); // uncomment for creating data
     req.send(JSON.stringify(data));
+    return req;
+};
+
+var createData = (path, data) => {
+    const req = saveData(path, "", data);
+
+    return new Promise((resolve, reject) => {
+        req.onreadystatechange = () => {
+            if (req.readyState === XMLHttpRequest.DONE) {
+                console.log("Signalling data saved", req);
+                try {
+                    resolve(JSON.parse(req.responseText).metadata.id);
+                } catch (ex) {
+                    reject(ex);
+                }
+            }
+        };
+    });
 };
 
 const fetchGameState = (path, resourceID) => {
@@ -34,37 +53,46 @@ const fetchGameState = (path, resourceID) => {
     ).then(r => r.json());
 };
 
-
 BoardSocketEvents.prototype = {
 
     remoteEvents: function (currentPlayer) {
         const me = this;
-        this.on('confirmturn', this._onTurnSendSocketEvent);
-        this.on('change:activePlayer', this.updateActivePlayer, this);
+        const gameId = me.get("roomId");
 
-        setInterval(() => {
-            fetchGameState(SERVICE_PATH, gameId).then(data => {
-                if (data.history && data.history.length && data.history.length !== me.history.get('turns').length) {
-                    const lastMove = data.history[data.history.length - 1];
-                    if (lastMove.t === "p") {
-                        this.onSocketMovePlayer(lastMove);
-                    } else {
-                        this.onSocketMoveFence(lastMove);
+        if (gameId) {
+            this.on('confirmturn', this._onTurnSendSocketEvent);
+            this.on('change:activePlayer', this.updateActivePlayer, this);
+
+            setInterval(() => {
+                fetchGameState(SERVICE_PATH, gameId).then(data => {
+                    if (data.history && data.history.length && data.history.length !== me.history.get('turns').length) {
+                        const lastMove = data.history[data.history.length - 1];
+                        if (lastMove.t === "p") {
+                            this.onSocketMovePlayer(lastMove);
+                        } else {
+                            this.onSocketMoveFence(lastMove);
+                        }
                     }
-                }
-            });
-        }, 5000);
+                });
+            }, 5000);
 
-        fetchGameState(SERVICE_PATH, gameId).then(data => {
-            if (data.history === undefined) {
-                saveData(SERVICE_PATH, gameId, boardState);
-            } else {
-                boardState = data;
-            }
-            this.onStart(currentPlayer, boardState.activePlayer, boardState.history);
-        });
+            fetchGameState(SERVICE_PATH, gameId).then(data => {
+                if (data.history === undefined) {
+                    saveData(SERVICE_PATH, gameId, boardState);
+                } else {
+                    boardState = data;
+                }
+                this.onStart(currentPlayer, boardState.activePlayer, boardState.history);
+            });
+        } else {
+            createData(SERVICE_PATH, boardState).then(id => {
+                this.set("roomId", id);
+                document.location = location.href + "&roomId=" + id;
+            });
+        }
     },
     updateActivePlayer() {
+        const gameId = this.get("roomId");
         boardState.activePlayer = this.get("activePlayer");
         saveData(SERVICE_PATH, gameId, boardState);
     },
@@ -86,6 +114,7 @@ BoardSocketEvents.prototype = {
         }
         boardState.history = this.history.get('turns').toJSON();
         boardState.history.push(eventInfo);
+        const gameId = this.get("roomId");
         saveData(SERVICE_PATH, gameId, boardState);
     },
     onSocketMoveFence: function (pos) {
