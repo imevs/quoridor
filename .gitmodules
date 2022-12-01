@@ -1,3 +1,0 @@
-[submodule "resources/js-test-driver-phantomjs"]
-	path = resources/js-test-driver-phantomjs
-	url = https://github.com/imevs/js-test-driver-phantomjs.git
