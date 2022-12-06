@@ -1,19 +1,24 @@
-var isNode = typeof module !== 'undefined';
+import _ from "underscore";
+import { SmartBot } from "public/models/SmartBot";
+import { iter } from "public/models/utils";
+import { PlayerModel } from "public/models/PlayerModel";
+import async from "async";
+import { BoardValidation } from "public/models/BoardValidation";
+import { Position } from "public/models/BackboneModel";
 
-if (isNode) {
-    var _ = require('lodash-node/underscore');
-    var SmartBot = require('./SmartBot.js');
-    var async = require('async');
-}
+type Move = Position & { type: "H" | "V" | "P"; };
+type Rate = Move & { rate: number; };
 
-var MegaBot = SmartBot.extend({
+type CallArgs = {moves: Move[], player: PlayerModel, board: BoardValidation, rates: Rate[]};
+type Callback = (err: string | null, data: CallArgs) => void;
+export class MegaBot extends SmartBot {
 
-    possibleWallsMoves: false,
-    satisfiedRate: 1,
+    possibleWallsMoves: Move[] = [];
+    satisfiedRate = 1;
 
-    doTurn     : function () {
+    public doTurn() {
         var self = this;
-        self.getBestTurn(function (turn) {
+        self.getBestTurn(turn => {
             var eventInfo = {
                 x: turn.x,
                 y: turn.y,
@@ -26,38 +31,38 @@ var MegaBot = SmartBot.extend({
                 self.trigger('client_move_fence', eventInfo);
             }
         });
-    },
+    }
 
-    getBestTurn: function (callback) {
+    public getBestTurn(callback: (res: Move) => void) {
         var board = this.board.copy();
         var player = board.players.at(this.currentPlayer);
         var moves = this.getPossibleMoves(board, player);
-        async.waterfall([
-            function (callback) {
-                callback(null, moves, player, board, []);
+        async.waterfall<CallArgs, string | null>([
+            (callback1: Callback) => {
+                callback1(null, { moves: moves, player: player, board: board, rates: [] });
             },
-            _(this.getRatesForPlayersMoves).bind(this),
-            _(this.getRatesForWallsMoves).bind(this)
-        ], function (moves, player, board, rates) {
-            rates = _(rates).sort(function (move1, move2) {
+            this.getRatesForPlayersMoves,
+            this.getRatesForWallsMoves,
+        ], (_err, result) => {
+            const rates = result?.rates.sort((move1, move2) => {
                 return move1.rate - move2.rate;
             });
 
             var minRate = _(_(rates).pluck('rate')).min();
             var types = {'H': 0, 'V': 1, 'P': 2 };
-            var filtered = _(rates).filter(function (move) {
+            var filtered = _(rates).filter(move => {
                 return move.rate === minRate;
             });
-            var minRatedMoves = filtered.sort(function (a, b) {
+            var minRatedMoves = filtered.sort((a, b) => {
                 return types[b.type] - types[a.type];
             });
-            callback(minRatedMoves[_.random(0, minRatedMoves.length - 1)]);
+            callback(minRatedMoves[_.random(0, minRatedMoves.length - 1)]!);
         });
-    },
+    }
 
-    getRatesForPlayersMoves: function (moves, player, board, rates, callback) {
-        var result = [];
-        _(moves).each(function (move) {
+    public getRatesForPlayersMoves = ({ moves, player, board, rates }: CallArgs, callback: Callback) => {
+        var result: Rate[] = [];
+        _(moves).each(move => {
             if (move.type === 'P') {
                 var prevPosition = player.pick('x', 'y', 'prev_x', 'prev_y');
                 player.set({
@@ -66,24 +71,23 @@ var MegaBot = SmartBot.extend({
                     prev_x: move.x,
                     prev_y: move.y
                 });
-                move.rate = this.calcHeuristic(player, board);
                 player.set(prevPosition);
-                result.push(move);
+                result.push({ ...move, rate: this.calcHeuristic(player, board) });
             }
-        }, this);
-        callback(null, moves, player, board, rates.concat(result));
-    },
+        });
+        callback(null, { moves: moves, player: player, board: board, rates: rates.concat(result) });
+    }
 
-    getRatesForWallsMoves: function (moves, player, board, rates, callback) {
+    public getRatesForWallsMoves = ({ moves, player, board, rates }: CallArgs, callback: Callback) => {
         var self = this;
-        var satisfiedCount = 0, result = [];
+        var satisfiedCount = 0, result: Rate[] = [];
 
         if (!this.canMoveFence()) {
-            callback(moves, player, board, rates.concat(result));
+            callback(null, { moves, player, board, rates });
             return;
         }
-        async.some(moves, function (item, callback) {
-            var move = {x: item.x, y: item.y, type: item.type };
+        async.some(moves, (item: Move, callback: (res: boolean) => void) => {
+            var move = {x: item.x, y: item.y, type: item.type, rate: 0 };
             if (move.type === 'P') {
                 callback(false);
                 return false;
@@ -113,34 +117,34 @@ var MegaBot = SmartBot.extend({
             }
             callback(satisfiedCount >= 2);
             return satisfiedCount >= 2;
-        }, function () {
+        }, () => {
             self.satisfiedRate = 0;
-            callback(moves, player, board, rates.concat(result));
+            callback(null, { moves, player, board, rates: rates.concat(result) });
         });
-    },
+    }
 
-    calcHeuristic: function (player, board) {
-        var otherPlayersPaths = [];
+    public calcHeuristic(_player: PlayerModel, board: BoardValidation) {
+        var otherPlayersPaths: number[] = [];
         var currentPlayerPathLength = 0;
-        board.players.each(function (player, index) {
+        board.players.each((player, index) => {
             if (this.currentPlayer === index) {
                 currentPlayerPathLength = this.getCountStepsToGoal(player, board) + 1;
             } else {
                 otherPlayersPaths.push(this.getCountStepsToGoal(player, board));
             }
-        }, this);
+        });
         var othersMinPathLength = _(otherPlayersPaths).min();
         return currentPlayerPathLength - othersMinPathLength;
-    },
+    }
 
-    getCountStepsToGoal: function (player, board) {
+    public getCountStepsToGoal(player: PlayerModel, board: BoardValidation): number {
         var indexPlayer = board.players.indexOf(player);
 
         /**
          * leave out of account another players positions
          */
-        var prevPositions = [];
-        board.players.each(function (p, i) {
+        var prevPositions: {}[] = [];
+        board.players.each((p, i) => {
             prevPositions.push(p.pick('x', 'y', 'prev_x', 'prev_y'));
             if (i !== indexPlayer) {
                 p.set({x: -1, y: -1, prev_x: -1, prev_y: -1});
@@ -149,51 +153,45 @@ var MegaBot = SmartBot.extend({
 
         var closed = this.processBoardForGoal(board, player);
 
-        var goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]);
-        board.players.each(function (p, i) { p.set(prevPositions[i]); });
+        var goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]!);
+        board.players.forEach((p, i) => { p.set(prevPositions[i]!); });
 
         return goal ? goal.deep : 9999;
-    },
+    }
 
-    initPossibleMoves: function () {
+    public initPossibleMoves() {
         this.possibleWallsMoves = this.possibleWallsMoves || this.selectWallsMoves();
-    },
+    }
 
-    getPossibleMoves: function (board, player) {
+    public getPossibleMoves(board: BoardValidation, player: PlayerModel): Move[] {
         this.initPossibleMoves();
-        var playerPositions = board.getValidPositions(player.pick('x', 'y'));
-        playerPositions = _(playerPositions).map(function (playerPosition) {
-            playerPosition.type = 'P';
-            return playerPosition;
+        var playerPositions = board.getValidPositions(player.pick('x', 'y') as Position, []).map(playerPosition => {
+            return { ...playerPosition, type: "P" } as Move;
         });
         return player.hasFences()
             ? playerPositions.concat(this.possibleWallsMoves) : playerPositions;
-    },
+    }
 
-    removePossibleWallsMove: function (move) {
-        var item = _(this.possibleWallsMoves).findWhere(move);
+    public removePossibleWallsMove(move: Move) {
+        var item = _(this.possibleWallsMoves).findWhere(move)!;
         var index = _(this.possibleWallsMoves).indexOf(item);
         if (index !== -1) {
             this.possibleWallsMoves.splice(index, 1);
         }
-    },
+    }
 
-    selectWallsMoves: function () {
-        var positions = [];
+    public selectWallsMoves() {
+        var positions: Move[] = [];
         var boardSize = this.board.get('boardSize');
 
-        _([boardSize, boardSize - 1]).iter(function (i, j) {
+        iter([boardSize, boardSize - 1], (i, j) => {
             positions.push({x: i, y: j, type: 'H'});
         });
-        _([boardSize - 1, boardSize]).iter(function (i, j) {
+        iter([boardSize, boardSize - 1], (i, j) => {
             positions.push({x: i, y: j, type: 'V'});
         });
 
         return positions;
     }
 
-});
-
-if (isNode) {
-    module.exports = MegaBot;
 }

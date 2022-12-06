@@ -1,11 +1,11 @@
-function createUrlObject(url) {
+function createUrlObject(url: string) {
     var a = document.createElement('a');
     a.href = url;
     return a;
 }
 
-window.parseUrl = function (url) {
-    var queryString = url, result = {}, i, s, seg;
+export const parseUrl = (url: string) => {
+    var queryString = url, result: Record<string, any> = {}, i, s, seg;
     var isArrayExp = /(\w+)\[(\d*)\]/;
 
     if (url.charAt(0) !== '?') {
@@ -20,10 +20,10 @@ window.parseUrl = function (url) {
             continue;
         }
 
-        s = seg[i].split('=');
+        s = seg[i]!.split('=');
 
-        var paramName = decodeURIComponent(s[0]),
-            paramValue = decodeURIComponent(s[1]);
+        var paramName = decodeURIComponent(s[0]!),
+            paramValue = decodeURIComponent(s[1]!);
         var isArrayItem = isArrayExp.test(paramName);
         if (isArrayItem || result[paramName]) {
             paramName = paramName.replace(isArrayExp, '$1');

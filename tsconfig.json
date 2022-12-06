@@ -5,7 +5,7 @@
     "module": "amd",
     "declaration": true,
     "outDir": "./public/scripts",
-    "rootDir": "./p2p",
+    "rootDir": "./public/models",
     "removeComments": true,
     "isolatedModules": true,
     "strict": true,

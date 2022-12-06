@@ -1,22 +1,19 @@
-var isNode = typeof module !== 'undefined';
+import { BackboneModel } from "public/models/BackboneModel";
 
-if (isNode) {
-    var Backbone = require('backbone');
-}
+export class TimerModel extends BackboneModel {
 
-var TimerModel = Backbone.Model.extend({
-
-    defaults: {
+    public defaults = () => ({
         playerNames: [],
         timePrev: 0,
         allTime: 0,
         times: [0, 0, 0, 0],
         time: 0
-    },
+    });
 
-    isStopped: false,
+    public isStopped = false;
+    public interval = 0;
 
-    next: function (current) {
+    public next(current: number) {
         if (this.isStopped) {
             return;
         }
@@ -26,25 +23,21 @@ var TimerModel = Backbone.Model.extend({
         timer.set('timePrev', timer.get('time'));
         timer.set('time', 0);
         clearInterval(this.interval);
-        timer.interval = setInterval(function () {
+        timer.interval = setInterval(() => {
             timer.set('time', timer.get('time') + 1);
         }, 1000);
-    },
+    }
 
-    reset: function () {
+    public reset() {
         this.set('timePrev', this.get('time'));
         this.set('time', 0);
         this.set('allTime', 0);
         this.set('times', [0, 0, 0, 0]);
-    },
+    }
 
-    stop: function () {
+    public stop() {
         this.isStopped = true;
         clearInterval(this.interval);
     }
 
-});
-
-if (isNode) {
-    module.exports = TimerModel;
 }

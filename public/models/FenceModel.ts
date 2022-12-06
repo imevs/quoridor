@@ -1,37 +1,45 @@
-var isNode = typeof module !== 'undefined';
+import _ from "underscore";
+import {
+    BackboneCollection,
+    BackboneModel,
+    Position,
+} from "public/models/BackboneModel";
+import { iter } from "public/models/utils";
 
-if (isNode) {
-    var Backbone = require('backbone');
-    var _ = require('../utils.js');
-}
+export type FencePosition = Position & { orientation: "H" | "V"; };
+export type FenceModelProps = FencePosition & {
+    color: string;
+    prevcolor: string;
+    state: string;
+};
 
-var FenceModel = Backbone.Model.extend({
+export class FenceModel extends BackboneModel<FenceModelProps> {
 
-    defaults: {
+    defaults = () => ({
         color: '#c75',
         state: ''
-    },
+    });
 
-    initialize: function () {
+    public initialize() {
         this.on({
-            'movefence': function () {
+            'movefence': () => {
                 this.set('state', 'prebusy');
             },
-            'markfence': function () {
+            'markfence': () => {
                 if (!this.get('state')) {
                     this.set('state', 'highlight');
                 }
             },
-            'unmarkfence': function () {
+            'unmarkfence': () => {
                 if (this.get('state') === 'highlight') {
                     this.set('state', '');
                 }
             },
             'change:state': this.onChangeState
         });
-    },
+    }
 
-    onChangeState: function () {
+    public onChangeState() {
         if (this.get('state') === 'prebusy') {
             this.set({
                 color: 'black',
@@ -40,7 +48,7 @@ var FenceModel = Backbone.Model.extend({
         }
         if (this.get('state') === '') {
             this.set({
-                color: this.defaults.color,
+                color: this.defaults().color,
                 prevcolor: ''
             });
         }
@@ -51,104 +59,107 @@ var FenceModel = Backbone.Model.extend({
             });
         }
     }
+}
 
-});
-
-var FenceHModel = FenceModel.extend({
-    defaults                : {
-        type: 'H'
-    },
-    getAdjacentFencePosition: function () {
+export class FenceHModel extends FenceModel {
+    public defaults = () => ({
+        type: 'H' as const,
+        color: '#c75',
+        state: ''
+    });
+    public getAdjacentFencePosition() {
         return {
             x: this.get('x') - 1,
             y: this.get('y')
         };
     }
-});
-_.defaults(FenceHModel.prototype.defaults, FenceModel.prototype.defaults);
+}
 
-var FenceVModel = FenceModel.extend({
-    defaults                : {
-        type: 'V'
-    },
-    getAdjacentFencePosition: function () {
+export class FenceVModel extends FenceModel {
+    public defaults = () => ({
+        type: 'V' as const,
+        color: '#c75',
+        state: ''
+    });
+
+    public getAdjacentFencePosition() {
         return {
             x: this.get('x'),
             y: this.get('y') - 1
         };
     }
-});
-_.defaults(FenceVModel.prototype.defaults, FenceModel.prototype.defaults);
+}
 
-var FencesCollection = Backbone.Collection.extend({
+export class FencesCollection extends BackboneCollection<FenceHModel | FenceVModel> {
 
-    model     : function (attrs, options) {
-        return attrs.type === 'H'
+    // @ts-ignore TODO, recheck types
+    public model(attrs: FenceModelProps, options: {}): FenceHModel | FenceVModel {
+        return attrs.orientation === 'H'
             ? new FenceHModel(attrs, options)
             : new FenceVModel(attrs, options);
-    },
+    }
 
-    initialize: function () {
+    public initialize() {
         this.on('premarkasselected', this.clearBusy, this);
-    },
-    createFences: function (boardSize, fences) {
+    }
+    public createFences(boardSize: number, fences: FencePosition[] = []) {
         var me = this;
-        _([boardSize, boardSize - 1]).iter(function (i, j) {
+        iter([boardSize, boardSize - 1], (i, j) => {
             me.add({x: i, y: j, type: 'H'});
         });
-        _([boardSize - 1, boardSize]).iter(function (i, j) {
+        iter([boardSize - 1, boardSize], (i, j) => {
             me.add({x: i, y: j, type: 'V'});
         });
 
-        _(fences).each(function (fence) {
-            var find = me.findWhere({
+        fences.forEach(fence => {
+            var find: FenceModel = me.findWhere({
                 x: fence.x,
                 y: fence.y,
-                type: fence.t
+                type: fence.orientation
             });
-            var sibling = me.getSibling(find);
+            var sibling: FenceModel = me.getSibling(find as FenceHModel | FenceVModel);
             find.set('state', 'busy');
             sibling.set('state', 'busy');
         });
-    },
-    clearBusy: function () {
+    }
+    public clearBusy() {
         _(this.where({
             state: 'prebusy'
-        })).each(function (fence) {
+        })).each(fence => {
             fence.set({state: ''});
         });
-    },
-    getPreBusy: function () {
+    }
+    public getPreBusy(): FenceModel[] {
         return this.where({state: 'prebusy'});
-    },
-    setBusy: function () {
-        _(this.getPreBusy()).each(function (fence) {
+    }
+    public setBusy() {
+        this.getPreBusy().forEach(fence => {
             fence.set({state: 'busy'});
         });
-    },
-    getMovedFence: function () {
+    }
+    public getMovedFence(): FenceHModel | FenceVModel {
         var fences = this.getPreBusy();
         return _.chain(fences)
             .sortBy(function (i) { return i.get('x'); })
             .sortBy(function (i) { return i.get('y'); })
-            .last().value();
-    },
-    getSibling                      : function (item) {
+            .last().value() as FenceHModel | FenceVModel;
+    }
+    public getSibling(item: FenceHModel | FenceVModel) {
         var siblingPosition = item && item.getAdjacentFencePosition();
         return siblingPosition && this.findWhere({
             x   : siblingPosition.x,
             y   : siblingPosition.y,
-            type: item.get('type')
+            type: item.get('orientation')
         });
-    },
-    triggerEventOnFenceAndSibling: function (item, event) {
+    }
+    public triggerEventOnFenceAndSibling(item: FenceHModel | FenceVModel, event: string) {
         var sibling = this.getSibling(item);
         if (sibling && event) {
             sibling.trigger(event);
             item.trigger(event);
         }
-    },
-    validateFenceAndSibling: function (item) {
+    }
+    public validateFenceAndSibling(item?: FenceHModel | FenceVModel) {
         if (!item) {
             return false;
         }
@@ -161,8 +172,8 @@ var FencesCollection = Backbone.Collection.extend({
         var sibling = this.getSibling(item);
 
         return !!(sibling && !this.isBusy(sibling));
-    },
-    validateAndTriggerEventOnFenceAndSibling: function (item, event) {
+    }
+    public validateAndTriggerEventOnFenceAndSibling(item: FenceHModel | FenceVModel, event: string) {
         var shouldTriggerEvent = this.validateFenceAndSibling(item);
         if (shouldTriggerEvent && event) {
             item.trigger('pre' + event);
@@ -171,13 +182,13 @@ var FencesCollection = Backbone.Collection.extend({
             sibling.trigger(event);
         }
         return shouldTriggerEvent;
-    },
-    isBusy                       : function (item) {
+    }
+    public isBusy(item: FenceModel) {
         return item.get('state') === 'busy';
-    },
-    isFencePlaceable             : function (item) {
-        var type, i, j;
-        if (item.get('type') === 'V') {
+    }
+    public isFencePlaceable(item: FenceModel) {
+        var type, i: "x" | "y", j: "x" | "y";
+        if (item.get('orientation') === 'V') {
             type = 'H';
             i = 'y';
             j = 'x';
@@ -186,20 +197,16 @@ var FencesCollection = Backbone.Collection.extend({
             i = 'x';
             j = 'y';
         }
-        var attrs = { state: 'busy', type: type };
+        var attrs = { state: 'busy', type: type, x: 0, y: 0 };
         attrs[i] = item.get(i) - 1;
         var prevLine = this.where(attrs);
-        var f1 = _(prevLine).find(function (model) {
+        var f1 = _(prevLine).find(model => {
             return model.get(j) === item.get(j);
         });
-        var f2 = _(prevLine).find(function (model) {
+        var f2 = _(prevLine).find(model => {
             return model.get(j) === item.get(j) + 1;
         });
         return !(f1 && f2);
     }
 
-});
-
-if (isNode) {
-    module.exports = FencesCollection;
 }

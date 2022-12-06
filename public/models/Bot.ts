@@ -1,86 +1,74 @@
-var isNode = typeof module !== 'undefined';
+import { BackboneModel, Position } from "./BackboneModel";
+import _ from "underscore";
+import { GameHistoryModel, TurnsCollection } from "public/models/TurnModel";
 
-if (isNode) {
-    var _ = require('lodash-node/underscore');
-    var Emitter = require('events').EventEmitter;
-    var GameHistoryModel = require('./TurnModel.js');
-    var Backbone = require('backbone');
-}
+type PlayerPosition = Position & { playerIndex: number; };
 
-var Bot = Backbone.Model.extend({
+export class Bot extends BackboneModel {
+    x!: number;
+    y!: number;
+    id = 0;
+    playerId = 0;
+    fencesRemaining = 0;
+    attemptsCount = 0;
+    currentPlayer = 0;
+    playersCount = 0;
+    fencesCount = 20;
+    fencesPositions: {}[] = [];
+    newPositions: {}[] = [];
 
-    fencesCount: 20,
-
-    constructor: function (id) {
+    constructor(id: number) {
+        super();
         this.id = id;
 
         this.playerId = id;
-        if (Emitter) {
-            this.emitter = new Emitter();
-        }
-        this.emit = this.trigger;
         this.initEvents();
-    },
+    }
 
-    trigger: function () {
-        if (this.emitter) {
-            return this.emitter.emit.apply(this, arguments);
-        } else {
-            return Backbone.Model.prototype.trigger.apply(this, arguments);
-        }
-    },
-
-    on: function () {
-        if (this.emitter) {
-            return this.emitter.on.apply(this, arguments);
-        } else {
-            return Backbone.Model.prototype.on.apply(this, arguments);
-        }
-    },
-
-    startGame: function (currentPlayer, activePlayer) {
-        this.onStart.apply(this, arguments);
+    public startGame = (currentPlayer: number, activePlayer: number) => {
+        this.onStart(currentPlayer, activePlayer, [], 0, 9);
         if (currentPlayer === activePlayer) {
             this.turn();
         }
-    },
+    }
 
-    onStart: function (currentPlayer, activePlayer, history, playersCount) {
+    public onStart(currentPlayer: number, _activePlayer: number, history: {}[], playersCount: number, boardSize: number) {
         this.playersCount = +playersCount;
         var historyModel = new GameHistoryModel({
-            boardSize: 9,
+            turns: new TurnsCollection(),
+            boardSize: boardSize,
             playersCount: this.playersCount
         });
-        historyModel.get('turns').reset(history);
+        historyModel.get('turns')!.reset(history);
         var playerPositions = historyModel.getPlayerPositions();
         var position = playerPositions[currentPlayer];
         if (position) {
-            this.x = position.x;
-            this.y = position.y;
+            this.x = position.x ?? 0;
+            this.y = position.y ?? 0;
             this.newPositions = [];
             this.fencesPositions = [];
             this.currentPlayer = currentPlayer;
             this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
         }
-    },
+    }
 
-    getNextActivePlayer: function (currentPlayer) {
+    public getNextActivePlayer(currentPlayer: number) {
         currentPlayer++;
         return currentPlayer < this.playersCount ? currentPlayer : 0;
-    },
+    }
 
-    initEvents: function () {
-        this.on('server_move_player', _(this.onMovePlayer).bind(this));
-        this.on('server_move_fence', _(this.onMoveFence).bind(this));
-        this.on('server_start', _(this.startGame).bind(this));
-        this.on('server_turn_fail', _(this.makeTurn).bind(this));
-    },
+    public initEvents() {
+        this.on('server_move_player', this.onMovePlayer);
+        this.on('server_move_fence', this.onMoveFence);
+        this.on('server_start', this.startGame);
+        this.on('server_turn_fail', this.makeTurn);
+    }
 
-    isPlayerCanMakeTurn: function (playerIndex) {
+    public isPlayerCanMakeTurn(playerIndex: number) {
         return this.currentPlayer === this.getNextActivePlayer(playerIndex);
-    },
+    }
 
-    onMovePlayer: function (params) {
+    public onMovePlayer = (params: PlayerPosition) => {
         if (this.currentPlayer === params.playerIndex) {
             this.x = params.x;
             this.y = params.y;
@@ -88,24 +76,24 @@ var Bot = Backbone.Model.extend({
         if (this.isPlayerCanMakeTurn(params.playerIndex)) {
             this.turn();
         }
-    },
+    }
 
-    onMoveFence: function (params) {
+    public onMoveFence = (params: PlayerPosition & { type: "H" | "V"; }) => {
         if (this.currentPlayer === params.playerIndex) {
             this.fencesRemaining--;
         }
         if (this.isPlayerCanMakeTurn(params.playerIndex)) {
             this.turn();
         }
-    },
+    }
 
-    turn: function () {
+    public turn() {
         this.attemptsCount = 0;
         this.newPositions = this.getJumpPositions();
         this.makeTurn();
-    },
+    }
 
-    makeTurn: function () {
+    public makeTurn = () => {
         var bot = this;
         this.attemptsCount++;
         if (this.attemptsCount > 50) {
@@ -113,21 +101,21 @@ var Bot = Backbone.Model.extend({
             return;
         }
         setTimeout(_(bot.doTurn).bind(bot), 1000);
-    },
+    }
 
-    getFencePosition: function () {
+    public getFencePosition(): Position & { type: "H" | "V"; } {
         var y = _.random(0, 8);
         var x = _.random(0, 8);
-        var type = _.random(0, 1) ? 'H' : 'V';
+        var type = _.random(0, 1) ? 'H' as const : 'V' as const;
         var res = {y: y, x: x, type: type};
         if (_(this.fencesPositions).contains(res)) {
             return this.getFencePosition();
         }
         this.fencesPositions.push(res);
         return res;
-    },
+    }
 
-    doTurn     : function () {
+    public doTurn() {
         var bot = this;
         var random = _.random(0, 1);
         var playerPosition;
@@ -152,9 +140,9 @@ var Bot = Backbone.Model.extend({
             return;
         }
         console.log('something going wrong');
-    },
+    }
 
-    getJumpPositions: function () {
+    public getJumpPositions() {
         return [
             {
                 x: this.x + 1,
@@ -173,25 +161,21 @@ var Bot = Backbone.Model.extend({
                 y: this.y - 1
             }
         ];
-    },
+    }
 
-    canMoveFence: function () {
+    public canMoveFence() {
         return this.fencesRemaining > 0;
-    },
+    }
 
-    canMovePlayer: function () {
+    public canMovePlayer() {
         return this.newPositions.length > 0;
-    },
+    }
 
-    getPossiblePosition: function () {
+    public getPossiblePosition() {
         var random = _.random(0, this.newPositions.length - 1);
         var position = this.newPositions[random];
         this.newPositions.splice(random, 1);
         return position;
     }
 
-});
-
-if (isNode) {
-    module.exports = Bot;
 }
