@@ -34,14 +34,14 @@ export class Bot extends BackboneModel {
 
     public onStart(currentPlayer: number, _activePlayer: number, history: {}[], playersCount: number, boardSize: number) {
         this.playersCount = +playersCount;
-        var historyModel = new GameHistoryModel({
+        const historyModel = new GameHistoryModel({
             turns: new TurnsCollection(),
             boardSize: boardSize,
             playersCount: this.playersCount
         });
         historyModel.get('turns')!.reset(history);
-        var playerPositions = historyModel.getPlayerPositions();
-        var position = playerPositions[currentPlayer];
+        const playerPositions = historyModel.getPlayerPositions();
+        const position = playerPositions[currentPlayer];
         if (position) {
             this.x = position.x ?? 0;
             this.y = position.y ?? 0;
@@ -94,7 +94,7 @@ export class Bot extends BackboneModel {
     }
 
     public makeTurn = () => {
-        var bot = this;
+        const bot = this;
         this.attemptsCount++;
         if (this.attemptsCount > 50) {
             console.log('bot can`t make a turn');
@@ -104,10 +104,10 @@ export class Bot extends BackboneModel {
     }
 
     public getFencePosition(): Position & { type: "H" | "V"; } {
-        var y = _.random(0, 8);
-        var x = _.random(0, 8);
-        var type = _.random(0, 1) ? 'H' as const : 'V' as const;
-        var res = {y: y, x: x, type: type};
+        const y = _.random(0, 8);
+        const x = _.random(0, 8);
+        const type = _.random(0, 1) ? 'H' as const : 'V' as const;
+        const res = {y: y, x: x, type: type};
         if (_(this.fencesPositions).contains(res)) {
             return this.getFencePosition();
         }
@@ -116,9 +116,9 @@ export class Bot extends BackboneModel {
     }
 
     public doTurn() {
-        var bot = this;
-        var random = _.random(0, 1);
-        var playerPosition;
+        const bot = this;
+        const random = _.random(0, 1);
+        let playerPosition;
         if (bot.canMovePlayer() && (random || !bot.canMoveFence())) {
             playerPosition = bot.getPossiblePosition();
             if (playerPosition) {
@@ -128,8 +128,8 @@ export class Bot extends BackboneModel {
         }
 
         if (bot.canMoveFence()) {
-            var res = this.getFencePosition();
-            var eventInfo = {
+            const res = this.getFencePosition();
+            const eventInfo = {
                 x          : res.x,
                 y          : res.y,
                 type       : res.type,
@@ -172,8 +172,8 @@ export class Bot extends BackboneModel {
     }
 
     public getPossiblePosition() {
-        var random = _.random(0, this.newPositions.length - 1);
-        var position = this.newPositions[random];
+        const random = _.random(0, this.newPositions.length - 1);
+        const position = this.newPositions[random];
         this.newPositions.splice(random, 1);
         return position;
     }

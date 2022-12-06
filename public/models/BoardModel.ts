@@ -71,8 +71,8 @@ export class BoardModel extends BackboneModel {
     }
 
     public initModels() {
-        var me = this;
-        var count = me.get('playersCount');
+        const me = this;
+        const count = me.get('playersCount');
         if (count !== 2 && count !== 4) {
             me.set('playersCount', 2);
         }
@@ -95,16 +95,16 @@ export class BoardModel extends BackboneModel {
 
     public makeTurn() {
         /* jshint maxcomplexity:9 */
-        var me = this;
+        const me = this;
         // if (!(me.isPlayerMoved || me.isFenceMoved)) {
         //     return;
         // }
-        var active = me.getActivePlayer();
-        var preBusy = me.fences.getMovedFence();
-        var index = me.get('activePlayer');
+        const active = me.getActivePlayer();
+        const preBusy = me.fences.getMovedFence();
+        const index = me.get('activePlayer');
         if (me.isFenceMoved) {
             me.getActivePlayer().placeFence();
-            var preBusySibling = me.fences.getSibling(preBusy);
+            const preBusySibling = me.fences.getSibling(preBusy);
             me.history.add({
                 x: preBusy.get('x'),
                 y: preBusy.get('y'),
@@ -164,13 +164,13 @@ export class BoardModel extends BackboneModel {
 
     public emitEventToBots(eventName: string, param: any) {
         // FIXME - recheck
-        var next = this.players.at(this.get('activePlayer')).get("id")!;
+        const next = this.players.at(this.get('activePlayer')).get("id")!;
         this.bots.forEach(bot => {
             if (next !== bot.currentPlayer) {
                 bot.trigger(eventName, param);
             }
         });
-        var nextBot = this.getNextActiveBot(next);
+        const nextBot = this.getNextActiveBot(next);
         if (nextBot) {
             nextBot.trigger(eventName, param);
         }
@@ -181,15 +181,15 @@ export class BoardModel extends BackboneModel {
     }
 
     public onMovePlayer(x: number, y: number) {
-        var me = this;
+        const me = this;
         if (me.isValidCurrentPlayerPosition(x, y)) {
-            var current = me.getActivePlayer();
+            const current = me.getActivePlayer();
             current.moveTo(x, y);
             me.fences.clearBusy();
             me.isFenceMoved = false;
             me.isPlayerMoved = true;
         } else {
-            var activeBot = me.getActiveBot();
+            const activeBot = me.getActiveBot();
             if (activeBot) {
                 activeBot.trigger('server_turn_fail');
             }
@@ -216,7 +216,7 @@ export class BoardModel extends BackboneModel {
             this.isPlayerMoved = false;
             this.isFenceMoved = true;
         } else {
-            var activeBot = this.getActiveBot();
+            const activeBot = this.getActiveBot();
             if (activeBot) {
                 activeBot.trigger('server_turn_fail');
             }
@@ -224,7 +224,7 @@ export class BoardModel extends BackboneModel {
     }
 
     public initEvents() {
-        var me = this;
+        const me = this;
 
         me.on('maketurn', this.makeTurn);
 
@@ -238,8 +238,8 @@ export class BoardModel extends BackboneModel {
         this.on('change:currentPlayer', this.updateInfo, this);
 
         this.players.on('win', player => {
-            var names = me.players.getPlayerNames();
-            var message = names[player] + ' player ' + 'is winner. Do you want to start new game?';
+            const names = me.players.getPlayerNames();
+            const message = names[player] + ' player ' + 'is winner. Do you want to start new game?';
             if (window.confirm(message)) {
                 document.location.reload();
             } else {
@@ -283,21 +283,21 @@ export class BoardModel extends BackboneModel {
         if (this.get('botsCount') === undefined) {
             return;
         }
-        var me = this;
+        const me = this;
 
-        var turns = this.history.get('turns')!.toJSON();
+        const turns = this.history.get('turns')!.toJSON();
 
         _(this.get('botsCount')).times(i => {
-            var botIndex = i + (this.get('playersCount') - this.get('botsCount'));
+            const botIndex = i + (this.get('playersCount') - this.get('botsCount'));
 
-            var bot = new BotWrapper({
+            const bot = new BotWrapper({
                 id: botIndex,
                 botType: 'super'
             });
             bot.on('client_move_player', me.onSocketMovePlayer);
             bot.on('client_move_fence', (pos: FencePosition) => {
                 if (me.onSocketMoveFence(pos) === false) {
-                    var activeBot = this.getActiveBot();
+                    const activeBot = this.getActiveBot();
                     if (activeBot) {
                         activeBot.trigger('server_turn_fail');
                     }

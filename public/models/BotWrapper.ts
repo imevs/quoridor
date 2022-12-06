@@ -10,8 +10,8 @@ export class BotWrapper extends BackboneModel {
     public bot!: Bot | SmartBot | Worker;
 
     public initialize() {
-        var type = this.get('botType');
-        var id = this.get('id');
+        const type = this.get('botType');
+        const id = this.get('id');
         this.currentPlayer = id;
         if (window.Worker) {
             this.bot = new Worker('/models/BotWorker.js');

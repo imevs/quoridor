@@ -3,16 +3,16 @@ import { BoardValidation } from "public/models/BoardValidation";
 import { Position } from "public/models/BackboneModel";
 import { FencePosition } from "public/models/FenceModel";
 
-var boardState = {
+let boardState = {
     activePlayer: 0,
     playersCount: 2,
     history: [] as { x: number; y: number; t?: "f" | "p"; orientation?: "H" | "V" | "P"; }[],
 };
 
-var SERVICE_PATH = "https://api.jsonbin.io/v3";
-var accessToken = "$2b$10$YE9Sljt4vjsX7w1GzojOVOkibhD.DRrH7eAGncSpfhmStD6Dp/kPO";
+const SERVICE_PATH = "https://api.jsonbin.io/v3";
+const accessToken = "$2b$10$YE9Sljt4vjsX7w1GzojOVOkibhD.DRrH7eAGncSpfhmStD6Dp/kPO";
 
-var saveData = (path: string, resourceID: string, data: {}) => {
+const saveData = (path: string, resourceID: string, data: {}) => {
     const req = new XMLHttpRequest();
 
     if (resourceID) {
@@ -32,7 +32,7 @@ var saveData = (path: string, resourceID: string, data: {}) => {
     return req;
 };
 
-var createData = (path: string, data: {}) => {
+const createData = (path: string, data: {}) => {
     const req = saveData(path, "", data);
 
     return new Promise((resolve, reject) => {
@@ -126,7 +126,7 @@ export class BoardSocketEvents extends BoardValidation {
     }
 
     onSocketMoveFence(pos: FencePosition) {
-        var fence = this.fences.findWhere({
+        const fence = this.fences.findWhere({
             type: pos.orientation,
             x   : pos.x,
             y   : pos.y
@@ -156,7 +156,7 @@ export class BoardSocketEvents extends BoardValidation {
             alert('Game is busy');
             return;
         }
-        var me = this;
+        const me = this;
         if (history.length) {
             // TODO: trigger update of UI
             me.history.get('turns').reset(history);
@@ -164,11 +164,11 @@ export class BoardSocketEvents extends BoardValidation {
             me.history.initPlayers();
         }
 
-        var players = me.history.getPlayerPositions(),
+        const players = me.history.getPlayerPositions(),
             fences = me.history.getFencesPositions();
 
         _(players).each((playerInfo, i) => {
-            var player = me.players.at(i);
+            const player = me.players.at(i);
             if (!_.isUndefined(playerInfo.x) && !_.isUndefined(playerInfo.y)) {
                 player.set({
                     x     : playerInfo.x,
@@ -180,7 +180,7 @@ export class BoardSocketEvents extends BoardValidation {
             }
         });
         _(fences).each(fencePos => {
-            var fence = me.fences.findWhere({
+            const fence = me.fences.findWhere({
                 x   : fencePos.x,
                 y   : fencePos.y,
                 type: fencePos.t

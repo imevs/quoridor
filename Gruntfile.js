@@ -8,7 +8,7 @@ module.exports = function (grunt) {
 
         simplemocha: {
             all: {
-                src: ['tests/mochaTests/*.js', 'tests/serverSideTests/*.js']
+                src: ['tests/mochaTests/*.js']
             }
         },
 

@@ -103,7 +103,7 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
         this.on('premarkasselected', this.clearBusy, this);
     }
     public createFences(boardSize: number, fences: FencePosition[] = []) {
-        var me = this;
+        const me = this;
         iter([boardSize, boardSize - 1], (i, j) => {
             me.add({x: i, y: j, type: 'H'});
         });
@@ -112,12 +112,12 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
         });
 
         fences.forEach(fence => {
-            var find: FenceModel = me.findWhere({
+            const find: FenceModel = me.findWhere({
                 x: fence.x,
                 y: fence.y,
                 type: fence.orientation
             });
-            var sibling: FenceModel = me.getSibling(find as FenceHModel | FenceVModel);
+            const sibling: FenceModel = me.getSibling(find as FenceHModel | FenceVModel);
             find.set('state', 'busy');
             sibling.set('state', 'busy');
         });
@@ -138,14 +138,14 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
         });
     }
     public getMovedFence(): FenceHModel | FenceVModel {
-        var fences = this.getPreBusy();
+        const fences = this.getPreBusy();
         return _.chain(fences)
             .sortBy(function (i) { return i.get('x'); })
             .sortBy(function (i) { return i.get('y'); })
             .last().value() as FenceHModel | FenceVModel;
     }
     public getSibling(item: FenceHModel | FenceVModel) {
-        var siblingPosition = item && item.getAdjacentFencePosition();
+        const siblingPosition = item && item.getAdjacentFencePosition();
         return siblingPosition && this.findWhere({
             x   : siblingPosition.x,
             y   : siblingPosition.y,
@@ -153,7 +153,7 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
         });
     }
     public triggerEventOnFenceAndSibling(item: FenceHModel | FenceVModel, event: string) {
-        var sibling = this.getSibling(item);
+        const sibling = this.getSibling(item);
         if (sibling && event) {
             sibling.trigger(event);
             item.trigger(event);
@@ -169,16 +169,16 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
         if (!this.isFencePlaceable(item)) {
             return false;
         }
-        var sibling = this.getSibling(item);
+        const sibling = this.getSibling(item);
 
         return !!(sibling && !this.isBusy(sibling));
     }
     public validateAndTriggerEventOnFenceAndSibling(item: FenceHModel | FenceVModel, event: string) {
-        var shouldTriggerEvent = this.validateFenceAndSibling(item);
+        const shouldTriggerEvent = this.validateFenceAndSibling(item);
         if (shouldTriggerEvent && event) {
             item.trigger('pre' + event);
             item.trigger(event);
-            var sibling = this.getSibling(item);
+            const sibling = this.getSibling(item);
             sibling.trigger(event);
         }
         return shouldTriggerEvent;
@@ -187,7 +187,7 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
         return item.get('state') === 'busy';
     }
     public isFencePlaceable(item: FenceModel) {
-        var type, i: "x" | "y", j: "x" | "y";
+        let type, i: "x" | "y", j: "x" | "y";
         if (item.get('orientation') === 'V') {
             type = 'H';
             i = 'y';
@@ -197,13 +197,13 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
             i = 'x';
             j = 'y';
         }
-        var attrs = { state: 'busy', type: type, x: 0, y: 0 };
+        const attrs = { state: 'busy', type: type, x: 0, y: 0 };
         attrs[i] = item.get(i) - 1;
-        var prevLine = this.where(attrs);
-        var f1 = _(prevLine).find(model => {
+        const prevLine = this.where(attrs);
+        const f1 = _(prevLine).find(model => {
             return model.get(j) === item.get(j);
         });
-        var f2 = _(prevLine).find(model => {
+        const f2 = _(prevLine).find(model => {
             return model.get(j) === item.get(j) + 1;
         });
         return !(f1 && f2);

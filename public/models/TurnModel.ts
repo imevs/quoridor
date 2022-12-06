@@ -37,7 +37,7 @@ export class TurnModel extends BackboneModel<TurnModelProps> {
     }
 
     public toString() {
-        var dy = this.get('y') === this.get('y2') ? 1 : 0;
+        const dy = this.get('y') === this.get('y2') ? 1 : 0;
         return this.get('t') === 'p'
             ? this.getX(this.get('x')) + this.getY(this.get('y')) + ''
             : this.getX(this.get('x')) + this.getY(this.get('y') + dy) +
@@ -45,7 +45,7 @@ export class TurnModel extends BackboneModel<TurnModelProps> {
     }
 
     public toJSON() {
-        var result = { ...this.attributes };
+        const result = { ...this.attributes };
         delete result.debug;
         return result;
     }
@@ -76,17 +76,17 @@ export class GameHistoryModel extends BackboneModel<{
     public getPlayerPositions() {
         const positions: { x?: number; y?: number; movedFences: number; }[] = [], self = this;
 
-        var playersCount = this.get('playersCount');
+        const playersCount = this.get('playersCount');
         _(_.range(playersCount)).each(index => {
-            var playerPositions = self.get('turns').filter((v, i) => {
-                var b = (i - index) % playersCount === 0;
+            const playerPositions = self.get('turns').filter((v, i) => {
+                const b = (i - index) % playersCount === 0;
                 return v.get('t') === 'p' && b;
             });
-            var playerFences = self.get('turns').filter((v, i) => {
-                var b = (i - index) % playersCount === 0;
+            const playerFences = self.get('turns').filter((v, i) => {
+                const b = (i - index) % playersCount === 0;
                 return v.get('t') === 'f' && b;
             });
-            var playerInfo = _.last(playerPositions);
+            const playerInfo = _.last(playerPositions);
             if (playerInfo) {
                 const info = playerInfo.pick('x', 'y');
                 positions[index] = { ...info, movedFences: playerFences.length };
@@ -96,7 +96,7 @@ export class GameHistoryModel extends BackboneModel<{
     }
 
     public getFencesPositions() {
-        var filter = this.get('turns').filter(val => {
+        const filter = this.get('turns').filter(val => {
             return val.get('t') === 'f';
         });
         return filter.map(model => {
@@ -107,23 +107,23 @@ export class GameHistoryModel extends BackboneModel<{
 
     public add(turnInfo: TurnModelProps) {
         turnInfo.debug = this.get('debug');
-        var turn = new TurnModel(turnInfo);
+        const turn = new TurnModel(turnInfo);
         this.get('turns').add(turn);
 
         this.trigger('change');
     }
 
     public at(index: number) {
-        var turnsLength = this.get('turns').length / this.get('playersCount');
+        const turnsLength = this.get('turns').length / this.get('playersCount');
         if (index > turnsLength) {
             return 'error';
         }
-        var self = this;
+        const self = this;
 
-        var result: string[] = [];
-        var startIndex = index * this.get('playersCount');
-        var playersCount = +self.get('playersCount');
-        var turns = this.get('turns').filter((_value, index) => {
+        const result: string[] = [];
+        const startIndex = index * this.get('playersCount');
+        const playersCount = +self.get('playersCount');
+        const turns = this.get('turns').filter((_value, index) => {
             return index >= startIndex && index < startIndex + playersCount;
         });
         _(turns).each(value => {
@@ -137,14 +137,14 @@ export class GameHistoryModel extends BackboneModel<{
     }
 
     public initPlayers() {
-        var playersCount = this.get('playersCount');
-        var self = this;
+        const playersCount = this.get('playersCount');
+        const self = this;
         if (playersCount === 2 && self.playersPositions.length !== 2) {
             self.playersPositions.splice(3, 1);
             self.playersPositions.splice(1, 1);
         }
         _(_.range(playersCount)).each(index => {
-            var playersPosition = self.playersPositions[index]!;
+            const playersPosition = self.playersPositions[index]!;
             self.add({ ...playersPosition, t: 'p' });
         });
     }

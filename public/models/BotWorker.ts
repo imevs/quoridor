@@ -19,8 +19,8 @@ let bot: BackboneModel;
 
 addEventListener('message', event => {
     if (event.data.eventName === 'create') {
-        var id = event.data.id;
-        var type = event.data.type || 'medium';
+        const id = event.data.id;
+        const type = event.data.type || 'medium';
 
         if (type === 'simple') {
             bot = new Bot(id);

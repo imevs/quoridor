@@ -17,7 +17,7 @@ export class TimerModel extends BackboneModel {
         if (this.isStopped) {
             return;
         }
-        var timer = this;
+        const timer = this;
         this.get('times')[current] = this.get('times')[current] + this.get('time');
         timer.set('allTime', timer.get('allTime') + this.get('time'));
         timer.set('timePrev', timer.get('time'));

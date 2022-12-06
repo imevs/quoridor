@@ -49,11 +49,11 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
     })[] = [];
 
     public initialize (players: { movedFences: number; fencesRemaining: number; url: number; }[]) {
-        var me = this;
+        const me = this;
         players.forEach((player, i) => {
             player.url = i;
             if (player.movedFences !== undefined) {
-                var fences = Math.round(me.fencesCount / players.length);
+                const fences = Math.round(me.fencesCount / players.length);
                 player.fencesRemaining = fences - player.movedFences;
             }
         });
@@ -77,20 +77,17 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
     public getNextActivePlayer (currentPlayer: number) {
         this.checkWin(currentPlayer);
 
-        var current = this.at(currentPlayer);
+        const current = this.at(currentPlayer);
         current.set({
             'prev_x': current.get('x'),
             'prev_y': current.get('y')
         });
 
-        var activePlayer = currentPlayer;
-        activePlayer++;
-        activePlayer = activePlayer < this.length ? activePlayer : 0;
-        return activePlayer;
+        return (currentPlayer + 1) < this.length ? currentPlayer + 1 : 0;
     }
 
     public checkWin (playerIndex: number) {
-        var pos = this.at(playerIndex).pick('x', 'y'),
+        const pos = this.at(playerIndex).pick('x', 'y'),
             x = pos.x,
             y = pos.y;
         if (this.playersPositions[playerIndex]!.isWin(x!, y!)) {
@@ -100,16 +97,16 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
         return false;
     }
     public createPlayers (playersCount: number) {
-        var me = this;
+        const me = this;
         playersCount = +playersCount;
         if (playersCount === 2 && me.playersPositions.length === 4) {
             me.playersPositions.splice(3, 1);
             me.playersPositions.splice(1, 1);
         }
-        var fences = Math.round(me.fencesCount / playersCount);
+        const fences = Math.round(me.fencesCount / playersCount);
         _(playersCount).times(player => {
-            var position = me.playersPositions[player]!;
-            var model = new PlayerModel({
+            const position = me.playersPositions[player]!;
+            const model = new PlayerModel({
                 url            : player,
                 color          : position.color,
                 x              : position.x,
@@ -123,10 +120,10 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
     }
 
     public initPlayerPositions() {
-        var me = this;
+        const me = this;
         this.each((player, i) => {
-            var position = me.playersPositions[i]!;
-            var fences = Math.round(me.fencesCount / me.length);
+            const position = me.playersPositions[i]!;
+            const fences = Math.round(me.fencesCount / me.length);
             player.set({
                 url            : i,
                 x              : position.x,
@@ -140,15 +137,15 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
 
     public isFieldBusy(pos: Position) {
         /* jshint maxcomplexity: 8 */
-        var p0 = this.at(0);
-        var p1 = this.at(1);
+        const p0 = this.at(0);
+        const p1 = this.at(1);
         if (this.length === 2) {
             return p0.get('x') === pos.x && p0.get('y') === pos.y ||
                 p1.get('x') === pos.x && p1.get('y') === pos.y;
         }
         if (this.length === 4) {
-            var p2 = this.at(2);
-            var p3 = this.at(3);
+            const p2 = this.at(2);
+            const p3 = this.at(3);
             return p0.get('x') === pos.x && p0.get('y') === pos.y ||
                 p1.get('x') === pos.x && p1.get('y') === pos.y ||
                 p2.get('x') === pos.x && p2.get('y') === pos.y ||
@@ -158,7 +155,7 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
     }
 
     public isBetween(n1: number, n2: number, n3: number) {
-        var min, max;
+        let min, max;
         if (n1 > n2) {
             min = n2;
             max = n1;
@@ -170,27 +167,27 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
     }
 
     public isFieldBehindOtherPlayer(pos1: Position, pos2: Position) {
-        var me = this;
-        var playerX = pos1.x, playerY = pos1.y, x = pos2.x, y = pos2.y;
+        const me = this;
+        const playerX = pos1.x, playerY = pos1.y, x = pos2.x, y = pos2.y;
 
-        var distanceBetweenPositions = playerX === x && Math.abs(playerY - y)
+        const distanceBetweenPositions = playerX === x && Math.abs(playerY - y)
             || playerY === y && Math.abs(playerX - x) || 0;
 
         if (distanceBetweenPositions !== 2) {
             return false;
         }
-        var callback1 = (item: PlayerModel) => {
+        const callback1 = (item: PlayerModel) => {
             return y === item.get('prev_y') && me.isBetween(playerX, x, item.get('prev_x'));
         };
-        var callback2 = (item: PlayerModel) => {
+        const callback2 = (item: PlayerModel) => {
             return x === item.get('prev_x') && me.isBetween(playerY, y, item.get('prev_y'));
         };
         return this.getCountByCondition(playerY === y ? callback1 : callback2) === 1;
     }
 
     public getCountByCondition(callback: (item: PlayerModel) => boolean) {
-        var busyFieldsBetweenPositionLength = 0;
-        for (var i = 0, len = this.length; i < len; i++) {
+        let busyFieldsBetweenPositionLength = 0;
+        for (let i = 0, len = this.length; i < len; i++) {
             if (callback(this.at(i))) {
                 busyFieldsBetweenPositionLength++;
             }
@@ -199,7 +196,7 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
     }
 
     public isFieldNearOtherPlayer(pos1: Position, pos2: Position) {
-        var isDiagonal = Math.abs(pos1.x - pos2.x) === 1 && Math.abs(pos1.y - pos2.y) === 1;
+        const isDiagonal = Math.abs(pos1.x - pos2.x) === 1 && Math.abs(pos1.y - pos2.y) === 1;
         if (!isDiagonal) {
             return false;
         }
@@ -216,8 +213,8 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
      *  p - player
      */
     public hasTwoVerticalSibling(pos1: Position, pos2: Position) {
-        var playerX = pos1.x, playerY = pos1.y, y = pos2.y;
-        var diffY = playerY - y; // 1 or -1
+        const playerX = pos1.x, playerY = pos1.y, y = pos2.y;
+        const diffY = playerY - y; // 1 or -1
         return this.isPrevFieldBusy({ x: playerX, y: playerY - diffY})
             && this.isPrevFieldBusy({ x: playerX, y: playerY - diffY * 2 });
     }
@@ -232,25 +229,25 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
      *  p - player
      */
     public hasTwoHorizontalSiblings(pos1: Position, pos2: Position) {
-        var playerX = pos1.x, playerY = pos1.y, x = pos2.x;
-        var diffX = playerX - x; //1 or -1
+        const playerX = pos1.x, playerY = pos1.y, x = pos2.x;
+        const diffX = playerX - x; //1 or -1
         return this.isPrevFieldBusy({x: playerX - diffX, y: playerY })
             && this.isPrevFieldBusy({x: playerX - diffX * 2, y: playerY});
     }
 
     public isPrevFieldBusy(pos: Position) {
         /* jshint maxcomplexity: 8 */
-        var p0 = this.at(0);
-        var p1 = this.at(1);
-        var nameX = 'prev_x' as const;
-        var nameY = 'prev_y' as const;
+        const p0 = this.at(0);
+        const p1 = this.at(1);
+        const nameX = 'prev_x' as const;
+        const nameY = 'prev_y' as const;
         if (this.length === 2) {
             return p0.get(nameX) === pos.x && p0.get(nameY) === pos.y ||
                 p1.get(nameX) === pos.x && p1.get(nameY) === pos.y;
         }
         if (this.length === 4) {
-            var p2 = this.at(2);
-            var p3 = this.at(3);
+            const p2 = this.at(2);
+            const p3 = this.at(3);
             return p0.get(nameX) === pos.x && p0.get(nameY) === pos.y ||
                 p1.get(nameX) === pos.x && p1.get(nameY) === pos.y ||
                 p2.get(nameX) === pos.x && p2.get(nameY) === pos.y ||

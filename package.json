@@ -10,6 +10,9 @@
     "test": "grunt test"
   },
   "dependencies": {
+    "@types/async": "^3.2.16",
+    "@types/backbone": "^1.4.15",
+    "@types/underscore": "^1.11.4",
     "async": "~0.2.9",
     "backbone": "~1.1.0",
     "body-parser": "^1.18.3",

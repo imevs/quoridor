@@ -17,9 +17,9 @@ export class MegaBot extends SmartBot {
     satisfiedRate = 1;
 
     public doTurn() {
-        var self = this;
+        const self = this;
         self.getBestTurn(turn => {
-            var eventInfo = {
+            const eventInfo = {
                 x: turn.x,
                 y: turn.y,
                 type: turn.type,
@@ -34,9 +34,9 @@ export class MegaBot extends SmartBot {
     }
 
     public getBestTurn(callback: (res: Move) => void) {
-        var board = this.board.copy();
-        var player = board.players.at(this.currentPlayer);
-        var moves = this.getPossibleMoves(board, player);
+        const board = this.board.copy();
+        const player = board.players.at(this.currentPlayer);
+        const moves = this.getPossibleMoves(board, player);
         async.waterfall<CallArgs, string | null>([
             (callback1: Callback) => {
                 callback1(null, { moves: moves, player: player, board: board, rates: [] });
@@ -48,12 +48,12 @@ export class MegaBot extends SmartBot {
                 return move1.rate - move2.rate;
             });
 
-            var minRate = _(_(rates).pluck('rate')).min();
-            var types = {'H': 0, 'V': 1, 'P': 2 };
-            var filtered = _(rates).filter(move => {
+            const minRate = _(_(rates).pluck('rate')).min();
+            const types = {'H': 0, 'V': 1, 'P': 2 };
+            const filtered = _(rates).filter(move => {
                 return move.rate === minRate;
             });
-            var minRatedMoves = filtered.sort((a, b) => {
+            const minRatedMoves = filtered.sort((a, b) => {
                 return types[b.type] - types[a.type];
             });
             callback(minRatedMoves[_.random(0, minRatedMoves.length - 1)]!);
@@ -61,10 +61,10 @@ export class MegaBot extends SmartBot {
     }
 
     public getRatesForPlayersMoves = ({ moves, player, board, rates }: CallArgs, callback: Callback) => {
-        var result: Rate[] = [];
+        const result: Rate[] = [];
         _(moves).each(move => {
             if (move.type === 'P') {
-                var prevPosition = player.pick('x', 'y', 'prev_x', 'prev_y');
+                const prevPosition = player.pick('x', 'y', 'prev_x', 'prev_y');
                 player.set({
                     x: move.x,
                     y: move.y,
@@ -79,28 +79,29 @@ export class MegaBot extends SmartBot {
     }
 
     public getRatesForWallsMoves = ({ moves, player, board, rates }: CallArgs, callback: Callback) => {
-        var self = this;
-        var satisfiedCount = 0, result: Rate[] = [];
+        const self = this;
+        let satisfiedCount = 0;
+        const result: Rate[] = [];
 
         if (!this.canMoveFence()) {
             callback(null, { moves, player, board, rates });
             return;
         }
         async.some(moves, (item: Move, callback: (res: boolean) => void) => {
-            var move = {x: item.x, y: item.y, type: item.type, rate: 0 };
+            const move = {x: item.x, y: item.y, type: item.type, rate: 0 };
             if (move.type === 'P') {
                 callback(false);
                 return false;
             }
-            var fence = board.fences.findWhere(move);
+            const fence = board.fences.findWhere(move);
 
             if (!board.fences.validateFenceAndSibling(fence)) {
                 self.removePossibleWallsMove(move);
             } else if (!board.breakSomePlayerPath(fence)) {
-                var sibling = board.fences.getSibling(fence);
+                const sibling = board.fences.getSibling(fence);
 
-                var prevStateFence = fence.get('state');
-                var prevStateSibling = sibling.get('state');
+                const prevStateFence = fence.get('state');
+                const prevStateSibling = sibling.get('state');
 
                 fence.set({state: 'busy'});
                 sibling.set({state: 'busy'});
@@ -124,8 +125,8 @@ export class MegaBot extends SmartBot {
     }
 
     public calcHeuristic(_player: PlayerModel, board: BoardValidation) {
-        var otherPlayersPaths: number[] = [];
-        var currentPlayerPathLength = 0;
+        const otherPlayersPaths: number[] = [];
+        let currentPlayerPathLength = 0;
         board.players.each((player, index) => {
             if (this.currentPlayer === index) {
                 currentPlayerPathLength = this.getCountStepsToGoal(player, board) + 1;
@@ -133,17 +134,17 @@ export class MegaBot extends SmartBot {
                 otherPlayersPaths.push(this.getCountStepsToGoal(player, board));
             }
         });
-        var othersMinPathLength = _(otherPlayersPaths).min();
+        const othersMinPathLength = _(otherPlayersPaths).min();
         return currentPlayerPathLength - othersMinPathLength;
     }
 
     public getCountStepsToGoal(player: PlayerModel, board: BoardValidation): number {
-        var indexPlayer = board.players.indexOf(player);
+        const indexPlayer = board.players.indexOf(player);
 
         /**
          * leave out of account another players positions
          */
-        var prevPositions: {}[] = [];
+        const prevPositions: {}[] = [];
         board.players.each((p, i) => {
             prevPositions.push(p.pick('x', 'y', 'prev_x', 'prev_y'));
             if (i !== indexPlayer) {
@@ -151,9 +152,9 @@ export class MegaBot extends SmartBot {
             }
         });
 
-        var closed = this.processBoardForGoal(board, player);
+        const closed = this.processBoardForGoal(board, player);
 
-        var goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]!);
+        const goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]!);
         board.players.forEach((p, i) => { p.set(prevPositions[i]!); });
 
         return goal ? goal.deep : 9999;
@@ -165,7 +166,7 @@ export class MegaBot extends SmartBot {
 
     public getPossibleMoves(board: BoardValidation, player: PlayerModel): Move[] {
         this.initPossibleMoves();
-        var playerPositions = board.getValidPositions(player.pick('x', 'y') as Position, []).map(playerPosition => {
+        const playerPositions = board.getValidPositions(player.pick('x', 'y') as Position, []).map(playerPosition => {
             return { ...playerPosition, type: "P" } as Move;
         });
         return player.hasFences()
@@ -173,16 +174,16 @@ export class MegaBot extends SmartBot {
     }
 
     public removePossibleWallsMove(move: Move) {
-        var item = _(this.possibleWallsMoves).findWhere(move)!;
-        var index = _(this.possibleWallsMoves).indexOf(item);
+        const item = _(this.possibleWallsMoves).findWhere(move)!;
+        const index = _(this.possibleWallsMoves).indexOf(item);
         if (index !== -1) {
             this.possibleWallsMoves.splice(index, 1);
         }
     }
 
     public selectWallsMoves() {
-        var positions: Move[] = [];
-        var boardSize = this.board.get('boardSize');
+        const positions: Move[] = [];
+        const boardSize = this.board.get('boardSize');
 
         iter([boardSize, boardSize - 1], (i, j) => {
             positions.push({x: i, y: j, type: 'H'});

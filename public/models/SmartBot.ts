@@ -32,12 +32,12 @@ export class SmartBot extends Bot {
     }
 
     onMoveFence = (params: PlayerPosition & { type: "H" | "V"; }) => {
-        var fence = this.board.fences.findWhere({
+        const fence = this.board.fences.findWhere({
             x: params.x,
             y: params.y,
             type: params.type
         });
-        var sibling: FenceModel = this.board.fences.getSibling(fence);
+        const sibling: FenceModel = this.board.fences.getSibling(fence);
         (fence as FenceModel).set('state', 'busy');
         sibling.set('state', 'busy');
 
@@ -55,7 +55,7 @@ export class SmartBot extends Bot {
         this.currentPlayer = +currentPlayer;
         this.playersCount = +playersCount;
 
-        var historyModel = new GameHistoryModel({
+        const historyModel = new GameHistoryModel({
             turns: new TurnsCollection(),
             boardSize: boardSize || 9,
             playersCount: this.playersCount
@@ -77,7 +77,7 @@ export class SmartBot extends Bot {
         this.board.players = new PlayersCollection(historyModel.getPlayerPositions());
         this.player = this.board.players.at(this.currentPlayer);
 
-        var position = historyModel.getPlayerPositions()[this.currentPlayer];
+        const position = historyModel.getPlayerPositions()[this.currentPlayer];
         if (position) {
             this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
         }
@@ -85,22 +85,22 @@ export class SmartBot extends Bot {
 
     getPossiblePosition() {
         //console.profile();
-        var board = this.board.copy();
-        var player = board.players.at(this.currentPlayer);
-        var goalPath = this.findPathToGoal(player, board);
-        var result = goalPath.pop()!;
+        const board = this.board.copy();
+        const player = board.players.at(this.currentPlayer);
+        const goalPath = this.findPathToGoal(player, board);
+        const result = goalPath.pop()!;
         //console.profileEnd();
         return { x: result.x, y: result.y };
     }
 
     findPathToGoal(player: PlayerModel, board: BoardValidation) {
-        var playerXY = player.pick('x', 'y');
-        var indexPlayer = board.players.indexOf(player);
+        const playerXY = player.pick('x', 'y');
+        const indexPlayer = board.players.indexOf(player);
 
         /**
          * leave out of account another players positions
          */
-        // var prevPositions: {}[] = [];
+        // const prevPositions: {}[] = [];
         board.players.each((p, i) => {
             // prevPositions.push(p.pick('x', 'y', 'prev_x', 'prev_y'));
             if (i !== indexPlayer) {
@@ -108,10 +108,10 @@ export class SmartBot extends Bot {
             }
         });
 
-        var closed = this.processBoardForGoal(board, player);
+        const closed = this.processBoardForGoal(board, player);
 
-        var goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]!);
-        var path = this.buildPath(goal, playerXY, board, closed, player);
+        const goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]!);
+        const path = this.buildPath(goal, playerXY, board, closed, player);
         // board.players.each((p, i) => {
         //     p.set(prevPositions[i]!);
         // });
@@ -120,9 +120,10 @@ export class SmartBot extends Bot {
     }
 
     processBoardForGoal(board: BoardValidation, player: PlayerModel): PositionWithDeep[] {
-        var open = [], closed = [];
-        var indexPlayer = board.players.indexOf(player);
-        var currentCoordinate, newDeep = { value: 0};
+        const open = [], closed = [];
+        const indexPlayer = board.players.indexOf(player);
+        let currentCoordinate;
+        const newDeep = { value: 0};
 
         open.push({
             x: player.get('x'),
@@ -130,11 +131,11 @@ export class SmartBot extends Bot {
             deep: 0
         });
 
-        var busyFences = board.getBusyFences();
-        var notVisitedPositions = board.generatePositions(board.get('boardSize'));
+        const busyFences = board.getBusyFences();
+        const notVisitedPositions = board.generatePositions(board.get('boardSize'));
         delete notVisitedPositions[10 * player.get('x') + player.get('y')];
-        var addNewCoordinates = board.getAddNewCoordinateFunc(notVisitedPositions, open, newDeep);
-        var winPositionsCount = 0;
+        const addNewCoordinates = board.getAddNewCoordinateFunc(notVisitedPositions, open, newDeep);
+        let winPositionsCount = 0;
 
         while (open.length) {
             currentCoordinate = open.shift()! as PositionWithDeep;
@@ -162,7 +163,7 @@ export class SmartBot extends Bot {
     }
 
     findGoal(closed: PositionWithDeep[], pawn: Position & { isWin(x: number, y: number): boolean; }) {
-        var winPositions = _(closed).filter(item => {
+        const winPositions = _(closed).filter(item => {
             return pawn.isWin(item.x, item.y);
         }).sort((a, b) => {
             return a.deep - b.deep;
@@ -180,10 +181,10 @@ export class SmartBot extends Bot {
         if (!from) {
             return []; // changed from false
         }
-        var current = from;
-        var path = [];
+        let current = from;
+        const path = [];
 
-        var func = (pos: PositionWithDeep) => {
+        const func = (pos: PositionWithDeep) => {
             return (pos.deep === current.deep - 1) &&
                 _(board.getNearestPositions(current)).findWhere({x: pos.x, y: pos.y}) !== undefined;
         };
