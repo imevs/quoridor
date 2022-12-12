@@ -10,21 +10,21 @@ export class InfoView extends GameObject {
     playersPositions: (Position & { color: string; })[] = [];
 
     initialize(params: { attributes: (Position & { color: string; })[]; }) {
-        var me = this;
+        const me = this;
         params = params || {};
         me.playersPositions = params.attributes;
         this.$el = $('#game-info');
-        require(['text!templates/game-info.html'], function (tmpl: string) {
+        require(['text!templates/game-info.html'], (tmpl: string) => {
             me.template = tmpl;
             me.listenTo(me.model, 'change', me.render);
             me.render();
         });
     }
     render() {
-        var me = this;
+        const me = this;
         // @ts-ignore
         me.$el.html(_.template(me.template, me.model.toJSON(),  {variable: 'data'}));
-        me.$el.find('.move').click(function () {
+        me.$el.find('.move').click(() => {
             me.trigger('click');
         });
         this.clearFences();
@@ -35,7 +35,7 @@ export class InfoView extends GameObject {
     }
 
     drawRemainingFences() {
-        var me = this,
+        const me = this,
             cls = ViewOptions,
             w = cls.squareDistance,
             h = cls.squareHeight,
@@ -48,8 +48,8 @@ export class InfoView extends GameObject {
             boardHeight = (cls.squareHeight + cls.squareDistance) * boardSize + 2 * cls.borderDepth,
             boardWidth = (cls.squareWidth + cls.squareDistance) * fenceCountPerPlayer;
 
-        _(me.model.get('fences')).each(function (fenceCount, index) {
-            var x = x0, y = y0;
+        _(me.model.get('fences')).each((fenceCount, index) => {
+            let x = x0, y = y0;
             if (playersCount === 2 && index === 1 || playersCount === 4 && index > 1) {
                 y += boardHeight + h + w;
             }
@@ -57,10 +57,10 @@ export class InfoView extends GameObject {
                 x += boardWidth;
             }
 
-            _(fenceCount).times(function (i) {
-                var dx = i * (cls.squareWidth + cls.squareDistance);
+            _(fenceCount).times((i) => {
+                const dx = i * (cls.squareWidth + cls.squareDistance);
 
-                var obj = cls.getPaper().rect(x + dx, y, w, h);
+                const obj = cls.getPaper().rect(x + dx, y, w, h);
                 obj.attr('fill', me.playersPositions[index]!.color);
                 obj.attr('stroke-width', 1);
                 me.fences.push(obj);
@@ -71,28 +71,28 @@ export class InfoView extends GameObject {
 
     clearFences() {
         while (this.fences.length) {
-            var f = this.fences.pop()!;
+            const f = this.fences.pop()!;
             f.remove();
         }
     }
 
     displayActivePlayer() {
-        var cls = ViewOptions;
+        const cls = ViewOptions;
         if (this.active) {
             this.active[0].remove();
             this.active[1].remove();
         }
-        var active = this.model.get('activePlayer');
+        const active = this.model.get('activePlayer');
         this.active = this.displayPlayer(active, cls.squareWidth * 4, 70, 'Active');
     }
 
     displayCurrentPlayer() {
-        var cls = ViewOptions;
+        const cls = ViewOptions;
         if (this.current) {
             this.current[0].remove();
             this.current[1].remove();
         }
-        var current = this.model.get('currentPlayer');
+        const current = this.model.get('currentPlayer');
         this.current = this.displayPlayer(current, cls.squareWidth, 70, 'You');
     }
 
@@ -101,7 +101,7 @@ export class InfoView extends GameObject {
         if (_.isUndefined(index) || index < 0) {
             return;
         }
-        var me = this,
+        const me = this,
             cls = ViewOptions,
             color = me.playersPositions[index]!.color,
             w = cls.squareWidth,
@@ -109,11 +109,11 @@ export class InfoView extends GameObject {
             x = cls.startX + dx,
             y = cls.startY - dy;
 
-        var textObj = cls.getPaper().text(x - 70, y, text + ' -');
+        const textObj = cls.getPaper().text(x - 70, y, text + ' -');
         textObj.attr('fill', 'black');
         textObj.attr('font-size', 20);
 
-        var obj = cls.getPaper().ellipse(x, y, w / 2, h / 2);
+        const obj = cls.getPaper().ellipse(x, y, w / 2, h / 2);
         obj.attr('fill', color);
         return [obj, textObj];
     }

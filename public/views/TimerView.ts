@@ -6,19 +6,19 @@ export class TimerView extends View {
     template: string = "";
 
     initialize() {
-        var me = this;
+        const me = this;
         this.$el = $('#timer');
-        require(['text!templates/timer.html'], function (tmpl: string) {
+        require(['text!templates/timer.html'], (tmpl: string) => {
             me.template = tmpl;
             me.listenTo(me.model, 'change', me.render);
             me.render();
         });
     }
     render() {
-        var me = this;
+        const me = this;
         // @ts-ignore
         me.$el.html(_.template(me.template, me.model.toJSON(), { variable: 'data' }));
-        me.$el.find('.move').click(function () {
+        me.$el.find('.move').click(() => {
             me.trigger('click');
         });
         return this;

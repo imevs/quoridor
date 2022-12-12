@@ -19,8 +19,8 @@ export class FieldView extends GameObject<FieldModel> {
     });
 
     initialize(options: { attributes: { defaultColor?: string; } }) {
-        var cls = ViewOptions;
-        var model = this.model!;
+        const cls = ViewOptions;
+        const model = this.model!;
         this.defaultColor = options.attributes.defaultColor || this.defaults.color;
         model.set('color', this.defaultColor);
 
@@ -28,14 +28,14 @@ export class FieldView extends GameObject<FieldModel> {
         this.listenTo(model, 'selectfield', this.selectCurrent);
         this.listenTo(model, 'markfield', this.markCurrent);
 
-        var w = cls.squareWidth,
+        const w = cls.squareWidth,
             h = cls.squareHeight,
             d = cls.squareDistance,
             color = model.get('color');
-        var i = model.get('x'), j = model.get('y');
-        var x = (w + d) * i + cls.startX + cls.borderDepth;
-        var y = (h + d) * j + cls.startY + cls.borderDepth;
-        var obj = cls.getPaper().rect(x, y, w, h);
+        const i = model.get('x'), j = model.get('y');
+        const x = (w + d) * i + cls.startX + cls.borderDepth;
+        const y = (h + d) * j + cls.startY + cls.borderDepth;
+        const obj = cls.getPaper().rect(x, y, w, h);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
         this.setElement(obj);
@@ -63,8 +63,8 @@ export class FieldView extends GameObject<FieldModel> {
             this.model.get('x'), this.model.get('y'));
     }
     render() {
-        var circle = this.el as Required<RaphaelEl>;
-        var model = this.model;
+        const circle = this.el as Required<RaphaelEl>;
+        const model = this.model;
 
         circle.attr({
             fill: model.get('color')

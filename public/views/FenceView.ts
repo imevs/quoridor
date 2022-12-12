@@ -23,14 +23,14 @@ export class FenceView extends GameObject {
             'change:color'  : this.render
         }, this);
 
-        var obj = this.createElement();
+        const obj = this.createElement();
         if (obj) {
             this.setElement(obj);
         }
     }
     render                    () {
-        var circle = this.el as Required<RaphaelEl>;
-        var model = this.model;
+        const circle = this.el as Required<RaphaelEl>;
+        const model = this.model;
 
         if (model.get('state') === 'prebusy') {
             circle.toFront();
@@ -57,19 +57,19 @@ export function createFenceView(model: FenceHModel | FenceVModel): FenceHView | 
 export class FenceHView extends FenceView {
 
     createElement() {
-        var cls = ViewOptions;
-        var w = cls.squareWidth,
+        const cls = ViewOptions;
+        const w = cls.squareWidth,
             h = cls.squareDistance,
             dh = cls.squareHeight,
             dw = cls.squareDistance;
 
-        var i = this.model.get('x'),
+        const i = this.model.get('x'),
             j = this.model.get('y'),
             color = this.model.get('color');
 
-        var x = (w + dw) * i + cls.startX - dw / 2 + cls.borderDepth;
-        var y = (h + dh) * j + cls.startY + dh + cls.borderDepth;
-        var obj = cls.getPaper().rect(x, y, w + dw + 1, h);
+        const x = (w + dw) * i + cls.startX - dw / 2 + cls.borderDepth;
+        const y = (h + dh) * j + cls.startY + dh + cls.borderDepth;
+        const obj = cls.getPaper().rect(x, y, w + dw + 1, h);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
         return obj;
@@ -79,19 +79,19 @@ export class FenceHView extends FenceView {
 export class FenceVView extends FenceView {
 
     createElement() {
-        var cls = ViewOptions;
-        var model = this.model;
+        const cls = ViewOptions;
+        const model = this.model;
 
-        var i = model.get('x'), j = model.get('y'),
+        const i = model.get('x'), j = model.get('y'),
             color = model.get('color');
 
-        var w = cls.squareDistance,
+        const w = cls.squareDistance,
             h = cls.squareHeight,
             dh = cls.squareDistance,
             dw = cls.squareWidth;
-        var x = (w + dw) * i + cls.startX + dw + cls.borderDepth;
-        var y = (h + dh) * j + cls.startY - dh / 2 + cls.borderDepth;
-        var obj = cls.getPaper().rect(x, y, w, h + dh + 1);
+        const x = (w + dw) * i + cls.startX + dw + cls.borderDepth;
+        const y = (h + dh) * j + cls.startY - dh / 2 + cls.borderDepth;
+        const obj = cls.getPaper().rect(x, y, w, h + dh + 1);
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
         return obj;

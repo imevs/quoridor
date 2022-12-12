@@ -7,16 +7,16 @@ export class GameHistoryView<TModel extends (BackboneModel) = GameHistoryModel> 
      template = "";
 
     initialize() {
-        var me = this;
+        const me = this;
         this.$el = $('#history');
-        require(['text!templates/history.html'], function (tmpl: string) {
+        require(['text!templates/history.html'], (tmpl: string) => {
             me.template = tmpl;
             me.listenTo(me.model, 'change', me.render);
             me.render();
         });
     }
     render() {
-        var data = this.model.toJSON();
+        const data = this.model.toJSON();
         data.turns = data.turns.models;
         // @ts-ignore
         this.$el.html(_.template(this.template, data, { variable: 'data' }));

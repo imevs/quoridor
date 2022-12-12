@@ -17,7 +17,7 @@ export class BoardView extends GameObject<BoardValidation> {
         this.model.trigger('confirmturn', true);
     };
     render() {
-        var me = this;
+        const me = this;
         this.$el = $(this.selector);
         require(['text!templates/board.html'], (tmpl: string) => {
             me.template = tmpl;
@@ -33,8 +33,8 @@ export class BoardView extends GameObject<BoardValidation> {
     }
 
     renderLegend() {
-        var me = this.model;
-        var cls = ViewOptions,
+        const me = this.model;
+        const cls = ViewOptions,
             d = cls.squareDistance,
             boardSize = me.get('boardSize'),
             depth = cls.borderDepth,
@@ -42,13 +42,13 @@ export class BoardView extends GameObject<BoardValidation> {
             h = boardSize * (d + cls.squareHeight),
             x = cls.startX + depth / 2,
             y = cls.startY + depth / 2 - 2;
-        var largeFontSize = depth - 3;
-        var smallFontSize = depth / 2;
+        const largeFontSize = depth - 3;
+        const smallFontSize = depth / 2;
 
-        _(_.range(boardSize)).each(function (i) {
-            var text;
-            var _yv = y + i * (cls.squareHeight + d) + (cls.squareHeight + depth) / 2;
-            var _xh = x + i * (cls.squareWidth + d) + (cls.squareWidth + depth) / 2;
+        _(_.range(boardSize)).each((i) => {
+            let text;
+            const _yv = y + i * (cls.squareHeight + d) + (cls.squareHeight + depth) / 2;
+            const _xh = x + i * (cls.squareWidth + d) + (cls.squareWidth + depth) / 2;
 
             text = cls.getPaper().text(x, _yv, me.intToInt(i));
             text.attr('fill', 'white');
@@ -67,10 +67,10 @@ export class BoardView extends GameObject<BoardValidation> {
             text.attr('font-size', largeFontSize);
         });
 
-        _(_.range(boardSize - 1)).each(function (i) {
-            var text;
-            var _yv = y + i * (cls.squareHeight + d) + cls.squareHeight + (d + depth) / 2;
-            var _xh = x + i * (cls.squareWidth + d) + cls.squareWidth + (d + depth) / 2;
+        _(_.range(boardSize - 1)).each((i) => {
+            let text;
+            const _yv = y + i * (cls.squareHeight + d) + cls.squareHeight + (d + depth) / 2;
+            const _xh = x + i * (cls.squareWidth + d) + cls.squareWidth + (d + depth) / 2;
 
             text = cls.getPaper().text(x, _yv, me.intToInt(i));
             text.attr('fill', 'white');
@@ -91,8 +91,8 @@ export class BoardView extends GameObject<BoardValidation> {
     }
 
     drawBorders() {
-        var me = this.model;
-        var cls = ViewOptions,
+        const me = this.model;
+        const cls = ViewOptions,
             depth = cls.borderDepth,
             d = cls.squareDistance,
             w = me.get('boardSize') * (d + cls.squareWidth) - d + depth,
@@ -100,14 +100,14 @@ export class BoardView extends GameObject<BoardValidation> {
             x = cls.startX,
             y = cls.startY;
 
-        var p = cls.getPaper();
-        var borderLeft = p.rect(x, y + depth, depth, h);
-        var borderRight = p.rect(x + w, y + depth, depth, h);
-        var borderTop = p.rect(x, y, w + depth, depth);
-        var borderBottom = p.rect(x, y + h + depth, w + depth, depth);
+        const p = cls.getPaper();
+        const borderLeft = p.rect(x, y + depth, depth, h);
+        const borderRight = p.rect(x + w, y + depth, depth, h);
+        const borderTop = p.rect(x, y, w + depth, depth);
+        const borderBottom = p.rect(x, y + h + depth, w + depth, depth);
 
-        var defColor = '#c75';
-        var positions = me.players.playersPositions;
+        const defColor = '#c75';
+        const positions = me.players.playersPositions;
         if (me.get('playersCount') === 2) {
             borderTop.attr('fill', positions[1]!.color);
             borderRight.attr('fill', defColor);
@@ -124,19 +124,19 @@ export class BoardView extends GameObject<BoardValidation> {
     }
 
     afterRender() {
-        var me = this.model;
+        const me = this.model;
 
-        me.fields.each(function (model) {
+        me.fields.each((model) => {
             new FieldView({ model: model });
         });
-        me.fences.each(function (model) {
+        me.fences.each((model) => {
             createFenceView(model);
         });
-        me.players.each(function (model) {
+        me.players.each((model) => {
             new PlayerView({model: model});
         });
         this.drawBorders();
-        var info = new InfoView({
+        const info = new InfoView({
             model: me.infoModel,
             attributes: me.players.playersPositions
         });

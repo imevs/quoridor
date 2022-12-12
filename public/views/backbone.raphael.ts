@@ -32,8 +32,8 @@ export class RaphaelView<TModel extends (Model) = Model, TElement extends Raphae
         const eventsObj = events as EventsHash;
 
         if(undelegateEvents) this.undelegateEvents();
-        for (var eventName in events) {
-            var method = eventsObj[eventName];
+        for (const eventName in events) {
+            let method = eventsObj[eventName];
             if (!_.isFunction(method) && method !== undefined) {
                 // @ts-ignore
                 method = this[method];
