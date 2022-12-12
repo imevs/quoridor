@@ -1,4 +1,5 @@
 import { BoardModel } from "public/models/BoardModel";
+import { BoardView } from "public/views/BoardView";
 import { parseUrl } from "public/models/urlParser";
 
 $(function () {

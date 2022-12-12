@@ -1,20 +1,27 @@
-/* global GameObject */
-window.FieldView = GameObject.extend({
+import { GameObject, ViewOptions } from "public/views/GameObject";
+import { FieldModel } from "public/models/FieldModel";
+import { RaphaelEl } from "public/views/backbone.raphael";
 
-    defaults: {
+export class FieldView extends GameObject<FieldModel> {
+
+    defaults = {
         color: '#742'
-    },
+    };
+    // @ts-ignore
+    model: FieldModel;
 
-    events: {
+    defaultColor = "";
+
+    events = () => ({
         'click'      : 'movePlayer',
         'mouseover'  : 'onSelectFieldBefore',
         'mouseout'   : 'unSelectCurrent'
-    },
+    });
 
-    initialize: function (options) {
-        var cls = this.constructor;
-        var model = this.model;
-        this.defaultColor = options.defaultColor || this.defaults.color;
+    initialize(options: { attributes: { defaultColor?: string; } }) {
+        var cls = ViewOptions;
+        var model = this.model!;
+        this.defaultColor = options.attributes.defaultColor || this.defaults.color;
         model.set('color', this.defaultColor);
 
         this.listenTo(model, 'change', this.render);
@@ -32,36 +39,37 @@ window.FieldView = GameObject.extend({
         obj.attr('fill', color);
         obj.attr('stroke-width', 0);
         this.setElement(obj);
-    },
+    }
 
-    selectCurrent  : function () {
+    selectCurrent  () {
         this.model.set({color: 'black'});
-    },
+    }
 
-    markCurrent  : function () {
+    markCurrent  () {
         this.model.set({color: 'gray'});
-    },
+    }
 
-    unSelectCurrent: function () {
+    unSelectCurrent() {
         this.model.set({color: this.defaultColor});
-    },
+    }
 
-    movePlayer     : function () {
+    movePlayer     () {
         this.model.trigger('moveplayer',
             this.model.get('x'), this.model.get('y'));
         this.unSelectCurrent();
-    },
-    onSelectFieldBefore: function () {
+    }
+    onSelectFieldBefore() {
         this.model.trigger('beforeselectfield',
             this.model.get('x'), this.model.get('y'));
-    },
-    render: function () {
-        var circle = this.el;
+    }
+    render() {
+        var circle = this.el as Required<RaphaelEl>;
         var model = this.model;
 
         circle.attr({
             fill: model.get('color')
         });
+        return this;
     }
 
-});
+}

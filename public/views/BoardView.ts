@@ -1,27 +1,40 @@
-/* global GameObject,$,_, TimerView, PlayerView, FieldView, FenceView, GameHistoryView,InfoView */
-window.BoardView = GameObject.extend({
-    selector: '#board',
-    events: {
+import { GameObject, ViewOptions } from "public/views/GameObject";
+import { FieldView } from "public/views/FieldView";
+import { createFenceView } from "public/views/FenceView";
+import { PlayerView } from "public/views/PlayerView";
+import { InfoView } from "public/views/InfoView";
+import { TimerView } from "public/views/TimerView";
+import { GameHistoryView } from "public/views/GameHistoryView";
+import _ from "underscore";
+import { BoardValidation } from "public/models/BoardValidation";
+
+export class BoardView extends GameObject<BoardValidation> {
+    selector = '#board';
+    events = () => ({
         'click': 'move'
-    },
-    move: function () {
+    });
+    move() {
         this.model.trigger('confirmturn', true);
-    },
-    render: function (callback) {
+    };
+    render() {
         var me = this;
         this.$el = $(this.selector);
-        this.template = require(['text!templates/board.html'], function (tmpl) {
+        require(['text!templates/board.html'], (tmpl: string) => {
             me.template = tmpl;
-            me.$el.html(_.template(me.template, me.model.attributes,  {variable: 'data'}));
-            callback.call(me);
+            // @ts-ignore
+            me.$el.html(_.template(me.template, me.model.attributes, {variable: 'data'}));
+            this.afterRender();
         });
-    },
-    initialize: function () {
-        this.render(this.afterRender);
-    },
-    renderLegend  : function () {
+        return this;
+    };
+
+    initialize() {
+        this.render();
+    }
+
+    renderLegend() {
         var me = this.model;
-        var cls = this.constructor,
+        var cls = ViewOptions,
             d = cls.squareDistance,
             boardSize = me.get('boardSize'),
             depth = cls.borderDepth,
@@ -75,11 +88,11 @@ window.BoardView = GameObject.extend({
             text.attr('fill', 'black');
             text.attr('font-size', smallFontSize);
         });
-    },
+    }
 
-    drawBorders: function () {
+    drawBorders() {
         var me = this.model;
-        var cls = this.constructor,
+        var cls = ViewOptions,
             depth = cls.borderDepth,
             d = cls.squareDistance,
             w = me.get('boardSize') * (d + cls.squareWidth) - d + depth,
@@ -96,28 +109,28 @@ window.BoardView = GameObject.extend({
         var defColor = '#c75';
         var positions = me.players.playersPositions;
         if (me.get('playersCount') === 2) {
-            borderTop.attr('fill', positions[1].color);
+            borderTop.attr('fill', positions[1]!.color);
             borderRight.attr('fill', defColor);
-            borderBottom.attr('fill', positions[0].color);
+            borderBottom.attr('fill', positions[0]!.color);
             borderLeft.attr('fill', defColor);
         } else if (me.get('playersCount') === 4) {
-            borderTop.attr('fill', positions[2].color);
-            borderRight.attr('fill', positions[3].color);
-            borderBottom.attr('fill', positions[0].color);
-            borderLeft.attr('fill', positions[1].color);
+            borderTop.attr('fill', positions[2]!.color);
+            borderRight.attr('fill', positions[3]!.color);
+            borderBottom.attr('fill', positions[0]!.color);
+            borderLeft.attr('fill', positions[1]!.color);
         }
 
         this.renderLegend();
-    },
+    }
 
-    afterRender: function () {
+    afterRender() {
         var me = this.model;
 
         me.fields.each(function (model) {
-            new FieldView({model: model});
+            new FieldView({ model: model });
         });
         me.fences.each(function (model) {
-            FenceView.createFenceView(model);
+            createFenceView(model);
         });
         me.players.each(function (model) {
             new PlayerView({model: model});
@@ -125,7 +138,7 @@ window.BoardView = GameObject.extend({
         this.drawBorders();
         var info = new InfoView({
             model: me.infoModel,
-            playersPositions: me.players.playersPositions
+            attributes: me.players.playersPositions
         });
         new TimerView({
             model: me.timerModel
@@ -136,4 +149,4 @@ window.BoardView = GameObject.extend({
 
         info.on('click', _.bind(this.move, this));
     }
-});
+}

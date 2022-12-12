@@ -1,19 +1,28 @@
-/* global GameObject,$,_ */
-window.InfoView = GameObject.extend({
-    fences: [],
-    initialize: function (params) {
+import { GameObject, ViewOptions } from "public/views/GameObject";
+import _ from "underscore";
+import { Position } from "public/models/BackboneModel";
+import { RaphaelEl } from "public/views/backbone.raphael";
+
+export class InfoView extends GameObject {
+    fences: (Required<RaphaelEl>)[] = [];
+    private current: any[] | undefined = undefined;
+    private active: [Required<RaphaelEl>, Required<RaphaelEl>] | undefined = undefined;
+    playersPositions: (Position & { color: string; })[] = [];
+
+    initialize(params: { attributes: (Position & { color: string; })[]; }) {
         var me = this;
         params = params || {};
-        me.playersPositions = params.playersPositions;
+        me.playersPositions = params.attributes;
         this.$el = $('#game-info');
-        this.template = require(['text!templates/game-info.html'], function (tmpl) {
+        require(['text!templates/game-info.html'], function (tmpl: string) {
             me.template = tmpl;
             me.listenTo(me.model, 'change', me.render);
             me.render();
         });
-    },
-    render: function () {
+    }
+    render() {
         var me = this;
+        // @ts-ignore
         me.$el.html(_.template(me.template, me.model.toJSON(),  {variable: 'data'}));
         me.$el.find('.move').click(function () {
             me.trigger('click');
@@ -22,11 +31,12 @@ window.InfoView = GameObject.extend({
         this.drawRemainingFences();
         this.displayCurrentPlayer();
         this.displayActivePlayer();
-    },
+        return this;
+    }
 
-    drawRemainingFences: function () {
+    drawRemainingFences() {
         var me = this,
-            cls = this.constructor,
+            cls = ViewOptions,
             w = cls.squareDistance,
             h = cls.squareHeight,
             fences = me.model.get('fences'),
@@ -51,49 +61,49 @@ window.InfoView = GameObject.extend({
                 var dx = i * (cls.squareWidth + cls.squareDistance);
 
                 var obj = cls.getPaper().rect(x + dx, y, w, h);
-                obj.attr('fill', me.playersPositions[index].color);
+                obj.attr('fill', me.playersPositions[index]!.color);
                 obj.attr('stroke-width', 1);
                 me.fences.push(obj);
             });
 
         });
-    },
+    }
 
-    clearFences: function () {
+    clearFences() {
         while (this.fences.length) {
-            var f = this.fences.pop();
+            var f = this.fences.pop()!;
             f.remove();
         }
-    },
+    }
 
-    displayActivePlayer: function () {
-        var cls = this.constructor;
+    displayActivePlayer() {
+        var cls = ViewOptions;
         if (this.active) {
             this.active[0].remove();
             this.active[1].remove();
         }
         var active = this.model.get('activePlayer');
         this.active = this.displayPlayer(active, cls.squareWidth * 4, 70, 'Active');
-    },
+    }
 
-    displayCurrentPlayer: function () {
-        var cls = this.constructor;
+    displayCurrentPlayer() {
+        var cls = ViewOptions;
         if (this.current) {
             this.current[0].remove();
             this.current[1].remove();
         }
         var current = this.model.get('currentPlayer');
         this.current = this.displayPlayer(current, cls.squareWidth, 70, 'You');
-    },
+    }
 
-    displayPlayer: function (index, dx, dy, text) {
+    displayPlayer(index: number, dx: number, dy: number, text: string): [Required<RaphaelEl>, Required<RaphaelEl>] | undefined {
         dx += 70;
         if (_.isUndefined(index) || index < 0) {
             return;
         }
         var me = this,
-            cls = me.constructor,
-            color = me.playersPositions[index].color,
+            cls = ViewOptions,
+            color = me.playersPositions[index]!.color,
             w = cls.squareWidth,
             h = cls.squareHeight,
             x = cls.startX + dx,
@@ -107,4 +117,4 @@ window.InfoView = GameObject.extend({
         obj.attr('fill', color);
         return [obj, textObj];
     }
-});
+}

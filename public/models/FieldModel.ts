@@ -1,7 +1,7 @@
 import { BackboneCollection, BackboneModel, Position } from "public/models/BackboneModel";
 import { iter } from "./utils";
 
-export class FieldModel extends BackboneModel<Position> {
+export class FieldModel extends BackboneModel<Position & { color: string; }> {
 
     /**
      * TODO: check if is used

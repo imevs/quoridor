@@ -1,8 +1,9 @@
-/* global GameObject */
-window.PlayerView = GameObject.extend({
+import { GameObject, ViewOptions } from "public/views/GameObject";
 
-    initialize: function () {
-        var cls = this.constructor;
+export class PlayerView extends GameObject {
+
+    initialize() {
+        var cls = ViewOptions;
         var model = this.model;
         this.listenTo(model, 'change', this.render);
         this.listenTo(model, 'resetstate', this.resetState);
@@ -19,35 +20,36 @@ window.PlayerView = GameObject.extend({
         obj.attr('fill', color);
 
         this.setElement(obj);
-    },
+    }
 
-    markAsCurrent: function () {
-        this.el.attr({'stroke-width': 3});
-    },
+    markAsCurrent() {
+        this.el.attr?.({'stroke-width': 3});
+    }
 
-    resetState: function () {
-        this.el.attr({'stroke-width': 1});
-    },
+    resetState() {
+        this.el.attr?.({'stroke-width': 1});
+    }
 
-    getPosX: function (x) {
-        var cls = this.constructor,
+    getPosX(x: number) {
+        var cls = ViewOptions,
             w = cls.squareWidth,
             d = cls.squareDistance;
         return (w + d) * x + cls.startX + w / 2 + cls.borderDepth;
-    },
+    }
 
-    getPosY: function (y) {
-        var cls = this.constructor,
+    getPosY(y: number) {
+        var cls = ViewOptions,
             h = cls.squareHeight,
             d = cls.squareDistance;
         return (h + d) * y + cls.startY + h / 2 + cls.borderDepth;
-    },
+    }
 
-    render: function () {
-        this.el.attr({
+    render() {
+        this.el.attr?.({
             fill: this.model.get('color'),
             cx  : this.getPosX(this.model.get('x')),
             cy  : this.getPosY(this.model.get('y'))
         });
+        return this;
     }
-});
+}

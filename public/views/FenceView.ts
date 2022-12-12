@@ -1,31 +1,35 @@
 /* global GameObject, FenceHModel */
-var FenceHView, FenceVView;
+import { GameObject, ViewOptions } from "public/views/GameObject";
+import { FenceHModel, FenceVModel } from "public/models/FenceModel";
+import { RaphaelEl } from "public/views/backbone.raphael";
 
-var FenceView = GameObject.extend({
-    events                    : {
+export class FenceView extends GameObject {
+    events = () => ({
         'click'    : 'onClick',
         'mouseover': 'highlightCurrentAndSibling',
         'mouseout' : 'resetCurrentAndSibling'
-    },
-    onClick                   : function () {
+    });
+    onClick                   () {
         this.model.trigger('selected', this.model);
-    },
-    highlightCurrentAndSibling: function () {
+    }
+    highlightCurrentAndSibling() {
         this.model.trigger('highlight_current_and_sibling', this.model);
-    },
-    resetCurrentAndSibling    : function () {
+    }
+    resetCurrentAndSibling    () {
         this.model.trigger('reset_current_and_sibling', this.model);
-    },
-    initialize                : function () {
+    }
+    initialize                () {
         this.model.on({
             'change:color'  : this.render
         }, this);
 
-        var obj = this.createElement && this.createElement();
-        this.setElement(obj);
-    },
-    render                    : function () {
-        var circle = this.el;
+        var obj = this.createElement();
+        if (obj) {
+            this.setElement(obj);
+        }
+    }
+    render                    () {
+        var circle = this.el as Required<RaphaelEl>;
         var model = this.model;
 
         if (model.get('state') === 'prebusy') {
@@ -38,19 +42,22 @@ var FenceView = GameObject.extend({
             circle.toFront();
         }
         circle.attr({fill: model.get('color')});
+        return this;
     }
-}, {
-    createFenceView: function (model) {
-        return model instanceof FenceHModel
-            ? new FenceHView({model: model})
-            : new FenceVView({model: model});
-    }
-});
 
-FenceHView = FenceView.extend({
+    createElement(): null | RaphaelEl { return null; }
+}
 
-    createElement: function () {
-        var cls = this.constructor;
+export function createFenceView(model: FenceHModel | FenceVModel): FenceHView | FenceVView {
+    return model instanceof FenceHModel
+        ? new FenceHView({model: model})
+        : new FenceVView({model: model});
+}
+
+export class FenceHView extends FenceView {
+
+    createElement() {
+        var cls = ViewOptions;
         var w = cls.squareWidth,
             h = cls.squareDistance,
             dh = cls.squareHeight,
@@ -67,12 +74,12 @@ FenceHView = FenceView.extend({
         obj.attr('stroke-width', 0);
         return obj;
     }
-});
+}
 
-FenceVView = FenceView.extend({
+export class FenceVView extends FenceView {
 
-    createElement: function () {
-        var cls = this.constructor;
+    createElement() {
+        var cls = ViewOptions;
         var model = this.model;
 
         var i = model.get('x'), j = model.get('y'),
@@ -89,4 +96,4 @@ FenceVView = FenceView.extend({
         obj.attr('stroke-width', 0);
         return obj;
     }
-});
+}
