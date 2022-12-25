@@ -6,7 +6,7 @@ import type { EventHandler } from "backbone";
 
 export class BotWrapper extends BackboneModel {
 
-    public currentPlayer: string = "";
+    public currentPlayer!: string;
     public bot!: Bot | SmartBot | Worker;
 
     public initialize() {

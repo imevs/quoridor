@@ -5,7 +5,7 @@ import { BackboneModel } from "../models/BackboneModel";
 const { View } = Backbone;
 
 export class GameHistoryView<TModel extends (BackboneModel) = GameHistoryModel> extends View<TModel> {
-     template = "";
+     template!: string;
 
     initialize() {
         const me = this;

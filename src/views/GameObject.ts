@@ -16,5 +16,5 @@ export const ViewOptions = {
 };
 
 export class GameObject<TModel extends (BackboneModel) = BackboneModel> extends RaphaelView<TModel, RaphaelEl> {
-    template = "";
+    template!: string;
 }

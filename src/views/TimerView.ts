@@ -4,7 +4,7 @@ const { View } = Backbone;
 
 export class TimerView extends View {
 
-    template: string = "";
+    template!: string;
 
     initialize() {
         const me = this;

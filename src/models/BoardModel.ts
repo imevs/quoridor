@@ -134,13 +134,14 @@ export class BoardModel extends BackboneModel {
         });
         me.getActivePlayer().trigger('setcurrent');
 
-        // if (!me.isOnlineGame()) {
-        //     if (!me.getNextActiveBot(me.get('activePlayer'))) {
-        /**
-         * if local mode game then automatic change currentPlayer
-         */
-        // me.set('currentPlayer', me.get('activePlayer'));
-        // }
+        if (!me.isOnlineGame()) {
+            if (!me.getNextActiveBot(me.get('activePlayer'))) {
+                /**
+                 * if local mode game then automatic change currentPlayer
+                 */
+                me.set('currentPlayer', me.get('activePlayer'));
+            }
+        }
 
         if (me.isFenceMoved) {
             me.emitEventToBots('server_move_fence', {
@@ -157,7 +158,6 @@ export class BoardModel extends BackboneModel {
                 playerIndex: index
             });
         }
-        // }
 
         me.isPlayerMoved = false;
         me.isFenceMoved = false;

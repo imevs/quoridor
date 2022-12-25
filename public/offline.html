@@ -20,13 +20,13 @@
     <script type="text/html" id="game-info-tmpl">
         <p>
             <% if (typeof data.currentPlayer != "undefined") { %>
-            <% if (data.currentPlayer >= 0) { %>
-            <button class="move btn btn-large btn-primary">Complete the move</button>
+                <% if (data.currentPlayer >= 0) { %>
+                    <button class="move btn btn-large btn-primary">Complete the move</button>
+                <%} else { %>
+                    <strong>You may to view game only (choose who to play from links above)</strong>
+                <%} %>
             <%} else { %>
-            <strong>You may to view game only (choose who to play from links above)</strong>
-            <%} %>
-            <%} else { %>
-            Connecting to game server...
+                Connecting to game server...
             <%}%>
         </p>
     </script>
