@@ -63,7 +63,7 @@ export class FenceModel extends BackboneModel<FenceModelProps> {
 
 export class FenceHModel extends FenceModel {
     public defaults() { return {
-        type: 'H' as const,
+        orientation: 'H' as const,
         color: '#c75',
         state: ''
     }; }
@@ -77,7 +77,7 @@ export class FenceHModel extends FenceModel {
 
 export class FenceVModel extends FenceModel {
     public defaults() { return {
-        type: 'V' as const,
+        orientation: 'V' as const,
         color: '#c75',
         state: ''
     }; }
@@ -105,17 +105,17 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
     public createFences(boardSize: number, fences: FencePosition[] = []) {
         const me = this;
         iter([boardSize, boardSize - 1], (i, j) => {
-            me.add({x: i, y: j, type: 'H'});
+            me.add({x: i, y: j, orientation: 'H'});
         });
         iter([boardSize - 1, boardSize], (i, j) => {
-            me.add({x: i, y: j, type: 'V'});
+            me.add({x: i, y: j, orientation: 'V'});
         });
 
         fences.forEach(fence => {
             const find: FenceModel = me.findWhere({
                 x: fence.x,
                 y: fence.y,
-                type: fence.orientation
+                orientation: fence.orientation
             });
             const sibling: FenceModel = me.getSibling(find as FenceHModel | FenceVModel);
             find.set('state', 'busy');
@@ -149,7 +149,7 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
         return siblingPosition && this.findWhere({
             x   : siblingPosition.x,
             y   : siblingPosition.y,
-            type: item.get('orientation')
+            orientation: item.get('orientation')
         });
     }
     public triggerEventOnFenceAndSibling(item: FenceHModel | FenceVModel, event: string) {
@@ -197,7 +197,7 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
             i = 'x';
             j = 'y';
         }
-        const attrs = { state: 'busy', type: type, x: 0, y: 0 };
+        const attrs = { state: 'busy', orientation: type, x: 0, y: 0 };
         attrs[i] = item.get(i) - 1;
         const prevLine = this.where(attrs);
         const f1 = _(prevLine).find(model => {

@@ -45,9 +45,9 @@ export class RaphaelView<TModel extends (Model) = Model, TElement extends Raphae
             method = _.bind(method as Function, this);
             //If it is one of the svg/vml events
             // @ts-ignore
-            const event = this.el[eventName];
-            if (event) {
-                event(method);
+            if (this.el[eventName]) {
+            // @ts-ignore
+            this.el[eventName](method);
             } // Custom events for RaphaelView object
             else {
                 this.on(eventName, method);

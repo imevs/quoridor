@@ -10,19 +10,16 @@ export class FieldView extends GameObject<FieldModel> {
     // @ts-ignore
     model: FieldModel;
 
-    defaultColor = "";
+    events() { return {
+        click      : this.movePlayer,
+        mouseover  : this.onSelectFieldBefore,
+        mouseout   : this.unSelectCurrent
+    }; }
 
-    events = () => ({
-        'click'      : 'movePlayer',
-        'mouseover'  : 'onSelectFieldBefore',
-        'mouseout'   : 'unSelectCurrent'
-    });
-
-    initialize(options: { attributes?: { defaultColor?: string; } }) {
+    initialize() {
         const cls = ViewOptions;
         const model = this.model!;
-        this.defaultColor = options.attributes?.defaultColor || this.defaults().color;
-        model.set('color', this.defaultColor);
+        model.set('color', this.defaults().color);
 
         this.listenTo(model, 'change', this.render);
         this.listenTo(model, 'selectfield', this.selectCurrent);
@@ -50,7 +47,7 @@ export class FieldView extends GameObject<FieldModel> {
     }
 
     unSelectCurrent() {
-        this.model.set({color: this.defaultColor});
+        this.model.set({color: this.defaults().color });
     }
 
     movePlayer     () {
@@ -60,7 +57,7 @@ export class FieldView extends GameObject<FieldModel> {
     }
     onSelectFieldBefore() {
         this.model.trigger('beforeselectfield',
-            this.model.get('x'), this.model.get('y'));
+            this.model.get('x'), this.model.get('y'), this.model);
     }
     render() {
         const circle = this.el as Required<RaphaelEl>;

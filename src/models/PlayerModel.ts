@@ -42,19 +42,22 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
     model           = PlayerModel;
     fencesCount     = 20;
 
-    public playersPositions: (Position & {
+    public playersPositions!: (Position & {
         color: string;
         name: string;
         isWin(x: number, y: number): boolean;
-    })[] = [
-        {x: 4, y: 0, color: '#d2322d', name: 'red', isWin: (_x, y) => { return y === 8; } },
-        {x: 8, y: 4, color: '#3477B2', name: 'blue', isWin: x => { return x === 0; } },
-        {x: 4, y: 8, color: 'green', name: 'green', isWin: (_x, y) => { return y === 0; } },
-        {x: 0, y: 4, color: '#ed9c28', name: 'orange', isWin: x => { return x === 8; } }
-    ];
+    })[];
 
     public initialize (players: { movedFences: number; fencesRemaining: number; url: number; }[]) {
         const me = this;
+
+        this.playersPositions = [
+            {x: 4, y: 0, color: '#d2322d', name: 'red', isWin: (_x, y) => { return y === 8; } },
+            {x: 8, y: 4, color: '#3477B2', name: 'blue', isWin: x => { return x === 0; } },
+            {x: 4, y: 8, color: 'green', name: 'green', isWin: (_x, y) => { return y === 0; } },
+            {x: 0, y: 4, color: '#ed9c28', name: 'orange', isWin: x => { return x === 8; } }
+        ];
+
         players && players.forEach((player, i) => {
             player.url = i;
             if (player.movedFences !== undefined) {

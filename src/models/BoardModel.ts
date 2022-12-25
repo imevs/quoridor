@@ -1,7 +1,7 @@
 // import _ from "underscore";
 import { BackboneModel } from "./BackboneModel";
 import { BotWrapper } from "./BotWrapper";
-import { FieldsCollection } from "./FieldModel";
+import { FieldModel, FieldsCollection } from "./FieldModel";
 import {
     FenceHModel,
     FencePosition,
@@ -236,9 +236,9 @@ export class BoardModel extends BackboneModel {
         me.on('maketurn', this.makeTurn);
 
         this.fields.on('moveplayer', me.onMovePlayer, this);
-        this.fields.on('beforeselectfield', (x, y, model) => {
+        this.fields.on('beforeselectfield', (x, y, model: FieldModel) => {
             if (me.isValidCurrentPlayerPosition(x, y)) {
-                model.selectField(x, y);
+                model.selectField();
             }
         });
         this.on('change:activePlayer', this.updateInfo, this);

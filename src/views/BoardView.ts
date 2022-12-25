@@ -10,12 +10,13 @@ import { BoardValidation } from "../models/BoardValidation";
 
 export class BoardView extends GameObject<BoardValidation> {
     selector = '#board';
-    events = () => ({
-        'click': 'move'
-    });
+    events() { return {
+        click: this.move,
+    }; }
     move() {
         this.model.trigger('confirmturn', true);
     };
+    
     render() {
         const me = this;
         this.$el = $(this.selector);

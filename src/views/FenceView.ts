@@ -4,11 +4,11 @@ import { FenceHModel, FenceVModel } from "../models/FenceModel";
 import { RaphaelEl } from "../views/backbone.raphael";
 
 export class FenceView extends GameObject {
-    events = () => ({
-        'click'    : 'onClick',
-        'mouseover': 'highlightCurrentAndSibling',
-        'mouseout' : 'resetCurrentAndSibling'
-    });
+    events() { return {
+        click    : this.onClick,
+        mouseover: this.highlightCurrentAndSibling,
+        mouseout : this.resetCurrentAndSibling,
+    }; }
     onClick                   () {
         this.model.trigger('selected', this.model);
     }

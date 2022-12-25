@@ -22,14 +22,15 @@ export class FieldModel extends BackboneModel<Position & { color: string; }> {
         });
         return color;
     }
+
+    selectField() {
+        this.trigger('selectfield');
+    }
+
 }
 
 export class FieldsCollection extends BackboneCollection<FieldModel> {
     model = FieldModel;
-    selectField(x: number, y: number) {
-        const field = this.findWhere({x: x, y: y});
-        field.trigger('selectfield');
-    }
     createFields(boardSize: number) {
         const me = this;
         iter([boardSize, boardSize], (i: number, j: number) => {
