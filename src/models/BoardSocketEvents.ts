@@ -186,7 +186,7 @@ export class BoardSocketEvents extends BoardValidation {
                 type: fencePos.t
             });
             fence.trigger('movefence');
-            me.fences.getSibling(fence).trigger('movefence');
+            me.fences.getSibling(fence)?.trigger('movefence');
         });
         me.fences.setBusy();
         me.run(activePlayer, currentPlayer);

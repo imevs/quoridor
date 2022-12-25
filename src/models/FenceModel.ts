@@ -59,45 +59,25 @@ export class FenceModel extends BackboneModel<FenceModelProps> {
             });
         }
     }
-}
-
-export class FenceHModel extends FenceModel {
-    public defaults() { return {
-        orientation: 'H' as const,
-        color: '#c75',
-        state: ''
-    }; }
-    public getAdjacentFencePosition() {
-        return {
-            x: this.get('x') - 1,
-            y: this.get('y')
-        };
-    }
-}
-
-export class FenceVModel extends FenceModel {
-    public defaults() { return {
-        orientation: 'V' as const,
-        color: '#c75',
-        state: ''
-    }; }
 
     public getAdjacentFencePosition() {
-        return {
-            x: this.get('x'),
-            y: this.get('y') - 1
-        };
+        if (this.get('orientation') === 'H') {
+            return {
+                x: this.get('x') - 1,
+                y: this.get('y')
+            };    
+        } else {
+            return {
+                x: this.get('x'),
+                y: this.get('y') - 1
+            };    
+        }
     }
 }
 
-export class FencesCollection extends BackboneCollection<FenceHModel | FenceVModel> {
+export class FencesCollection extends BackboneCollection<FenceModel> {
 
-    // @ts-ignore TODO, recheck types
-    public model = function (attrs: FenceModelProps, options: {}): FenceHModel | FenceVModel {
-        return attrs.orientation === 'H'
-            ? new FenceHModel(attrs, options)
-            : new FenceVModel(attrs, options);
-    }
+    public model = FenceModel;
 
     public initialize() {
         this.on('premarkasselected', this.clearBusy, this);
@@ -112,14 +92,14 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
         });
 
         fences.forEach(fence => {
-            const find: FenceModel = me.findWhere({
+            const find = me.findWhere({
                 x: fence.x,
                 y: fence.y,
                 orientation: fence.orientation
             });
-            const sibling: FenceModel = me.getSibling(find as FenceHModel | FenceVModel);
+            const sibling = me.getSibling(find);
             find.set('state', 'busy');
-            sibling.set('state', 'busy');
+            sibling?.set('state', 'busy');
         });
     }
     public clearBusy() {
@@ -137,14 +117,15 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
             fence.set({state: 'busy'});
         });
     }
-    public getMovedFence(): FenceHModel | FenceVModel {
+    public getMovedFence(): FenceModel {
         const fences = this.getPreBusy();
         return _.chain(fences)
             .sortBy(function (i) { return i.get('x'); })
             .sortBy(function (i) { return i.get('y'); })
-            .last().value() as FenceHModel | FenceVModel;
+            .last().value() as FenceModel;
     }
-    public getSibling(item: FenceHModel | FenceVModel) {
+    public getSibling(item: FenceModel): FenceModel | undefined {
+        console.log(item);
         const siblingPosition = item && item.getAdjacentFencePosition();
         return siblingPosition && this.findWhere({
             x   : siblingPosition.x,
@@ -152,14 +133,14 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
             orientation: item.get('orientation')
         });
     }
-    public triggerEventOnFenceAndSibling(item: FenceHModel | FenceVModel, event: string) {
+    public triggerEventOnFenceAndSibling(item: FenceModel, event: string) {
         const sibling = this.getSibling(item);
         if (sibling && event) {
             sibling.trigger(event);
             item.trigger(event);
         }
     }
-    public validateFenceAndSibling(item?: FenceHModel | FenceVModel) {
+    public validateFenceAndSibling(item?: FenceModel) {
         if (!item) {
             return false;
         }
@@ -173,13 +154,13 @@ export class FencesCollection extends BackboneCollection<FenceHModel | FenceVMod
 
         return !!(sibling && !this.isBusy(sibling));
     }
-    public validateAndTriggerEventOnFenceAndSibling(item: FenceHModel | FenceVModel, event: string) {
+    public validateAndTriggerEventOnFenceAndSibling(item: FenceModel, event: string) {
         const shouldTriggerEvent = this.validateFenceAndSibling(item);
         if (shouldTriggerEvent && event) {
             item.trigger('pre' + event);
             item.trigger(event);
             const sibling = this.getSibling(item);
-            sibling.trigger(event);
+            sibling?.trigger(event);
         }
         return shouldTriggerEvent;
     }

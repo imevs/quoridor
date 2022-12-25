@@ -1,6 +1,6 @@
 // import _ from "underscore";
 import { Bot } from "../models/Bot";
-import { FenceModel, FencesCollection } from "../models/FenceModel";
+import { FencesCollection } from "../models/FenceModel";
 import { PlayerModel, PlayersCollection } from "../models/PlayerModel";
 import { GameHistoryModel, TurnsCollection } from "../models/TurnModel";
 import { BoardValidation } from "../models/BoardValidation";
@@ -37,9 +37,9 @@ export class SmartBot extends Bot {
             y: params.y,
             type: params.type
         });
-        const sibling: FenceModel = this.board.fences.getSibling(fence);
-        (fence as FenceModel).set('state', 'busy');
-        sibling.set('state', 'busy');
+        const sibling = this.board.fences.getSibling(fence);
+        fence.set('state', 'busy');
+        sibling?.set('state', 'busy');
 
         if (this.currentPlayer === params.playerIndex) {
             this.fencesRemaining--;

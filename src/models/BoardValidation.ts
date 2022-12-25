@@ -1,11 +1,9 @@
 // import _ from "underscore";
 import { PlayerModel, PlayersCollection } from "./PlayerModel";
 import {
-    FenceHModel,
     FenceModel,
     FenceModelProps,
     FencesCollection,
-    FenceVModel
 } from "./FenceModel";
 import { iter } from "./utils";
 import { BoardModel } from "./BoardModel";
@@ -241,8 +239,8 @@ export class BoardValidation extends BoardModel {
         const board = this.copy();
         const indexPlayer = this.players.indexOf(pawn);
         const player = board.players.at(indexPlayer);
-        const fence: FenceModel = board.fences.findWhere(coordinate.pick('x', 'y', 'orientation'));
-        const sibling: FenceModel = board.fences.getSibling(fence as FenceHModel | FenceVModel);
+        const fence = board.fences.findWhere(coordinate.pick('x', 'y', 'orientation'));
+        const sibling = board.fences.getSibling(fence);
         if (!sibling) {
             return 'invalid';
         }
@@ -319,6 +317,9 @@ export class BoardValidation extends BoardModel {
     public getNearestWalls(wall: Partial<FenceModelProps>) {
         const fence = this.fences.findWhere(wall);
         const sibling = this.fences.getSibling(fence);
+        if (!sibling) {
+            return [];
+        }
         const siblingWall = sibling.pick('x', 'y', 'orientation');
         const all = _(this._getNearestWalls(wall).concat(this._getNearestWalls(siblingWall)));
         const all2 = all.without(all.findWhere(wall)!, all.findWhere(siblingWall)!);
@@ -346,8 +347,8 @@ export class BoardValidation extends BoardModel {
             currentPlayer: this.get('currentPlayer'),
             activePlayer: this.get('activePlayer')
         });
-        board.fences = new FencesCollection(this.fences.toJSON());
-        board.players = new PlayersCollection(this.players.toJSON());
+        board.fences = new FencesCollection(this.fences.toJSON(), { model: FenceModel });
+        board.players = new PlayersCollection(this.players.toJSON(), { model: PlayerModel });
         board.players.playersPositions = this.players.playersPositions;
 
         return board;

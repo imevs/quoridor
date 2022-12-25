@@ -101,16 +101,16 @@ export class MegaBot extends SmartBot {
                 const sibling = board.fences.getSibling(fence);
 
                 const prevStateFence = fence.get('state');
-                const prevStateSibling = sibling.get('state');
+                const prevStateSibling = sibling?.get('state');
 
                 fence.set({state: 'busy'});
-                sibling.set({state: 'busy'});
+                sibling?.set({state: 'busy'});
 
                 move.rate = self.calcHeuristic(player, board);
                 result.push(move);
 
                 fence.set({state: prevStateFence});
-                sibling.set({state: prevStateSibling});
+                sibling?.set({state: prevStateSibling});
 
                 if (move.rate <= self.satisfiedRate) {
                     satisfiedCount++;

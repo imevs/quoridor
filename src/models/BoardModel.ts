@@ -3,10 +3,9 @@ import { BackboneModel } from "./BackboneModel";
 import { BotWrapper } from "./BotWrapper";
 import { FieldModel, FieldsCollection } from "./FieldModel";
 import {
-    FenceHModel,
     FencePosition,
     FencesCollection,
-    FenceVModel
+    FenceModel
 } from "./FenceModel";
 import { PlayersCollection } from "./PlayerModel";
 import { TimerModel } from "./TimerModel";
@@ -112,13 +111,15 @@ export class BoardModel extends BackboneModel {
         if (me.isFenceMoved) {
             me.getActivePlayer().placeFence();
             const preBusySibling = me.fences.getSibling(preBusy);
-            me.history.add({
-                x: preBusy.get('x'),
-                y: preBusy.get('y'),
-                x2: preBusySibling.get('x'),
-                y2: preBusySibling.get('y'),
-                t: 'f'
-            });
+            if (preBusySibling) {
+                me.history.add({
+                    x: preBusy.get('x'),
+                    y: preBusy.get('y'),
+                    x2: preBusySibling.get('x'),
+                    y2: preBusySibling.get('y'),
+                    t: 'f'
+                });    
+            }
             me.fences.setBusy();
         }
         if (me.isPlayerMoved) {
@@ -211,7 +212,7 @@ export class BoardModel extends BackboneModel {
         });
     }
 
-    public onFenceSelected(model: FenceHModel | FenceVModel) {
+    public onFenceSelected(model: FenceModel) {
         if (this.canSelectFences() &&
             this.fences.validateFenceAndSibling(model) &&
             this.notBreakSomePlayerPath(model)) {
@@ -254,15 +255,20 @@ export class BoardModel extends BackboneModel {
             }
         });
         this.fences.on({
-            'selected': (model: FenceHModel | FenceVModel) => me.onFenceSelected(model),
-            'highlight_current_and_sibling': (model: FenceHModel | FenceVModel) => {
+            'selected': (model: FenceModel) => me.onFenceSelected(model),
+            'highlight_current_and_sibling': (model: FenceModel) => {
+                console.log("validate", [
+                    me.canSelectFences(),
+                    me.fences.validateFenceAndSibling(model),
+                    me.notBreakSomePlayerPath(model)
+                ]);
                 if (me.canSelectFences() &&
                     me.fences.validateFenceAndSibling(model) &&
                     me.notBreakSomePlayerPath(model)) {
                     me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markfence');
                 }
             },
-            'reset_current_and_sibling': (model: FenceHModel | FenceVModel) => {
+            'reset_current_and_sibling': (model: FenceModel) => {
                 me.fences.triggerEventOnFenceAndSibling(model, 'unmarkfence');
             }
         });

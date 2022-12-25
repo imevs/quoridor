@@ -1,6 +1,5 @@
-/* global GameObject, FenceHModel */
 import { GameObject, ViewOptions } from "../views/GameObject";
-import { FenceHModel, FenceVModel } from "../models/FenceModel";
+import { FenceModel } from "../models/FenceModel";
 import { RaphaelEl } from "../views/backbone.raphael";
 
 export class FenceView extends GameObject {
@@ -48,8 +47,8 @@ export class FenceView extends GameObject {
     createElement(): null | RaphaelEl { return null; }
 }
 
-export function createFenceView(model: FenceHModel | FenceVModel): FenceHView | FenceVView {
-    return model instanceof FenceHModel
+export function createFenceView(model: FenceModel): FenceHView | FenceVView {
+    return model.get("orientation") === "H"
         ? new FenceHView({model: model})
         : new FenceVView({model: model});
 }
