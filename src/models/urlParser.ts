@@ -5,7 +5,7 @@ function createUrlObject(url: string) {
 }
 
 export const parseUrl = (url: string) => {
-    let queryString = url, result: Record<string, any> = {}, i, s, seg;
+    let queryString = url, result: Record<string, string | string[]> = {}, i, s, seg;
     const isArrayExp = /(\w+)\[(\d*)\]/;
 
     if (url.charAt(0) !== '?') {
@@ -28,12 +28,9 @@ export const parseUrl = (url: string) => {
         if (isArrayItem || result[paramName]) {
             paramName = paramName.replace(isArrayExp, '$1');
             const oldVal = result[paramName];
-            if (!oldVal) {
-                result[paramName] = [];
-            } else if (!(oldVal instanceof Array)) {
-                result[paramName] = [oldVal];
-            }
-            result[paramName].push(paramValue);
+            const newVal = oldVal ? (oldVal instanceof Array ? oldVal : [oldVal]) : [];
+            newVal.push(paramValue);
+            result[paramName] = newVal;
         } else {
             result[paramName] = paramValue;
         }

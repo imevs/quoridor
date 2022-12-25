@@ -1,7 +1,8 @@
-import { View } from "backbone";
-import _ from "underscore";
-import { GameHistoryModel } from "public/models/TurnModel";
-import { BackboneModel } from "public/models/BackboneModel";
+// import _ from "underscore";
+import { GameHistoryModel } from "../models/TurnModel";
+import { BackboneModel } from "../models/BackboneModel";
+
+const { View } = Backbone;
 
 export class GameHistoryView<TModel extends (BackboneModel) = GameHistoryModel> extends View<TModel> {
      template = "";
@@ -9,11 +10,9 @@ export class GameHistoryView<TModel extends (BackboneModel) = GameHistoryModel> 
     initialize() {
         const me = this;
         this.$el = $('#history');
-        require(['text!templates/history.html'], (tmpl: string) => {
-            me.template = tmpl;
-            me.listenTo(me.model, 'change', me.render);
-            me.render();
-        });
+        me.template = document.querySelector("#history-tmpl")?.innerHTML ?? "";
+        me.listenTo(me.model, 'change', me.render);
+        me.render();
     }
     render() {
         const data = this.model.toJSON();

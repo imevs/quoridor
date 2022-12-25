@@ -1,14 +1,14 @@
-import { BackboneModel } from "public/models/BackboneModel";
+import { BackboneModel } from "../models/BackboneModel";
 
 export class TimerModel extends BackboneModel {
 
-    public defaults = () => ({
+    public defaults() { return {
         playerNames: [],
         timePrev: 0,
         allTime: 0,
         times: [0, 0, 0, 0],
         time: 0
-    });
+    }; }
 
     public isStopped = false;
     public interval = 0;

@@ -1,7 +1,7 @@
-import { Bot } from "public/models/Bot";
-import { SmartBot } from "public/models/SmartBot";
-import { MegaBot } from "public/models/MegaBot";
-import { BackboneModel } from "public/models/BackboneModel";
+import { Bot } from "../models/Bot";
+import { SmartBot } from "../models/SmartBot";
+import { MegaBot } from "../models/MegaBot";
+import { BackboneModel } from "../models/BackboneModel";
 
 // importScripts('../libs/lodash.underscore.js');
 // importScripts('../libs/backbone.js');

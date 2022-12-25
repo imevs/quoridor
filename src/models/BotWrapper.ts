@@ -1,8 +1,8 @@
 import { BackboneModel } from "./BackboneModel";
-import { SmartBot } from "public/models/SmartBot";
-import { MegaBot } from "public/models/MegaBot";
-import { Bot } from "public/models/Bot";
-import { EventHandler } from "backbone";
+import { SmartBot } from "../models/SmartBot";
+import { MegaBot } from "../models/MegaBot";
+import { Bot } from "../models/Bot";
+import type { EventHandler } from "backbone";
 
 export class BotWrapper extends BackboneModel {
 

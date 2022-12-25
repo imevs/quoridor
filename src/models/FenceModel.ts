@@ -1,10 +1,10 @@
-import _ from "underscore";
+// import _ from "underscore";
 import {
     BackboneCollection,
     BackboneModel,
     Position,
-} from "public/models/BackboneModel";
-import { iter } from "public/models/utils";
+} from "../models/BackboneModel";
+import { iter } from "../models/utils";
 
 export type FencePosition = Position & { orientation: "H" | "V"; };
 export type FenceModelProps = FencePosition & {
@@ -15,10 +15,10 @@ export type FenceModelProps = FencePosition & {
 
 export class FenceModel extends BackboneModel<FenceModelProps> {
 
-    defaults = () => ({
+    public defaults() { return {
         color: '#c75',
         state: ''
-    });
+    }; }
 
     public initialize() {
         this.on({
@@ -62,11 +62,11 @@ export class FenceModel extends BackboneModel<FenceModelProps> {
 }
 
 export class FenceHModel extends FenceModel {
-    public defaults = () => ({
+    public defaults() { return {
         type: 'H' as const,
         color: '#c75',
         state: ''
-    });
+    }; }
     public getAdjacentFencePosition() {
         return {
             x: this.get('x') - 1,
@@ -76,11 +76,11 @@ export class FenceHModel extends FenceModel {
 }
 
 export class FenceVModel extends FenceModel {
-    public defaults = () => ({
+    public defaults() { return {
         type: 'V' as const,
         color: '#c75',
         state: ''
-    });
+    }; }
 
     public getAdjacentFencePosition() {
         return {
@@ -93,7 +93,7 @@ export class FenceVModel extends FenceModel {
 export class FencesCollection extends BackboneCollection<FenceHModel | FenceVModel> {
 
     // @ts-ignore TODO, recheck types
-    public model(attrs: FenceModelProps, options: {}): FenceHModel | FenceVModel {
+    public model = function (attrs: FenceModelProps, options: {}): FenceHModel | FenceVModel {
         return attrs.orientation === 'H'
             ? new FenceHModel(attrs, options)
             : new FenceVModel(attrs, options);

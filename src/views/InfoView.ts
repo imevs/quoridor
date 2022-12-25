@@ -1,24 +1,22 @@
-import { GameObject, ViewOptions } from "public/views/GameObject";
-import _ from "underscore";
-import { Position } from "public/models/BackboneModel";
-import { RaphaelEl } from "public/views/backbone.raphael";
+import { GameObject, ViewOptions } from "../views/GameObject";
+// import _ from "underscore";
+import { BackboneModel } from "../models/BackboneModel";
+import { RaphaelEl } from "../views/backbone.raphael";
 
 export class InfoView extends GameObject {
-    fences: (Required<RaphaelEl>)[] = [];
-    private current: any[] | undefined = undefined;
-    private active: [Required<RaphaelEl>, Required<RaphaelEl>] | undefined = undefined;
-    playersPositions: (Position & { color: string; })[] = [];
+    fences!: (Required<RaphaelEl>)[];
+    private current!: any[] | undefined;
+    private active: [Required<RaphaelEl>, Required<RaphaelEl>] | undefined;
+    playersPositions!: ({ color: string; })[];
 
-    initialize(params: { attributes: (Position & { color: string; })[]; }) {
+    initialize(params: { model: BackboneModel<{ playersPositions: { color: string; }[]; }> }) {
         const me = this;
         params = params || {};
-        me.playersPositions = params.attributes;
+        me.fences = [];
+        me.playersPositions = params.model.get("playersPositions");
         this.$el = $('#game-info');
-        require(['text!templates/game-info.html'], (tmpl: string) => {
-            me.template = tmpl;
-            me.listenTo(me.model, 'change', me.render);
-            me.render();
-        });
+        me.template = document.querySelector("#game-info-tmpl")?.innerHTML ?? "";
+        me.listenTo(me.model, 'change', me.render);
     }
     render() {
         const me = this;

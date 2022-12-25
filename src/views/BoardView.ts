@@ -1,12 +1,12 @@
-import { GameObject, ViewOptions } from "public/views/GameObject";
-import { FieldView } from "public/views/FieldView";
-import { createFenceView } from "public/views/FenceView";
-import { PlayerView } from "public/views/PlayerView";
-import { InfoView } from "public/views/InfoView";
-import { TimerView } from "public/views/TimerView";
-import { GameHistoryView } from "public/views/GameHistoryView";
-import _ from "underscore";
-import { BoardValidation } from "public/models/BoardValidation";
+import { GameObject, ViewOptions } from "./GameObject";
+import { FieldView } from "./FieldView";
+import { createFenceView } from "./FenceView";
+import { PlayerView } from "./PlayerView";
+import { InfoView } from "./InfoView";
+import { TimerView } from "./TimerView";
+import { GameHistoryView } from "./GameHistoryView";
+// import _ from "underscore";
+import { BoardValidation } from "../models/BoardValidation";
 
 export class BoardView extends GameObject<BoardValidation> {
     selector = '#board';
@@ -19,18 +19,12 @@ export class BoardView extends GameObject<BoardValidation> {
     render() {
         const me = this;
         this.$el = $(this.selector);
-        require(['text!templates/board.html'], (tmpl: string) => {
-            me.template = tmpl;
-            // @ts-ignore
-            me.$el.html(_.template(me.template, me.model.attributes, {variable: 'data'}));
-            this.afterRender();
-        });
+        me.template = document.querySelector("#board-tmpl")?.innerHTML ?? "";
+        // @ts-ignore
+        me.$el.html(_.template(me.template, me.model.attributes, {variable: 'data'}));
+        this.afterRender();
         return this;
     };
-
-    initialize() {
-        this.render();
-    }
 
     renderLegend() {
         const me = this.model;
@@ -138,8 +132,8 @@ export class BoardView extends GameObject<BoardValidation> {
         this.drawBorders();
         const info = new InfoView({
             model: me.infoModel,
-            attributes: me.players.playersPositions
         });
+        info.render();
         new TimerView({
             model: me.timerModel
         });

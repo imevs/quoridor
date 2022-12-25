@@ -1,7 +1,7 @@
-import _ from "underscore";
-import { BoardValidation } from "public/models/BoardValidation";
-import { Position } from "public/models/BackboneModel";
-import { FencePosition } from "public/models/FenceModel";
+// import _ from "underscore";
+import { BoardValidation } from "../models/BoardValidation";
+import { Position } from "../models/BackboneModel";
+import { FencePosition } from "../models/FenceModel";
 
 let boardState = {
     activePlayer: 0,

@@ -1,4 +1,4 @@
-import { BackboneCollection, BackboneModel, Position } from "public/models/BackboneModel";
+import { BackboneCollection, BackboneModel, Position } from "../models/BackboneModel";
 import { iter } from "./utils";
 
 export class FieldModel extends BackboneModel<Position & { color: string; }> {

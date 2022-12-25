@@ -1,5 +1,5 @@
-import _ from "underscore";
-import { BackboneCollection, BackboneModel, Position } from "public/models/BackboneModel";
+// import _ from "underscore";
+import { BackboneCollection, BackboneModel, Position } from "../models/BackboneModel";
 
 let boardSize = 8;
 
@@ -12,10 +12,10 @@ type TurnModelProps = Position & {
 
 export class TurnModel extends BackboneModel<TurnModelProps> {
 
-    public defaults = () => ({
+    public defaults() { return {
         x: 0,
         y: 0,
-    });
+    }; }
     public alpha = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k'];
 
     public intToChar(i: string | number ) {
@@ -66,10 +66,10 @@ export class GameHistoryModel extends BackboneModel<{
     turns: TurnsCollection;
 }> {
 
-    public defaults = () => ({
+    public defaults() { return {
         turns: new TurnsCollection(),
         playerNames: [],
-    });
+    }; }
 
     public playersPositions: Position[] = [];
 

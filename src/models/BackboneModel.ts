@@ -1,8 +1,11 @@
-import { Model, Collection, ObjectHash, _StringKey } from "backbone";
+import type { ObjectHash, _StringKey } from "backbone";
+
+const { Model, Collection } = Backbone;
 
 export class BackboneModel<T extends ObjectHash = any> extends Model<T> {
     public get<A extends _StringKey<T>>(attributeName: A): T[A] {
-        return super.get(attributeName)!;
+        const defs = this.defaults?.() ?? {};
+        return super.get(attributeName)! ?? defs[attributeName]!;
     }
 }
 

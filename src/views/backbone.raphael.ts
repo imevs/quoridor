@@ -1,5 +1,7 @@
-import { _Result, EventsHash, Model, View } from "backbone";
-import _ from "underscore";
+import type { _Result, EventsHash, Model } from "backbone";
+// import _ from "underscore";
+
+const { View } = Backbone;
 
 export type RaphaelEl = Element & Partial<{
     toFront(): void;

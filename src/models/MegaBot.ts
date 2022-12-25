@@ -1,10 +1,10 @@
-import _ from "underscore";
-import { SmartBot } from "public/models/SmartBot";
-import { iter } from "public/models/utils";
-import { PlayerModel } from "public/models/PlayerModel";
-import async from "async";
-import { BoardValidation } from "public/models/BoardValidation";
-import { Position } from "public/models/BackboneModel";
+// import _ from "underscore";
+import { SmartBot } from "../models/SmartBot";
+import { iter } from "../models/utils";
+import { PlayerModel } from "../models/PlayerModel";
+// import async from "async";
+import { BoardValidation } from "../models/BoardValidation";
+import { Position } from "../models/BackboneModel";
 
 type Move = Position & { type: "H" | "V" | "P"; };
 type Rate = Move & { rate: number; };

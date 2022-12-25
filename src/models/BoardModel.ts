@@ -1,16 +1,16 @@
-import _ from "underscore";
+// import _ from "underscore";
 import { BackboneModel } from "./BackboneModel";
 import { BotWrapper } from "./BotWrapper";
-import { FieldsCollection } from "public/models/FieldModel";
+import { FieldsCollection } from "./FieldModel";
 import {
     FenceHModel,
     FencePosition,
     FencesCollection,
     FenceVModel
-} from "public/models/FenceModel";
-import { PlayersCollection } from "public/models/PlayerModel";
-import { TimerModel } from "public/models/TimerModel";
-import { GameHistoryModel, TurnsCollection } from "public/models/TurnModel";
+} from "./FenceModel";
+import { PlayersCollection } from "./PlayerModel";
+import { TimerModel } from "./TimerModel";
+import { GameHistoryModel, TurnsCollection } from "./TurnModel";
 
 export class BoardModel extends BackboneModel {
     public isPlayerMoved = false;
@@ -22,15 +22,20 @@ export class BoardModel extends BackboneModel {
     public players!: PlayersCollection;
     public history!: GameHistoryModel;
     public timerModel!: TimerModel;
-    public infoModel!: BackboneModel;
+    public infoModel!: BackboneModel<{ 
+        playersPositions: ({ color: string; })[];
+        currentPlayer?: number;
+        activePlayer?: number;
+        fences?: { fencesRemaining: number; }[];
+     }>;
 
-    public defaults = () => ({
+    public defaults() { return {
         botsCount: 0,
         boardSize: 9,
         playersCount: 2,
         currentPlayer: null,
         activePlayer: null
-    });
+    }; };
 
     public getActivePlayer() {
         return this.players.at(this.get('activePlayer'));
@@ -61,7 +66,9 @@ export class BoardModel extends BackboneModel {
         this.timerModel = new TimerModel({
             playersCount: this.get('playersCount')
         });
-        this.infoModel = new BackboneModel();
+        this.infoModel = new BackboneModel({
+            playersPositions: this.players.playersPositions
+        });
         this.history = new GameHistoryModel({
             turns: new TurnsCollection(),
             debug: this.get('debug'),

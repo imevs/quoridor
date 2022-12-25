@@ -1,6 +1,6 @@
 import { BackboneModel, Position } from "./BackboneModel";
-import _ from "underscore";
-import { GameHistoryModel, TurnsCollection } from "public/models/TurnModel";
+// import _ from "underscore";
+import { GameHistoryModel, TurnsCollection } from "../models/TurnModel";
 
 type PlayerPosition = Position & { playerIndex: number; };
 

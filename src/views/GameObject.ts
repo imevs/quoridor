@@ -1,5 +1,5 @@
 import { RaphaelEl, RaphaelView } from "./backbone.raphael";
-import { BackboneModel } from "public/models/BackboneModel";
+import { BackboneModel } from "../models/BackboneModel";
 
 export const ViewOptions = {
     // object methods

@@ -1,4 +1,4 @@
-import { GameObject, ViewOptions } from "public/views/GameObject";
+import { GameObject, ViewOptions } from "./GameObject";
 
 export class PlayerView extends GameObject {
 

@@ -1,7 +1,7 @@
 /* global GameObject, FenceHModel */
-import { GameObject, ViewOptions } from "public/views/GameObject";
-import { FenceHModel, FenceVModel } from "public/models/FenceModel";
-import { RaphaelEl } from "public/views/backbone.raphael";
+import { GameObject, ViewOptions } from "../views/GameObject";
+import { FenceHModel, FenceVModel } from "../models/FenceModel";
+import { RaphaelEl } from "../views/backbone.raphael";
 
 export class FenceView extends GameObject {
     events = () => ({

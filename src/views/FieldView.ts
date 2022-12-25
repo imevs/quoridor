@@ -1,12 +1,12 @@
-import { GameObject, ViewOptions } from "public/views/GameObject";
-import { FieldModel } from "public/models/FieldModel";
-import { RaphaelEl } from "public/views/backbone.raphael";
+import { GameObject, ViewOptions } from "../views/GameObject";
+import { FieldModel } from "../models/FieldModel";
+import { RaphaelEl } from "../views/backbone.raphael";
 
 export class FieldView extends GameObject<FieldModel> {
 
-    defaults = {
+    public defaults() { return {
         color: '#742'
-    };
+    }; }
     // @ts-ignore
     model: FieldModel;
 
@@ -18,10 +18,10 @@ export class FieldView extends GameObject<FieldModel> {
         'mouseout'   : 'unSelectCurrent'
     });
 
-    initialize(options: { attributes: { defaultColor?: string; } }) {
+    initialize(options: { attributes?: { defaultColor?: string; } }) {
         const cls = ViewOptions;
         const model = this.model!;
-        this.defaultColor = options.attributes.defaultColor || this.defaults.color;
+        this.defaultColor = options.attributes?.defaultColor || this.defaults().color;
         model.set('color', this.defaultColor);
 
         this.listenTo(model, 'change', this.render);

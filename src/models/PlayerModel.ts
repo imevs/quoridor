@@ -1,5 +1,5 @@
-import _ from "underscore";
-import { BackboneCollection, BackboneModel, Position } from "public/models/BackboneModel";
+// import _ from "underscore";
+import { BackboneCollection, BackboneModel, Position } from "../models/BackboneModel";
 
 export class PlayerModel extends BackboneModel<Position & {
     fencesRemaining: number;
@@ -46,23 +46,22 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
         color: string;
         name: string;
         isWin(x: number, y: number): boolean;
-    })[] = [];
+    })[] = [
+        {x: 4, y: 0, color: '#d2322d', name: 'red', isWin: (_x, y) => { return y === 8; } },
+        {x: 8, y: 4, color: '#3477B2', name: 'blue', isWin: x => { return x === 0; } },
+        {x: 4, y: 8, color: 'green', name: 'green', isWin: (_x, y) => { return y === 0; } },
+        {x: 0, y: 4, color: '#ed9c28', name: 'orange', isWin: x => { return x === 8; } }
+    ];
 
     public initialize (players: { movedFences: number; fencesRemaining: number; url: number; }[]) {
         const me = this;
-        players.forEach((player, i) => {
+        players && players.forEach((player, i) => {
             player.url = i;
             if (player.movedFences !== undefined) {
                 const fences = Math.round(me.fencesCount / players.length);
                 player.fencesRemaining = fences - player.movedFences;
             }
         });
-        me.playersPositions = [
-            {x: 4, y: 0, color: '#d2322d', name: 'red', isWin: (_x, y) => { return y === 8; } },
-            {x: 8, y: 4, color: '#3477B2', name: 'blue', isWin: x => { return x === 0; } },
-            {x: 4, y: 8, color: 'green', name: 'green', isWin: (_x, y) => { return y === 0; } },
-            {x: 0, y: 4, color: '#ed9c28', name: 'orange', isWin: x => { return x === 8; } }
-        ];
 
         if (players && players.length === 2 && me.playersPositions.length === 4) {
             me.playersPositions.splice(3, 1);

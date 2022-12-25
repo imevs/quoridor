@@ -1,15 +1,15 @@
-import _ from "underscore";
-import { PlayerModel, PlayersCollection } from "public/models/PlayerModel";
+// import _ from "underscore";
+import { PlayerModel, PlayersCollection } from "./PlayerModel";
 import {
     FenceHModel,
     FenceModel,
     FenceModelProps,
     FencesCollection,
     FenceVModel
-} from "public/models/FenceModel";
-import { iter } from "public/models/utils";
-import { BoardModel } from "public/models/BoardModel";
-import { Position } from "public/models/BackboneModel";
+} from "./FenceModel";
+import { iter } from "./utils";
+import { BoardModel } from "./BoardModel";
+import { Position } from "./BackboneModel";
 
 export class BoardValidation extends BoardModel {
 

@@ -5,6 +5,7 @@
   "author": "Vitaliy Medvedev <medvedev.vs@gmail.com>",
   "description": "quoridor game",
   "scripts": {
+    "tsc": "tsc",
     "pretest": "jshint --config jshint.json server public/models public/views",
     "postinstall": "node libs/r.js -o build.json",
     "test": "grunt test"
@@ -12,6 +13,7 @@
   "dependencies": {
     "@types/async": "^3.2.16",
     "@types/backbone": "^1.4.15",
+    "@types/requirejs": "^2.1.34",
     "@types/underscore": "^1.11.4",
     "async": "~0.2.9",
     "backbone": "~1.1.0",
@@ -27,6 +29,7 @@
     "serve-favicon": "^2.5.0",
     "serve-static": "^1.13.2",
     "socket.io": "~0.9",
+    "typescript": "^4.9.4",
     "underscore": "*",
     "uuid": "~1.4",
     "wolfy87-eventemitter": "~4.2.9"
