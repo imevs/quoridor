@@ -1,10 +1,11 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "incremental": true,
     "target": "ES2016",
-    "module": "amd",
+    "module": "commonjs",
     "outFile": "./public/dist/bundle.js",
-    "rootDir": "./src/",
+    "rootDir": "./",
     "removeComments": true,
     "strict": true,
     "noUnusedLocals": true,
@@ -14,11 +15,12 @@
     "noUncheckedIndexedAccess": true,
     "esModuleInterop": true,
     "sourceMap": false,
-    "allowUmdGlobalAccess": false,
+    "allowUmdGlobalAccess": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src/**/*"
+    "src/**/*", 
+    "tests/**/*"
   ]
 }

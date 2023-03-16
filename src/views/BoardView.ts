@@ -1,3 +1,5 @@
+import _ from "underscore";
+
 import { GameObject, ViewOptions } from "./GameObject";
 import { FieldView } from "./FieldView";
 import { createFenceView } from "./FenceView";
@@ -5,11 +7,12 @@ import { PlayerView } from "./PlayerView";
 import { InfoView } from "./InfoView";
 import { TimerView } from "./TimerView";
 import { GameHistoryView } from "./GameHistoryView";
-// import _ from "underscore";
 import { BoardValidation } from "../models/BoardValidation";
 
 export class BoardView extends GameObject<BoardValidation> {
     selector = '#board';
+    // @ts-ignore
+    model!: BoardValidation;
     events() { return {
         click: this.move,
     }; }
@@ -21,8 +24,7 @@ export class BoardView extends GameObject<BoardValidation> {
         const me = this;
         this.$el = $(this.selector);
         me.template = document.querySelector("#board-tmpl")?.innerHTML ?? "";
-        // @ts-ignore
-        me.$el.html(_.template(me.template, me.model.attributes, {variable: 'data'}));
+        me.$el.html(_.template(me.template, {variable: 'data'})(me.model.attributes));
         this.afterRender();
         return this;
     };
@@ -130,6 +132,16 @@ export class BoardView extends GameObject<BoardValidation> {
         me.players.each((model) => {
             new PlayerView({model: model});
         });
+        me.players.on('win', player => {
+            const names = me.players.getPlayerNames();
+            const message = names[player] + ' player ' + 'is winner. Do you want to start new game?';
+            if (window.confirm(message)) {
+                document.location.reload();
+            } else {
+                me.stop();
+            }
+        });
+
         this.drawBorders();
         const info = new InfoView({
             model: me.infoModel,

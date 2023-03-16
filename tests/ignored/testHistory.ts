@@ -1,35 +1,28 @@
-var assert = this.chai ? chai.assert : require('chai').assert;
-var Backbone = this.Backbone || require('backbone');
-var GameHistory = this.GameHistoryModel || require('../../public/models/TurnModel.js');
-
-Backbone.sync = function () {};
+import { assert } from "chai";
+import { GameHistoryModel as GameHistory, TurnsCollection } from '../../src/models/TurnModel';
 
 describe('test-quoridor', function () {
-    var gameHistory;
+    var gameHistory: GameHistory;
 
-    beforeEach(function (test) {
+    beforeEach(function () {
 
         gameHistory = new GameHistory();
-        test();
     });
 
-    it('create history', function (test) {
+    it('create history', function () {
         assert.equal(gameHistory.get('turns').length, 0);
-        test();
     });
 
-    it('move player 1', function (test) {
+    it('move player 1', function () {
         gameHistory.add({
             x: 4,
             y: 1,
             t: 'p'
         });
         assert.equal(gameHistory.at(0), 'e8');
-
-        test();
     });
 
-    it('move players 1-2', function (test) {
+    it('move players 1-2', function () {
         gameHistory.add({
             x: 4,
             y: 1,
@@ -42,11 +35,9 @@ describe('test-quoridor', function () {
             t: 'p'
         });
         assert.equal(gameHistory.at(0), 'e8 e2');
-
-        test();
     });
 
-    it('move player 1-2-1', function (test) {
+    it('move player 1-2-1', function () {
         gameHistory.add({
             x: 4,
             y: 1,
@@ -66,11 +57,9 @@ describe('test-quoridor', function () {
         });
         assert.equal(gameHistory.at(0), 'e8 e2');
         assert.equal(gameHistory.at(1), 'e7');
-
-        test();
     });
 
-    it('move 1 fence', function (test) {
+    it('move 1 fence', function () {
         gameHistory.add({
             x : 4,
             x2: 5,
@@ -80,11 +69,9 @@ describe('test-quoridor', function () {
         });
 
         assert.equal(gameHistory.at(0), 'e7f7');
-
-        test();
     });
 
-    it('move 2 fences', function (test) {
+    it('move 2 fences', function () {
         gameHistory.add({
             x : 4,
             x2: 5,
@@ -101,11 +88,9 @@ describe('test-quoridor', function () {
         });
 
         assert.equal(gameHistory.at(0), 'e7f7 e1f1');
-
-        test();
     });
 
-    it('move player and fence', function (test) {
+    it('move player and fence', function () {
         gameHistory.add({
             x: 4,
             y: 2,
@@ -120,22 +105,18 @@ describe('test-quoridor', function () {
         });
 
         assert.equal(gameHistory.at(0), 'e7 e1f1');
-
-        test();
     });
 
-    it('getLength after first turn first player', function (test) {
+    it('getLength after first turn first player', function () {
         gameHistory.add({
             x: 4,
             y: 2,
             t: 'p'
         });
         assert.equal(gameHistory.getLength(), 1);
-
-        test();
     });
 
-    it('getLength after first turn second player', function (test) {
+    it('getLength after first turn second player', function () {
         gameHistory.add({
             x: 4,
             y: 2,
@@ -147,11 +128,9 @@ describe('test-quoridor', function () {
             t: 'p'
         });
         assert.equal(gameHistory.getLength(), 1);
-
-        test();
     });
 
-    it('getLength after second turn first player', function (test) {
+    it('getLength after second turn first player', function () {
         gameHistory.add({
             x: 4,
             y: 2,
@@ -168,11 +147,9 @@ describe('test-quoridor', function () {
             t: 'p'
         });
         assert.equal(gameHistory.getLength(), 2);
-
-        test();
     });
 
-    it('getPlayersPositions getLength of array', function (test) {
+    it('getPlayersPositions getLength of array', function () {
         gameHistory.add({
             x: 4,
             y: 2,
@@ -190,12 +167,14 @@ describe('test-quoridor', function () {
         });
 
         assert.equal(2, gameHistory.getPlayerPositions().length);
-
-        test();
     });
 
-    it('getPlayersPositions getLength of array (4)', function (test) {
-        var history = new GameHistory({playersCount: 4});
+    it('getPlayersPositions getLength of array (4)', function () {
+        var history = new GameHistory({
+            turns: new TurnsCollection(),
+            playersCount: 4,
+            boardSize: 9
+        });
         history.add({
             x: 4,
             y: 2,
@@ -213,11 +192,9 @@ describe('test-quoridor', function () {
         });
 
         assert.equal(4, history.getPlayerPositions().length);
-
-        test();
     });
 
-    it('getFencesPositions getLength of array', function (test) {
+    it('getFencesPositions getLength of array', function () {
         gameHistory.add({
             x : 4,
             x2: 5,
@@ -241,11 +218,9 @@ describe('test-quoridor', function () {
         });
 
         assert.equal(3, gameHistory.getFencesPositions().length);
-
-        test();
     });
 
-    it('getFencesPositions check data', function (test) {
+    it('getFencesPositions check data', function () {
         gameHistory.add({
             x : 4,
             x2: 5,
@@ -274,11 +249,9 @@ describe('test-quoridor', function () {
             { x: 7, x2: 7, y: 4, y2: 5, t: 'V' }
         ];
         assert.deepEqual(expected, gameHistory.getFencesPositions());
-
-        test();
     });
 
-    it('getPlayersPositions check positions', function (test) {
+    it('getPlayersPositions check positions', function () {
         gameHistory.add({
             x: 4,
             y: 2,
@@ -307,13 +280,13 @@ describe('test-quoridor', function () {
             { x: 5, y: 1, movedFences: 1 }
         ];
         assert.deepEqual(expected, gameHistory.getPlayerPositions());
-
-        test();
     });
 
-    it('test initPlayers', function (test) {
+    it('test initPlayers', function () {
         gameHistory = new GameHistory({
-            playersCount: '2'
+            turns: new TurnsCollection(),
+            playersCount: 2,
+            boardSize: 9
         });
         gameHistory.initPlayers();
         gameHistory.initPlayers(); // tests for idempotency of initPlayers method
@@ -322,8 +295,6 @@ describe('test-quoridor', function () {
             { x: 4, y: 8, movedFences: 0 }
         ];
         assert.deepEqual(expected, gameHistory.getPlayerPositions());
-
-        test();
     });
 
 });

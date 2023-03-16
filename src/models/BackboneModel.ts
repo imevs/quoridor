@@ -1,6 +1,5 @@
 import type { ObjectHash, _StringKey } from "backbone";
-
-const { Model, Collection } = Backbone;
+import { Model, Collection } from "backbone";
 
 export class BackboneModel<T extends ObjectHash = any> extends Model<T> {
     public get<A extends _StringKey<T>>(attributeName: A): T[A] {
@@ -9,6 +8,12 @@ export class BackboneModel<T extends ObjectHash = any> extends Model<T> {
     }
 }
 
-export class BackboneCollection<TModel extends BackboneModel = BackboneModel> extends Collection<TModel> {}
+export class BackboneCollection<TModel extends BackboneModel = BackboneModel> extends Collection<TModel> {
+    // @ts-ignore
+    findWhere(properties: any): TModel | undefined {
+        return super.findWhere(properties);
+    }
+
+}
 
 export type Position = { x: number; y: number; };

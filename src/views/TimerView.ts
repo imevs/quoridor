@@ -1,6 +1,5 @@
-// import _ from "underscore";
-
-const { View } = Backbone;
+import _ from "underscore";
+import { View } from "backbone";
 
 export class TimerView extends View {
 
@@ -15,8 +14,7 @@ export class TimerView extends View {
     }
     render() {
         const me = this;
-        // @ts-ignore
-        me.$el.html(_.template(me.template, me.model.toJSON(), { variable: 'data' }));
+        me.$el.html(_.template(me.template, { variable: 'data' })(me.model.toJSON()));
         me.$el.find('.move').click(() => {
             me.trigger('click');
         });

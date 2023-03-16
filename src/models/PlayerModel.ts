@@ -1,10 +1,10 @@
-// import _ from "underscore";
+import _ from "underscore";
 import { BackboneCollection, BackboneModel, Position } from "../models/BackboneModel";
 
 export class PlayerModel extends BackboneModel<Position & {
     fencesRemaining: number;
-    prev_x: number;
-    prev_y: number;
+    prev_x?: number;
+    prev_y?: number;
     type?: "bot";
     id?: string;
     state?: string;
@@ -179,10 +179,10 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
             return false;
         }
         const callback1 = (item: PlayerModel) => {
-            return y === item.get('prev_y') && me.isBetween(playerX, x, item.get('prev_x'));
+            return y === item.get('prev_y') && me.isBetween(playerX, x, item.get('prev_x')!);
         };
         const callback2 = (item: PlayerModel) => {
-            return x === item.get('prev_x') && me.isBetween(playerY, y, item.get('prev_y'));
+            return x === item.get('prev_x') && me.isBetween(playerY, y, item.get('prev_y')!);
         };
         return this.getCountByCondition(playerY === y ? callback1 : callback2) === 1;
     }

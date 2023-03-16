@@ -1,17 +1,28 @@
-var BoardModel = this.BoardModel || require('../../public/models/BoardModel').BoardModel;
-var assert = this.chai ? chai.assert : require('chai').assert;
+import { assert } from 'chai';
+import { BoardValidation as BoardModel } from '../../src/models/BoardValidation';
 
 describe('Test Board', function () {
     
-    var self = {};
+    let self: { board: BoardModel } = {} as any;
 
     beforeEach(function () {
         self.board = new BoardModel({
-            playersCount: 2
+            playersCount: 2,
+            currentPlayer: 0,
+            botsCount: 0,
+            boardSize: 9,
+            activePlayer: 0,
         });
     });
     it('testCreateBoardCreateModels', function () {
-        self.board = new BoardModel({});
+        self.board = new BoardModel({
+            playersCount: 2,
+            currentPlayer: 0,
+            botsCount: 0,
+            boardSize: 9,
+            activePlayer: 0,
+
+        });
         assert.notEqual(self.board.fields, undefined);
         assert.notEqual(self.board.players, undefined);
         assert.notEqual(self.board.fences, undefined);
@@ -20,7 +31,10 @@ describe('Test Board', function () {
     it('testCreateBoardInitModels', function () {
         self.board = new BoardModel({
             playersCount: 4,
-            boardSize: 9
+            currentPlayer: 0,
+            botsCount: 0,
+            boardSize: 9,
+            activePlayer: 0,
         });
         assert.equal(self.board.fields.length, 9 * 9);
         assert.equal(self.board.fences.length, 2 * 9 * (9 - 1));

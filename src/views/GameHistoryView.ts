@@ -1,8 +1,8 @@
-// import _ from "underscore";
+import { View } from "backbone";
+import _ from "underscore";
+
 import { GameHistoryModel } from "../models/TurnModel";
 import { BackboneModel } from "../models/BackboneModel";
-
-const { View } = Backbone;
 
 export class GameHistoryView<TModel extends (BackboneModel) = GameHistoryModel> extends View<TModel> {
      template!: string;
@@ -17,8 +17,7 @@ export class GameHistoryView<TModel extends (BackboneModel) = GameHistoryModel> 
     render() {
         const data = this.model.toJSON();
         data.turns = data.turns.models;
-        // @ts-ignore
-        this.$el.html(_.template(this.template, data, { variable: 'data' }));
+        this.$el.html(_.template(this.template, { variable: 'data' })(data));
         return this;
     }
 }

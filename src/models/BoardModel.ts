@@ -1,4 +1,4 @@
-// import _ from "underscore";
+import _ from "underscore";
 import { BackboneModel } from "./BackboneModel";
 import { BotWrapper } from "./BotWrapper";
 import { FieldModel, FieldsCollection } from "./FieldModel";
@@ -11,11 +11,19 @@ import { PlayersCollection } from "./PlayerModel";
 import { TimerModel } from "./TimerModel";
 import { GameHistoryModel, TurnsCollection } from "./TurnModel";
 
-export class BoardModel extends BackboneModel {
+export abstract class BoardModel extends BackboneModel<{
+    debug?: boolean;
+    roomId?: string;
+    playersCount: number;
+    botsCount: number;
+    boardSize: number;
+    currentPlayer: number | null;
+    activePlayer: number;
+}> {
     public isPlayerMoved = false;
     public isFenceMoved = false;
     public auto = false;
-    public bots: BotWrapper[] = [];
+    public bots: BotWrapper[] | undefined;
     public fences!: FencesCollection;
     public fields!: FieldsCollection;
     public players!: PlayersCollection;
@@ -33,29 +41,49 @@ export class BoardModel extends BackboneModel {
         boardSize: 9,
         playersCount: 2,
         currentPlayer: null,
-        activePlayer: null
+        activePlayer: -1,
     }; };
 
     public getActivePlayer() {
-        return this.players.at(this.get('activePlayer'));
+        return this.players.at(this.get('activePlayer')!);
     }
 
     public getActiveBot() {
         return _(this.bots).find(bot => {
-            return bot.currentPlayer === this.get('currentPlayer');
+            return bot.currentPlayer === this.get('activePlayer');
         });
     }
 
-    // Next methods are implemented in BoardSocketEvents >>
-    public remoteEvents(_num: number): void {}
-    public onSocketMovePlayer = (_model: { x: number; y: number; timeout?: number; }) => {}
-    public onSocketMoveFence(_pos: FencePosition): boolean { return true; }
-    // << BoardSocketEvents
+    public onSocketMoveFence(pos: FencePosition) { 
+        const fence = this.fences.findWhere({
+            type: pos.orientation,
+            x   : pos.x,
+            y   : pos.y
+        });
+        if (!fence) {
+            return false;
+        }
+        this.auto = true;
+        fence.trigger('selected', fence);
+        this.auto = false;
+        this.trigger('maketurn');
+        return true;
+    }
+    public onSocketMovePlayer(pos: { x: number; y: number; timeout?: number; }) {
+        if (pos.timeout) {
+            this.isPlayerMoved = true;
+        }
+        this.auto = true;
+        this.fields.trigger('moveplayer', pos.x, pos.y);
+        this.auto = false;
+        this.trigger('maketurn');
+    }
 
     // Next methods are implemented in BoardValidation subclass >>
-    public canSelectFences(): boolean { return true; }
-    public notBreakSomePlayerPath(_model: BackboneModel): boolean { return true; }
-    public isValidCurrentPlayerPosition(_x: number, _y: number): boolean { return true; }
+    // TODO: move validation in separate class
+    abstract canSelectFences(): boolean;
+    abstract notBreakSomePlayerPath(model: BackboneModel): boolean;
+    abstract isValidCurrentPlayerPosition(x: number, y: number): boolean;
     // << BoardValidation
 
     public createModels() {
@@ -93,18 +121,17 @@ export class BoardModel extends BackboneModel {
 
     public switchActivePlayer() {
         if (this.history.get('turns').length > this.get('playersCount')) {
-            this.timerModel.next(this.get('activePlayer'));
+            this.timerModel.next(this.get('activePlayer')!);
         }
 
-        this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
+        this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')!));
     }
 
     public makeTurn() {
-        /* jshint maxcomplexity:9 */
         const me = this;
-        // if (!(me.isPlayerMoved || me.isFenceMoved)) {
-        //     return;
-        // }
+        if (!(me.isPlayerMoved || me.isFenceMoved)) {
+             return;
+        }
         const active = me.getActivePlayer();
         const preBusy = me.fences.getMovedFence();
         const index = me.get('activePlayer');
@@ -136,9 +163,9 @@ export class BoardModel extends BackboneModel {
         me.getActivePlayer().trigger('setcurrent');
 
         if (!me.isOnlineGame()) {
-            if (!me.getNextActiveBot(me.get('activePlayer'))) {
+            if (!me.getNextActiveBot(me.get('activePlayer')!)) {
                 /**
-                 * if local mode game then automatic change currentPlayer
+                 * if local mode game then automatically change currentPlayer
                  */
                 me.set('currentPlayer', me.get('activePlayer'));
             }
@@ -164,24 +191,20 @@ export class BoardModel extends BackboneModel {
         me.isFenceMoved = false;
     }
 
-    public getNextActiveBot(next: string): BotWrapper | undefined {
-        return this.bots.find(bot => {
+    public getNextActiveBot(next: number): BotWrapper | undefined {
+        return this.bots?.find(bot => {
             return bot.currentPlayer === next;
         });
     }
 
     public emitEventToBots(eventName: string, param: any) {
-        // FIXME - recheck
-        const next = this.players.at(this.get('activePlayer')).get("id")!;
-        this.bots.forEach(bot => {
+        const next = this.players.at(this.get('activePlayer')).get("url");
+        this.bots?.forEach(bot => {
             if (next !== bot.currentPlayer) {
                 bot.trigger(eventName, param);
             }
         });
-        const nextBot = this.getNextActiveBot(next);
-        if (nextBot) {
-            nextBot.trigger(eventName, param);
-        }
+        this.getNextActiveBot(next)?.trigger(eventName, param);
     }
 
     public isOnlineGame() {
@@ -190,6 +213,7 @@ export class BoardModel extends BackboneModel {
 
     public onMovePlayer(x: number, y: number) {
         const me = this;
+        console.log("onMovePlayer", x, y);
         if (me.isValidCurrentPlayerPosition(x, y)) {
             const current = me.getActivePlayer();
             current.moveTo(x, y);
@@ -206,17 +230,18 @@ export class BoardModel extends BackboneModel {
 
     public updateInfo() {
         this.infoModel.set({
-            currentPlayer: this.get('currentPlayer'),
-            activePlayer: this.get('activePlayer'),
+            currentPlayer: this.get('currentPlayer')!,
+            activePlayer: this.get('activePlayer')!,
             fences: this.players.pluck('fencesRemaining')
         });
     }
 
     public onFenceSelected(model: FenceModel) {
-        if (this.canSelectFences() &&
+        if (
+            this.canSelectFences() &&
             this.fences.validateFenceAndSibling(model) &&
-            this.notBreakSomePlayerPath(model)) {
-
+            this.notBreakSomePlayerPath(model)
+        ) {
             this.fences.clearBusy();
             this.fences.validateAndTriggerEventOnFenceAndSibling(model, 'movefence');
 
@@ -245,23 +270,9 @@ export class BoardModel extends BackboneModel {
         this.on('change:activePlayer', this.updateInfo, this);
         this.on('change:currentPlayer', this.updateInfo, this);
 
-        this.players.on('win', player => {
-            const names = me.players.getPlayerNames();
-            const message = names[player] + ' player ' + 'is winner. Do you want to start new game?';
-            if (window.confirm(message)) {
-                document.location.reload();
-            } else {
-                me.stop();
-            }
-        });
         this.fences.on({
             'selected': (model: FenceModel) => me.onFenceSelected(model),
             'highlight_current_and_sibling': (model: FenceModel) => {
-                console.log("validate", [
-                    me.canSelectFences(),
-                    me.fences.validateFenceAndSibling(model),
-                    me.notBreakSomePlayerPath(model)
-                ]);
                 if (me.canSelectFences() &&
                     me.fences.validateFenceAndSibling(model) &&
                     me.notBreakSomePlayerPath(model)) {
@@ -286,7 +297,7 @@ export class BoardModel extends BackboneModel {
     }
 
     public stop() {
-        this.bots.forEach(bot => {
+        this.bots?.forEach(bot => {
             bot.terminate();
         });
         this.timerModel.stop();
@@ -297,6 +308,7 @@ export class BoardModel extends BackboneModel {
             return;
         }
         const me = this;
+        this.bots = [];
 
         const turns = this.history.get('turns')!.toJSON();
 
@@ -305,11 +317,11 @@ export class BoardModel extends BackboneModel {
 
             const bot = new BotWrapper({
                 id: botIndex,
-                botType: 'super'
+                botType: 'medium'
             });
-            bot.on('client_move_player', me.onSocketMovePlayer);
+            bot.on('client_move_player', (pos) => me.onSocketMovePlayer(pos));
             bot.on('client_move_fence', (pos: FencePosition) => {
-                if (me.onSocketMoveFence(pos) === false) {
+                if (this.onSocketMoveFence(pos) === false) {
                     const activeBot = this.getActiveBot();
                     if (activeBot) {
                         activeBot.trigger('server_turn_fail');
@@ -319,24 +331,21 @@ export class BoardModel extends BackboneModel {
             bot.trigger('server_start', botIndex,
                 this.get('activePlayer'), turns, this.get('playersCount'));
 
-            this.bots.push(bot);
+            this.bots!.push(bot);
         });
     }
 
     public initialize() {
-        this.set({
-            'playersCount': +this.get('playersCount'),
-            'boardSize': +this.get('boardSize')
-        });
         this.createModels();
         this.initEvents();
         this.initModels();
-        if (this.isOnlineGame()) {
-            this.remoteEvents(this.get('currentPlayer'));
-        } else {
-            this.on('confirmturn', this.makeTurn);
-            this.run(0, 0);
-        }
+        this.updateInfo();
+        this.afterInitialize();
+    }
+
+    public afterInitialize() {
+        this.on('confirmturn', this.makeTurn);
+        this.run(0, 0);
     }
 }
 

@@ -1,5 +1,6 @@
+import _ from "underscore";
+
 import { GameObject, ViewOptions } from "../views/GameObject";
-// import _ from "underscore";
 import { BackboneModel } from "../models/BackboneModel";
 import { RaphaelEl } from "../views/backbone.raphael";
 
@@ -8,6 +9,12 @@ export class InfoView extends GameObject {
     private current!: any[] | undefined;
     private active: [Required<RaphaelEl>, Required<RaphaelEl>] | undefined;
     playersPositions!: ({ color: string; })[];
+    model!: BackboneModel<{ 
+        currentPlayer: number;
+        activePlayer: number;
+        fences: { fencesRemaining: number; }[];
+        playersPositions: { color: string; }[]; 
+    }>;
 
     initialize(params: { model: BackboneModel<{ playersPositions: { color: string; }[]; }> }) {
         const me = this;
@@ -20,8 +27,7 @@ export class InfoView extends GameObject {
     }
     render() {
         const me = this;
-        // @ts-ignore
-        me.$el.html(_.template(me.template, me.model.toJSON(), {variable: 'data'}));
+        me.$el.html(_.template(me.template, {variable: 'data'})(me.model.toJSON()));
         me.$el.find('.move').click(() => {
             me.trigger('click');
         });

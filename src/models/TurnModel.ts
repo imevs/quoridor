@@ -1,4 +1,4 @@
-// import _ from "underscore";
+import _ from "underscore";
 import { BackboneCollection, BackboneModel, Position } from "../models/BackboneModel";
 
 let boardSize = 8;
@@ -54,7 +54,6 @@ export class TurnModel extends BackboneModel<TurnModelProps> {
 
 export class TurnsCollection extends BackboneCollection<TurnModel> {
     model = TurnModel;
-    public initialize() {}
 }
 
 export class GameHistoryModel extends BackboneModel<{
@@ -67,11 +66,10 @@ export class GameHistoryModel extends BackboneModel<{
 }> {
 
     public defaults() { return {
-        turns: new TurnsCollection(),
         playerNames: [],
     }; }
 
-    public playersPositions: Position[] = [];
+    public playersPositions!: Position[];
 
     public getPlayerPositions() {
         const positions: { x?: number; y?: number; movedFences: number; }[] = [], self = this;
@@ -151,11 +149,10 @@ export class GameHistoryModel extends BackboneModel<{
 
     public initialize(params?: { boardSize: number; playersCount: number; }) {
         this.set({
+            turns: new TurnsCollection(),
             boardSize: params?.boardSize ?? 9,
             playersCount: params?.playersCount ?? 2,
         });
-
-        boardSize = this.get('boardSize');
         this.playersPositions = [
             {x: 4, y: 0 },
             {x: 8, y: 4 },

@@ -1,4 +1,4 @@
-// import _ from "underscore";
+import _ from "underscore";
 import {
     BackboneCollection,
     BackboneModel,
@@ -9,15 +9,15 @@ import { iter } from "../models/utils";
 export type FencePosition = Position & { orientation: "H" | "V"; };
 export type FenceModelProps = FencePosition & {
     color: string;
-    prevcolor: string;
-    state: string;
+    prevcolor?: string;
+    state?: string;
 };
 
 export class FenceModel extends BackboneModel<FenceModelProps> {
 
     public defaults() { return {
         color: '#c75',
-        state: ''
+        orientation: "H" as const,
     }; }
 
     public initialize() {
@@ -98,14 +98,12 @@ export class FencesCollection extends BackboneCollection<FenceModel> {
                 orientation: fence.orientation
             });
             const sibling = me.getSibling(find);
-            find.set('state', 'busy');
+            find?.set('state', 'busy');
             sibling?.set('state', 'busy');
         });
     }
     public clearBusy() {
-        _(this.where({
-            state: 'prebusy'
-        })).each(fence => {
+        _(this.where({ state: 'prebusy'})).each(fence => {
             fence.set({state: ''});
         });
     }
@@ -120,12 +118,11 @@ export class FencesCollection extends BackboneCollection<FenceModel> {
     public getMovedFence(): FenceModel {
         const fences = this.getPreBusy();
         return _.chain(fences)
-            .sortBy(function (i) { return i.get('x'); })
-            .sortBy(function (i) { return i.get('y'); })
-            .last().value() as FenceModel;
+            .sortBy(i => i.get('x'))
+            .sortBy(i => i.get('y'))
+            .last().value()!;
     }
-    public getSibling(item: FenceModel): FenceModel | undefined {
-        console.log(item);
+    public getSibling(item: FenceModel | undefined): FenceModel | undefined {
         const siblingPosition = item && item.getAdjacentFencePosition();
         return siblingPosition && this.findWhere({
             x   : siblingPosition.x,

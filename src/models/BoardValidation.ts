@@ -1,4 +1,4 @@
-// import _ from "underscore";
+import _ from "underscore";
 import { PlayerModel, PlayersCollection } from "./PlayerModel";
 import {
     FenceModel,
@@ -150,7 +150,7 @@ export class BoardValidation extends BoardModel {
             return false;
         }
         const busyFences = this.getBusyFences();
-        const currentPos = {x: activePlayer.get('prev_x'), y: activePlayer.get('prev_y')};
+        const currentPos = {x: activePlayer.get('prev_x')!, y: activePlayer.get('prev_y')!};
         return this.isValidPlayerPosition(currentPos, {x: x, y: y}, busyFences);
     }
 
@@ -199,8 +199,7 @@ export class BoardValidation extends BoardModel {
     }
 
     public getBusyFences(): FenceModelProps[] {
-        const board = this.copy();
-        return board.fences
+        return this.fences
             .filter(item => item.get('state') === 'busy')
             .map(f => f.toJSON() as FenceModelProps);
     }
@@ -220,7 +219,7 @@ export class BoardValidation extends BoardModel {
         return notVisitedPositions;
     }
 
-    public getAddNewCoordinateFunc(notVisitedPositions: Record<number, number>, open: {}[], newDeep?: { value: number; }) {
+    public getAddNewCoordinateFunc(notVisitedPositions: Record<number, number>, open: (Position & { deep?: number; })[], newDeep?: { value: number; }) {
         return (validMoveCoordinate: Position) => {
             const hash = validMoveCoordinate.x * 10 + validMoveCoordinate.y;
             if (notVisitedPositions[hash]) {
@@ -235,7 +234,7 @@ export class BoardValidation extends BoardModel {
     }
 
     public doesFenceBreakPlayerPath(pawn: PlayerModel, coordinate: FenceModel) {
-        const open = [pawn.pick('x', 'y')], closed = [];
+        const open: Position[] = [pawn.pick('x', 'y') as Position], closed = [];
         const board = this.copy();
         const indexPlayer = this.players.indexOf(pawn);
         const player = board.players.at(indexPlayer);
@@ -244,7 +243,7 @@ export class BoardValidation extends BoardModel {
         if (!sibling) {
             return 'invalid';
         }
-        fence.set('state', 'busy');
+        fence?.set('state', 'busy');
         sibling.set('state', 'busy');
 
         const busyFences = board.getBusyFences();
@@ -253,7 +252,7 @@ export class BoardValidation extends BoardModel {
         const addNewCoordinates = board.getAddNewCoordinateFunc(notVisitedPositions, open);
 
         while (open.length) {
-            const currentCoordinate = open.pop()! as Position;
+            const currentCoordinate = open.pop()!;
             if (this.players.playersPositions[indexPlayer]!.isWin(currentCoordinate.x, currentCoordinate.y)) {
                 return false;
             }
@@ -341,11 +340,12 @@ export class BoardValidation extends BoardModel {
     }
 
     public copy() {
-        const board = new BoardValidation({
+        const board = new BoardShallowCopy({
             boardSize: this.get('boardSize'),
             playersCount: this.get('playersCount'),
             currentPlayer: this.get('currentPlayer'),
-            activePlayer: this.get('activePlayer')
+            activePlayer: this.get('activePlayer'),
+            botsCount: this.get("botsCount"),
         });
         board.fences = new FencesCollection(this.fences.toJSON(), { model: FenceModel });
         board.players = new PlayersCollection(this.players.toJSON(), { model: PlayerModel });
@@ -353,4 +353,10 @@ export class BoardValidation extends BoardModel {
 
         return board;
     }
+}
+
+class BoardShallowCopy extends BoardValidation {
+
+    public initialize() {}
+
 }

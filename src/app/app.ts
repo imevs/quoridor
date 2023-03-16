@@ -7,7 +7,9 @@ const boardModel = new BoardValidation({
     currentPlayer: +(params.currentPlayer ?? 0),
     playersCount: +(params.playersCount ?? 2),
     botsCount: +(params.botsCount ?? 0),
-    roomId: params.roomId
+    boardSize: 9,
+    activePlayer: 0,
+    roomId: params.roomId as string
 });
 (window as any).boardModel = boardModel;
 const view = new BoardView({

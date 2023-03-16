@@ -1,4 +1,4 @@
-// import _ from "underscore";
+import _ from "underscore";
 import { Bot } from "../models/Bot";
 import { FencesCollection } from "../models/FenceModel";
 import { PlayerModel, PlayersCollection } from "../models/PlayerModel";
@@ -14,11 +14,9 @@ export class SmartBot extends Bot {
     public board!: BoardValidation;
     public player!: PlayerModel;
     public activePlayer!: number;
-    public currentPlayer!: number;
-    public playersCount!: number;
     public fencesRemaining: number = 0;
 
-    onMovePlayer = (params: PlayerPosition) => {
+    public onMovePlayer(params: PlayerPosition) {
         this.board.players.at(params.playerIndex).set({
             x: params.x,
             y: params.y,
@@ -31,14 +29,14 @@ export class SmartBot extends Bot {
         }
     }
 
-    onMoveFence = (params: PlayerPosition & { type: "H" | "V"; }) => {
+    public onMoveFence(params: PlayerPosition & { type: "H" | "V"; }) {
         const fence = this.board.fences.findWhere({
             x: params.x,
             y: params.y,
             type: params.type
         });
         const sibling = this.board.fences.getSibling(fence);
-        fence.set('state', 'busy');
+        fence?.set('state', 'busy');
         sibling?.set('state', 'busy');
 
         if (this.currentPlayer === params.playerIndex) {
@@ -49,16 +47,16 @@ export class SmartBot extends Bot {
         }
     }
 
-    onStart(currentPlayer: number, _activePlayer: number, history: {}[], playersCount: number, boardSize: number) {
-        this.newPositions = [];
-        this.fencesPositions = [];
-        this.currentPlayer = +currentPlayer;
-        this.playersCount = +playersCount;
+    public onStart(currentPlayer: number, _activePlayer: number, history: {}[], playersCount: number, boardSize: number) {
+        this._newPositions = [];
+        this._fencesPositions = [];
+        this._currentPlayer = currentPlayer;
+        this._playersCount = playersCount;
 
         const historyModel = new GameHistoryModel({
             turns: new TurnsCollection(),
-            boardSize: boardSize || 9,
-            playersCount: this.playersCount
+            boardSize: boardSize,
+            playersCount: playersCount
         });
         if (history.length) {
             historyModel.get('turns').reset(history);
@@ -69,31 +67,35 @@ export class SmartBot extends Bot {
         this.board = new BoardValidation({
             boardSize: historyModel.get('boardSize'),
             playersCount: historyModel.get('playersCount'),
-            currentPlayer: this.currentPlayer,
-            activePlayer: this.activePlayer
+            currentPlayer: this.currentPlayer!,
+            activePlayer: this.activePlayer!,
+            botsCount: 0
         });
         this.board.fences = new FencesCollection();
         this.board.fences.createFences(historyModel.get('boardSize'));
-        this.board.players = new PlayersCollection(historyModel.getPlayerPositions());
-        this.player = this.board.players.at(this.currentPlayer);
+        this.board.players = new PlayersCollection(historyModel.getPlayerPositions(), { model: PlayerModel });
+        this.player = this.board.players.at(currentPlayer);
 
-        const position = historyModel.getPlayerPositions()[this.currentPlayer];
+        const position = historyModel.getPlayerPositions()[currentPlayer];
         if (position) {
-            this.fencesRemaining = Math.round(this.fencesCount / this.playersCount) - position.movedFences;
+            this.fencesRemaining = Math.round(this.fencesCount / playersCount) - position.movedFences;
         }
     }
 
-    getPossiblePosition() {
+    public getPossiblePosition() {
         //console.profile();
         const board = this.board.copy();
-        const player = board.players.at(this.currentPlayer);
+        if (this.currentPlayer === null) {
+            console.error("this.currentPlayer is null");
+        }
+        const player = board.players.at(this.currentPlayer!);
         const goalPath = this.findPathToGoal(player, board);
         const result = goalPath.pop()!;
         //console.profileEnd();
         return { x: result.x, y: result.y };
     }
 
-    findPathToGoal(player: PlayerModel, board: BoardValidation) {
+    public findPathToGoal(player: PlayerModel, board: BoardValidation) {
         const playerXY = player.pick('x', 'y');
         const indexPlayer = board.players.indexOf(player);
 
@@ -119,17 +121,15 @@ export class SmartBot extends Bot {
         return path;
     }
 
-    processBoardForGoal(board: BoardValidation, player: PlayerModel): PositionWithDeep[] {
-        const open = [], closed = [];
-        const indexPlayer = board.players.indexOf(player);
-        let currentCoordinate;
-        const newDeep = { value: 0};
-
-        open.push({
+    public processBoardForGoal(board: BoardValidation, player: PlayerModel): PositionWithDeep[] {
+        const open = [{
             x: player.get('x'),
             y: player.get('y'),
             deep: 0
-        });
+        }], closed = [];
+        const indexPlayer = board.players.indexOf(player);
+        let currentCoordinate;
+        const newDeep = { value: 0};
 
         const busyFences = board.getBusyFences();
         const notVisitedPositions = board.generatePositions(board.get('boardSize'));
@@ -138,7 +138,7 @@ export class SmartBot extends Bot {
         let winPositionsCount = 0;
 
         while (open.length) {
-            currentCoordinate = open.shift()! as PositionWithDeep;
+            currentCoordinate = open.shift()!;
             newDeep.value = currentCoordinate.deep + 1;
             closed.push({
                 x: currentCoordinate.x,
@@ -162,7 +162,7 @@ export class SmartBot extends Bot {
         return closed;
     }
 
-    findGoal(closed: PositionWithDeep[], pawn: Position & { isWin(x: number, y: number): boolean; }) {
+    public findGoal(closed: PositionWithDeep[], pawn: Position & { isWin(x: number, y: number): boolean; }) {
         const winPositions = _(closed).filter(item => {
             return pawn.isWin(item.x, item.y);
         }).sort((a, b) => {
@@ -171,7 +171,7 @@ export class SmartBot extends Bot {
         return winPositions[0];
     }
 
-    buildPath(
+    public buildPath(
         from: PositionWithDeep | undefined,
         to: { x?: number; y?: number; },
         board: BoardValidation,

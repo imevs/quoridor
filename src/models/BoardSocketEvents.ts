@@ -1,4 +1,4 @@
-// import _ from "underscore";
+import _ from "underscore";
 import { BoardValidation } from "../models/BoardValidation";
 import { Position } from "../models/BackboneModel";
 import { FencePosition } from "../models/FenceModel";
@@ -6,7 +6,9 @@ import { FencePosition } from "../models/FenceModel";
 let boardState = {
     activePlayer: 0,
     playersCount: 2,
-    history: [] as { x: number; y: number; t?: "f" | "p"; orientation?: "H" | "V" | "P"; }[],
+    history: [] as { 
+        x: number; y: number; orientation: "H" | "V" | "P"; 
+    }[],
 };
 
 const SERVICE_PATH = "https://api.jsonbin.io/v3";
@@ -32,7 +34,7 @@ const saveData = (path: string, resourceID: string, data: {}) => {
     return req;
 };
 
-const createData = (path: string, data: {}) => {
+const createData = (path: string, data: {}): Promise<string> => {
     const req = saveData(path, "", data);
 
     return new Promise((resolve, reject) => {
@@ -40,7 +42,7 @@ const createData = (path: string, data: {}) => {
             if (req.readyState === XMLHttpRequest.DONE) {
                 console.log("Signalling data saved", req);
                 try {
-                    resolve(JSON.parse(req.responseText).metadata.id);
+                    resolve(JSON.parse(req.responseText).metadata.id as string);
                 } catch (ex) {
                     reject(ex);
                 }
@@ -70,7 +72,7 @@ export class BoardSocketEvents extends BoardValidation {
                 fetchGameState(SERVICE_PATH, gameId).then(data => {
                     if (data.history && data.history.length && data.history.length !== me.history.get('turns').length) {
                         const lastMove = data.history[data.history.length - 1]!;
-                        if (lastMove.t === "p") {
+                        if (lastMove.orientation === "P") {
                             this.onSocketMovePlayer(lastMove);
                         } else {
                             this.onSocketMoveFence(lastMove as FencePosition);
@@ -88,15 +90,15 @@ export class BoardSocketEvents extends BoardValidation {
                 this.onStart(currentPlayer, boardState.activePlayer, boardState.history);
             });
         } else {
-            createData(SERVICE_PATH, boardState).then(id => {
+            createData(SERVICE_PATH, boardState).then((id: string) => {
                 this.set("roomId", id);
                 document.location = location.href + "&roomId=" + id;
             });
         }
     }
     updateActivePlayer() {
-        const gameId = this.get("roomId");
-        boardState.activePlayer = this.get("activePlayer");
+        const gameId = this.get("roomId")!;
+        boardState.activePlayer = this.get("activePlayer")!;
         saveData(SERVICE_PATH, gameId, boardState);
     }
     _onTurnSendSocketEvent() {
@@ -109,7 +111,7 @@ export class BoardSocketEvents extends BoardValidation {
         if (this.isPlayerMoved) {
             boardState.history.push({
                 ...(this.getActivePlayer().pick('x', 'y') as Position),
-                t: "p"
+                orientation: "P"
             });
         }
         if (this.isFenceMoved) {
@@ -118,10 +120,9 @@ export class BoardSocketEvents extends BoardValidation {
                 x: eventInfo.x,
                 y: eventInfo.y,
                 orientation: eventInfo.orientation,
-                t: "f"
             });
         }
-        const gameId = this.get("roomId");
+        const gameId = this.get("roomId")!;
         saveData(SERVICE_PATH, gameId, boardState);
     }
 
@@ -139,16 +140,6 @@ export class BoardSocketEvents extends BoardValidation {
         this.auto = false;
         this.trigger('maketurn');
         return true;
-    }
-
-    onSocketMovePlayer = (pos: { x: number; y: number; timeout?: number; }) => {
-        if (pos.timeout) {
-            this.isPlayerMoved = true;
-        }
-        this.auto = true;
-        this.fields.trigger('moveplayer', pos.x, pos.y);
-        this.auto = false;
-        this.trigger('maketurn');
     }
 
     onStart(currentPlayer: 'error' | number, activePlayer: number, history: {}[]) {
@@ -185,10 +176,16 @@ export class BoardSocketEvents extends BoardValidation {
                 y   : fencePos.y,
                 type: fencePos.t
             });
-            fence.trigger('movefence');
+            fence?.trigger('movefence');
             me.fences.getSibling(fence)?.trigger('movefence');
         });
         me.fences.setBusy();
         me.run(activePlayer, currentPlayer);
     }
+
+
+    public afterInitialize() {
+        this.remoteEvents(this.get('currentPlayer')!);
+    }
+
 }
