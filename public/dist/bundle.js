@@ -798,12 +798,901 @@ define("views/GameHistoryView", ["require", "exports", "backbone", "underscore"]
     }
     exports.GameHistoryView = GameHistoryView;
 });
-define("models/PlayerModel", ["require", "exports", "underscore", "models/BackboneModel"], function (require, exports, underscore_8, BackboneModel_4) {
+define("models/Bot", ["require", "exports", "underscore", "models/BackboneModel", "models/TurnModel"], function (require, exports, underscore_8, BackboneModel_4, TurnModel_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.Bot = void 0;
+    underscore_8 = __importDefault(underscore_8);
+    class Bot extends BackboneModel_4.BackboneModel {
+        get playerId() {
+            var _a;
+            return (_a = this._playerId) !== null && _a !== void 0 ? _a : null;
+        }
+        get currentPlayer() {
+            var _a;
+            return (_a = this._currentPlayer) !== null && _a !== void 0 ? _a : null;
+        }
+        get playersCount() {
+            var _a;
+            return (_a = this._playersCount) !== null && _a !== void 0 ? _a : null;
+        }
+        get fencesPositions() {
+            var _a;
+            return (_a = this._fencesPositions) !== null && _a !== void 0 ? _a : [];
+        }
+        get newPositions() {
+            var _a;
+            return (_a = this._newPositions) !== null && _a !== void 0 ? _a : [];
+        }
+        constructor(id) {
+            super();
+            this.fencesRemaining = 0;
+            this.attemptsCount = 0;
+            this.fencesCount = 20;
+            this.setDelay = setTimeout;
+            this.random = underscore_8.default.random;
+            this.id = id;
+            this._playerId = id;
+            this.initEvents();
+        }
+        startGame(currentPlayer, activePlayer, history, playersCount) {
+            this.onStart(currentPlayer, activePlayer, history, playersCount, 9);
+            if (currentPlayer === activePlayer) {
+                this.turn();
+            }
+        }
+        onStart(currentPlayer, _activePlayer, history, playersCount, boardSize) {
+            var _a, _b;
+            this._playersCount = playersCount;
+            const historyModel = new TurnModel_1.GameHistoryModel({
+                turns: new TurnModel_1.TurnsCollection(),
+                boardSize: boardSize,
+                playersCount: playersCount
+            });
+            historyModel.get('turns').reset(history);
+            const playerPositions = historyModel.getPlayerPositions();
+            const position = playerPositions[currentPlayer];
+            if (position) {
+                this.x = (_a = position.x) !== null && _a !== void 0 ? _a : 0;
+                this.y = (_b = position.y) !== null && _b !== void 0 ? _b : 0;
+                this._newPositions = [];
+                this._fencesPositions = [];
+                this._currentPlayer = currentPlayer;
+                this.fencesRemaining = Math.round(this.fencesCount / playersCount) - position.movedFences;
+            }
+        }
+        getNextActivePlayer(currentPlayer) {
+            var _a;
+            currentPlayer++;
+            return currentPlayer < ((_a = this.playersCount) !== null && _a !== void 0 ? _a : 0) ? currentPlayer : 0;
+        }
+        initEvents() {
+            this.on('server_move_player', this.onMovePlayer, this);
+            this.on('server_move_fence', this.onMoveFence, this);
+            this.on('server_start', this.startGame, this);
+            this.on('server_turn_fail', this.makeTurn, this);
+        }
+        isPlayerCanMakeTurn(playerIndex) {
+            return this.currentPlayer === this.getNextActivePlayer(playerIndex);
+        }
+        onMovePlayer(params) {
+            if (this.currentPlayer === params.playerIndex) {
+                this.x = params.x;
+                this.y = params.y;
+            }
+            if (this.isPlayerCanMakeTurn(params.playerIndex)) {
+                this.turn();
+            }
+        }
+        onMoveFence(params) {
+            if (this.currentPlayer === params.playerIndex) {
+                this.fencesRemaining--;
+            }
+            if (this.isPlayerCanMakeTurn(params.playerIndex)) {
+                this.turn();
+            }
+        }
+        turn() {
+            this.attemptsCount = 0;
+            this._newPositions = this.getJumpPositions();
+            this.makeTurn();
+        }
+        makeTurn() {
+            this.attemptsCount++;
+            if (this.attemptsCount > 50) {
+                console.warn('bot can`t make a turn');
+                return;
+            }
+            this.setDelay.call(window, () => this.doTurn(), 1000);
+        }
+        getFencePosition() {
+            const y = this.random(0, 8);
+            const x = this.random(0, 8);
+            const type = this.random(0, 1) ? 'H' : 'V';
+            const res = { y: y, x: x, type: type };
+            if ((0, underscore_8.default)(this.fencesPositions).contains(res)) {
+                return this.getFencePosition();
+            }
+            this.fencesPositions.push(res);
+            return res;
+        }
+        doTurn() {
+            const bot = this;
+            const random = this.random(0, 1);
+            if (bot.canMovePlayer() && (random || !bot.canMoveFence())) {
+                let playerPosition = bot.getPossiblePosition();
+                if (playerPosition) {
+                    bot.trigger('client_move_player', playerPosition);
+                }
+                return;
+            }
+            if (bot.canMoveFence()) {
+                const res = this.getFencePosition();
+                const eventInfo = {
+                    x: res.x,
+                    y: res.y,
+                    type: res.type,
+                    playerIndex: bot.id
+                };
+                bot.trigger('client_move_fence', eventInfo);
+                return;
+            }
+            console.warn('something going wrong');
+        }
+        getJumpPositions() {
+            return [
+                {
+                    x: this.x + 1,
+                    y: this.y
+                },
+                {
+                    x: this.x - 1,
+                    y: this.y
+                },
+                {
+                    x: this.x,
+                    y: this.y + 1
+                },
+                {
+                    x: this.x,
+                    y: this.y - 1
+                }
+            ];
+        }
+        canMoveFence() {
+            return this.fencesRemaining > 0;
+        }
+        canMovePlayer() {
+            return this.newPositions && this.newPositions.length > 0;
+        }
+        getPossiblePosition() {
+            const random = this.random(0, this.newPositions.length - 1);
+            const position = this.newPositions[random];
+            this.newPositions.splice(random, 1);
+            return position;
+        }
+    }
+    exports.Bot = Bot;
+});
+define("models/SmartBot", ["require", "exports", "underscore", "models/Bot", "models/FenceModel", "models/PlayerModel", "models/TurnModel", "models/BoardValidation"], function (require, exports, underscore_9, Bot_1, FenceModel_1, PlayerModel_1, TurnModel_2, BoardValidation_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.SmartBot = void 0;
+    underscore_9 = __importDefault(underscore_9);
+    class SmartBot extends Bot_1.Bot {
+        constructor() {
+            super(...arguments);
+            this.fencesRemaining = 0;
+        }
+        onMovePlayer(params) {
+            this.board.players.at(params.playerIndex).set({
+                x: params.x,
+                y: params.y,
+                prev_x: params.x,
+                prev_y: params.y
+            });
+            if (this.isPlayerCanMakeTurn(params.playerIndex)) {
+                this.turn();
+            }
+        }
+        onMoveFence(params) {
+            const fence = this.board.fences.findWhere({
+                x: params.x,
+                y: params.y,
+                type: params.type
+            });
+            const sibling = this.board.fences.getSibling(fence);
+            fence === null || fence === void 0 ? void 0 : fence.set('state', 'busy');
+            sibling === null || sibling === void 0 ? void 0 : sibling.set('state', 'busy');
+            if (this.currentPlayer === params.playerIndex) {
+                this.fencesRemaining--;
+            }
+            if (this.isPlayerCanMakeTurn(params.playerIndex)) {
+                this.turn();
+            }
+        }
+        onStart(currentPlayer, _activePlayer, history, playersCount, boardSize) {
+            this._newPositions = [];
+            this._fencesPositions = [];
+            this._currentPlayer = currentPlayer;
+            this._playersCount = playersCount;
+            const historyModel = new TurnModel_2.GameHistoryModel({
+                turns: new TurnModel_2.TurnsCollection(),
+                boardSize: boardSize,
+                playersCount: playersCount
+            });
+            if (history.length) {
+                historyModel.get('turns').reset(history);
+            }
+            else {
+                historyModel.initPlayers();
+            }
+            this.board = new BoardValidation_1.BoardValidation({
+                boardSize: historyModel.get('boardSize'),
+                playersCount: historyModel.get('playersCount'),
+                currentPlayer: this.currentPlayer,
+                activePlayer: this.activePlayer,
+                botsCount: 0
+            });
+            this.board.fences = new FenceModel_1.FencesCollection();
+            this.board.fences.createFences(historyModel.get('boardSize'));
+            this.board.players = new PlayerModel_1.PlayersCollection(historyModel.getPlayerPositions(), { model: PlayerModel_1.PlayerModel });
+            this.player = this.board.players.at(currentPlayer);
+            const position = historyModel.getPlayerPositions()[currentPlayer];
+            if (position) {
+                this.fencesRemaining = Math.round(this.fencesCount / playersCount) - position.movedFences;
+            }
+        }
+        getPossiblePosition() {
+            const board = this.board.copy();
+            if (this.currentPlayer === null) {
+                console.error("this.currentPlayer is null");
+            }
+            const player = board.players.at(this.currentPlayer);
+            const goalPath = this.findPathToGoal(player, board);
+            const result = goalPath.pop();
+            return { x: result.x, y: result.y };
+        }
+        findPathToGoal(player, board) {
+            const playerXY = player.pick('x', 'y');
+            const indexPlayer = board.players.indexOf(player);
+            board.players.each((p, i) => {
+                if (i !== indexPlayer) {
+                    p.set({ x: -1, y: -1, prev_x: -1, prev_y: -1 });
+                }
+            });
+            const closed = this.processBoardForGoal(board, player);
+            const goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]);
+            const path = this.buildPath(goal, playerXY, board, closed, player);
+            return path;
+        }
+        processBoardForGoal(board, player) {
+            const open = [{
+                    x: player.get('x'),
+                    y: player.get('y'),
+                    deep: 0
+                }], closed = [];
+            const indexPlayer = board.players.indexOf(player);
+            let currentCoordinate;
+            const newDeep = { value: 0 };
+            const busyFences = board.getBusyFences();
+            const notVisitedPositions = board.generatePositions(board.get('boardSize'));
+            delete notVisitedPositions[10 * player.get('x') + player.get('y')];
+            const addNewCoordinates = board.getAddNewCoordinateFunc(notVisitedPositions, open, newDeep);
+            let winPositionsCount = 0;
+            while (open.length) {
+                currentCoordinate = open.shift();
+                newDeep.value = currentCoordinate.deep + 1;
+                closed.push({
+                    x: currentCoordinate.x,
+                    y: currentCoordinate.y,
+                    deep: currentCoordinate.deep
+                });
+                if (board.players.playersPositions[indexPlayer].isWin(currentCoordinate.x, currentCoordinate.y)) {
+                    winPositionsCount++;
+                }
+                if (winPositionsCount >= board.get('boardSize')) {
+                    return closed;
+                }
+                player.set({
+                    x: currentCoordinate.x,
+                    y: currentCoordinate.y,
+                    prev_x: currentCoordinate.x,
+                    prev_y: currentCoordinate.y
+                });
+                (0, underscore_9.default)(board.getValidPositions(currentCoordinate, busyFences)).each(addNewCoordinates);
+            }
+            return closed;
+        }
+        findGoal(closed, pawn) {
+            const winPositions = (0, underscore_9.default)(closed).filter(item => {
+                return pawn.isWin(item.x, item.y);
+            }).sort((a, b) => {
+                return a.deep - b.deep;
+            });
+            return winPositions[0];
+        }
+        buildPath(from, to, board, closed, player) {
+            if (!from) {
+                return [];
+            }
+            let current = from;
+            const path = [];
+            const func = (pos) => {
+                return (pos.deep === current.deep - 1) &&
+                    (0, underscore_9.default)(board.getNearestPositions(current)).findWhere({ x: pos.x, y: pos.y }) !== undefined;
+            };
+            while (current.x !== to.x || current.y !== to.y) {
+                player.set({
+                    x: current.x,
+                    y: current.y,
+                    prev_x: current.x,
+                    prev_y: current.y
+                });
+                path.push(current);
+                current = (0, underscore_9.default)(closed).detect(func);
+                if (!current) {
+                    console.log('cannot build path');
+                    return [];
+                }
+            }
+            return path;
+        }
+    }
+    exports.SmartBot = SmartBot;
+});
+define("models/MegaBot", ["require", "exports", "underscore", "async", "models/SmartBot", "models/utils"], function (require, exports, underscore_10, async_1, SmartBot_1, utils_3) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.MegaBot = void 0;
+    underscore_10 = __importDefault(underscore_10);
+    async_1 = __importDefault(async_1);
+    class MegaBot extends SmartBot_1.SmartBot {
+        constructor() {
+            super(...arguments);
+            this.possibleWallsMoves = [];
+            this.satisfiedRate = 1;
+        }
+        doTurn() {
+            const self = this;
+            self.getBestTurn(turn => {
+                const eventInfo = {
+                    x: turn.x,
+                    y: turn.y,
+                    type: turn.type,
+                    playerIndex: this.id
+                };
+                if (turn.type === 'P') {
+                    self.trigger('client_move_player', eventInfo);
+                }
+                else {
+                    self.trigger('client_move_fence', eventInfo);
+                }
+            });
+        }
+        getBestTurn(callback) {
+            const board = this.board.copy();
+            const player = board.players.at(this.currentPlayer);
+            const moves = this.getPossibleMoves(board, player);
+            async_1.default.waterfall([
+                (callback1) => {
+                    callback1(null, { moves: moves, player: player, board: board, rates: [] });
+                },
+                this.getRatesForPlayersMoves.bind(this),
+                this.getRatesForWallsMoves.bind(this),
+            ], (_err, result) => {
+                const rates = result === null || result === void 0 ? void 0 : result.rates.sort((move1, move2) => {
+                    return move1.rate - move2.rate;
+                });
+                const minRate = (0, underscore_10.default)((0, underscore_10.default)(rates).pluck('rate')).min();
+                const types = { H: 0, V: 1, P: 2 };
+                const filtered = (0, underscore_10.default)(rates).filter(move => {
+                    return move.rate === minRate;
+                });
+                const minRatedMoves = filtered.sort((a, b) => {
+                    return types[b.type] - types[a.type];
+                });
+                callback(minRatedMoves[underscore_10.default.random(0, minRatedMoves.length - 1)]);
+            });
+        }
+        getRatesForPlayersMoves({ moves, player, board, rates }, callback) {
+            const result = [];
+            (0, underscore_10.default)(moves).each(move => {
+                if (move.type === 'P') {
+                    const prevPosition = player.pick('x', 'y', 'prev_x', 'prev_y');
+                    player.set({
+                        x: move.x,
+                        y: move.y,
+                        prev_x: move.x,
+                        prev_y: move.y
+                    });
+                    player.set(prevPosition);
+                    result.push(Object.assign(Object.assign({}, move), { rate: this.calcHeuristic(player, board) }));
+                }
+            });
+            callback(null, { moves: moves, player: player, board: board, rates: rates.concat(result) });
+        }
+        getRatesForWallsMoves({ moves, player, board, rates }, callback) {
+            const self = this;
+            let satisfiedCount = 0;
+            const result = [];
+            if (!this.canMoveFence()) {
+                callback(null, { moves, player, board, rates });
+                return;
+            }
+            async_1.default.some(moves, (item, callback) => {
+                const move = { x: item.x, y: item.y, type: item.type, rate: 0 };
+                if (move.type === 'P') {
+                    callback(false);
+                    return false;
+                }
+                const fence = board.fences.findWhere(move);
+                if (!board.fences.validateFenceAndSibling(fence)) {
+                    self.removePossibleWallsMove(move);
+                }
+                else if (fence && !board.breakSomePlayerPath(fence)) {
+                    const sibling = board.fences.getSibling(fence);
+                    const prevStateFence = fence.get('state');
+                    const prevStateSibling = sibling === null || sibling === void 0 ? void 0 : sibling.get('state');
+                    fence.set({ state: 'busy' });
+                    sibling === null || sibling === void 0 ? void 0 : sibling.set({ state: 'busy' });
+                    move.rate = self.calcHeuristic(player, board);
+                    result.push(move);
+                    fence.set({ state: prevStateFence });
+                    sibling === null || sibling === void 0 ? void 0 : sibling.set({ state: prevStateSibling });
+                    if (move.rate <= self.satisfiedRate) {
+                        satisfiedCount++;
+                    }
+                }
+                callback(satisfiedCount >= 2);
+                return satisfiedCount >= 2;
+            }, () => {
+                self.satisfiedRate = 0;
+                callback(null, { moves, player, board, rates: rates.concat(result) });
+            });
+        }
+        calcHeuristic(_player, board) {
+            const otherPlayersPaths = [];
+            let currentPlayerPathLength = 0;
+            board.players.each((player, index) => {
+                if (this.currentPlayer === index) {
+                    currentPlayerPathLength = this.getCountStepsToGoal(player, board) + 1;
+                }
+                else {
+                    otherPlayersPaths.push(this.getCountStepsToGoal(player, board));
+                }
+            });
+            const othersMinPathLength = (0, underscore_10.default)(otherPlayersPaths).min();
+            return currentPlayerPathLength - othersMinPathLength;
+        }
+        getCountStepsToGoal(player, board) {
+            const indexPlayer = board.players.indexOf(player);
+            const prevPositions = [];
+            board.players.each((p, i) => {
+                prevPositions.push(p.pick('x', 'y', 'prev_x', 'prev_y'));
+                if (i !== indexPlayer) {
+                    p.set({ x: -1, y: -1, prev_x: -1, prev_y: -1 });
+                }
+            });
+            const closed = this.processBoardForGoal(board, player);
+            const goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]);
+            board.players.forEach((p, i) => { p.set(prevPositions[i]); });
+            return goal ? goal.deep : 9999;
+        }
+        initPossibleMoves() {
+            this.possibleWallsMoves = this.possibleWallsMoves || this.selectWallsMoves();
+        }
+        getPossibleMoves(board, player) {
+            this.initPossibleMoves();
+            const playerPositions = board.getValidPositions(player.pick('x', 'y'), []).map(playerPosition => {
+                const move = Object.assign(Object.assign({}, playerPosition), { type: "P" });
+                return move;
+            });
+            return player.hasFences()
+                ? playerPositions.concat(this.possibleWallsMoves) : playerPositions;
+        }
+        removePossibleWallsMove(move) {
+            const item = (0, underscore_10.default)(this.possibleWallsMoves).findWhere(move);
+            const index = (0, underscore_10.default)(this.possibleWallsMoves).indexOf(item);
+            if (index !== -1) {
+                this.possibleWallsMoves.splice(index, 1);
+            }
+        }
+        selectWallsMoves() {
+            const positions = [];
+            const boardSize = this.board.get('boardSize');
+            (0, utils_3.iter)([boardSize, boardSize - 1], (i, j) => {
+                positions.push({ x: i, y: j, type: 'H' });
+            });
+            (0, utils_3.iter)([boardSize, boardSize - 1], (i, j) => {
+                positions.push({ x: i, y: j, type: 'V' });
+            });
+            return positions;
+        }
+    }
+    exports.MegaBot = MegaBot;
+});
+define("models/BotWrapper", ["require", "exports", "models/BackboneModel", "models/SmartBot", "models/MegaBot", "models/Bot"], function (require, exports, BackboneModel_5, SmartBot_2, MegaBot_1, Bot_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.BotWrapper = void 0;
+    class BotWrapper extends BackboneModel_5.BackboneModel {
+        constructor() {
+            super(...arguments);
+            this.trigger = (name, ...param) => {
+                console.log("trigger", name, ...param);
+                if (!this.bot) {
+                    BackboneModel_5.BackboneModel.prototype.trigger.call(this, name, ...param);
+                }
+                this.bot.trigger(name, ...param);
+                return this;
+            };
+        }
+        initialize() {
+            const type = this.get('botType');
+            const id = this.get('id');
+            this.currentPlayer = id;
+            if (type === 'simple') {
+                this.bot = new Bot_2.Bot(id);
+            }
+            else if (type === 'medium') {
+                this.bot = new SmartBot_2.SmartBot(id);
+            }
+            else if (type === 'super') {
+                this.bot = new MegaBot_1.MegaBot(id);
+            }
+        }
+        on(name, callback) {
+            this.bot.on(name, callback);
+            return this;
+        }
+        terminate() {
+            this.trigger = function () { return this; };
+        }
+    }
+    exports.BotWrapper = BotWrapper;
+});
+define("models/TimerModel", ["require", "exports", "models/BackboneModel"], function (require, exports, BackboneModel_6) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.TimerModel = void 0;
+    class TimerModel extends BackboneModel_6.BackboneModel {
+        constructor() {
+            super(...arguments);
+            this.isStopped = false;
+            this.interval = 0;
+        }
+        defaults() {
+            return {
+                playerNames: [],
+                timePrev: 0,
+                allTime: 0,
+                times: [0, 0, 0, 0],
+                time: 0
+            };
+        }
+        next(current) {
+            if (this.isStopped) {
+                return;
+            }
+            const timer = this;
+            this.get('times')[current] = this.get('times')[current] + this.get('time');
+            timer.set('allTime', timer.get('allTime') + this.get('time'));
+            timer.set('timePrev', timer.get('time'));
+            timer.set('time', 0);
+            clearInterval(this.interval);
+            timer.interval = setInterval(() => {
+                timer.set('time', timer.get('time') + 1);
+            }, 1000);
+        }
+        reset() {
+            this.set('timePrev', this.get('time'));
+            this.set('time', 0);
+            this.set('allTime', 0);
+            this.set('times', [0, 0, 0, 0]);
+        }
+        stop() {
+            this.isStopped = true;
+            clearInterval(this.interval);
+        }
+    }
+    exports.TimerModel = TimerModel;
+});
+define("models/BoardModel", ["require", "exports", "underscore", "models/BackboneModel", "models/BotWrapper", "models/FieldModel", "models/FenceModel", "models/PlayerModel", "models/TimerModel", "models/TurnModel"], function (require, exports, underscore_11, BackboneModel_7, BotWrapper_1, FieldModel_1, FenceModel_2, PlayerModel_2, TimerModel_1, TurnModel_3) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.BoardModel = void 0;
+    underscore_11 = __importDefault(underscore_11);
+    class BoardModel extends BackboneModel_7.BackboneModel {
+        constructor() {
+            super(...arguments);
+            this.isPlayerMoved = false;
+            this.isFenceMoved = false;
+            this.auto = false;
+        }
+        defaults() {
+            return {
+                botsCount: 0,
+                boardSize: 9,
+                playersCount: 2,
+                currentPlayer: null,
+                activePlayer: -1,
+            };
+        }
+        ;
+        getActivePlayer() {
+            return this.players.at(this.get('activePlayer'));
+        }
+        getActiveBot() {
+            return (0, underscore_11.default)(this.bots).find(bot => {
+                return bot.currentPlayer === this.get('activePlayer');
+            });
+        }
+        onSocketMoveFence(pos) {
+            const fence = this.fences.findWhere({
+                type: pos.orientation,
+                x: pos.x,
+                y: pos.y
+            });
+            if (!fence) {
+                return false;
+            }
+            this.auto = true;
+            fence.trigger('selected', fence);
+            this.auto = false;
+            this.trigger('maketurn');
+            return true;
+        }
+        onSocketMovePlayer(pos) {
+            if (pos.timeout) {
+                this.isPlayerMoved = true;
+            }
+            this.auto = true;
+            this.fields.trigger('moveplayer', pos.x, pos.y);
+            this.auto = false;
+            this.trigger('maketurn');
+        }
+        createModels() {
+            this.fences = new FenceModel_2.FencesCollection();
+            this.fields = new FieldModel_1.FieldsCollection();
+            this.players = new PlayerModel_2.PlayersCollection();
+            this.timerModel = new TimerModel_1.TimerModel({
+                playersCount: this.get('playersCount')
+            });
+            this.infoModel = new BackboneModel_7.BackboneModel({
+                playersPositions: this.players.playersPositions
+            });
+            this.history = new TurnModel_3.GameHistoryModel({
+                turns: new TurnModel_3.TurnsCollection(),
+                debug: this.get('debug'),
+                boardSize: this.get('boardSize'),
+                playersCount: this.get('playersCount')
+            });
+        }
+        initModels() {
+            const me = this;
+            const count = me.get('playersCount');
+            if (count !== 2 && count !== 4) {
+                me.set('playersCount', 2);
+            }
+            me.set('botsCount', Math.min(me.get('playersCount'), me.get('botsCount')));
+            me.fields.createFields(me.get('boardSize'));
+            me.fences.createFences(me.get('boardSize'));
+            me.players.createPlayers(me.get('playersCount'));
+            this.history.set('playerNames', this.players.getPlayerNames());
+            this.timerModel.set('playerNames', this.players.getPlayerNames());
+        }
+        switchActivePlayer() {
+            if (this.history.get('turns').length > this.get('playersCount')) {
+                this.timerModel.next(this.get('activePlayer'));
+            }
+            this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
+        }
+        makeTurn() {
+            const me = this;
+            if (!(me.isPlayerMoved || me.isFenceMoved)) {
+                return;
+            }
+            const active = me.getActivePlayer();
+            const preBusy = me.fences.getMovedFence();
+            const index = me.get('activePlayer');
+            if (me.isFenceMoved) {
+                me.getActivePlayer().placeFence();
+                const preBusySibling = me.fences.getSibling(preBusy);
+                if (preBusySibling) {
+                    me.history.add({
+                        x: preBusy.get('x'),
+                        y: preBusy.get('y'),
+                        x2: preBusySibling.get('x'),
+                        y2: preBusySibling.get('y'),
+                        t: 'f'
+                    });
+                }
+                me.fences.setBusy();
+            }
+            if (me.isPlayerMoved) {
+                me.history.add({
+                    x: active.get('x'),
+                    y: active.get('y'),
+                    t: 'p'
+                });
+            }
+            me.switchActivePlayer();
+            me.players.each(player => {
+                player.trigger('resetstate');
+            });
+            me.getActivePlayer().trigger('setcurrent');
+            if (!me.isOnlineGame()) {
+                if (!me.getNextActiveBot(me.get('activePlayer'))) {
+                    me.set('currentPlayer', me.get('activePlayer'));
+                }
+            }
+            if (me.isFenceMoved) {
+                me.emitEventToBots('server_move_fence', {
+                    x: preBusy.get('x'),
+                    y: preBusy.get('y'),
+                    type: preBusy.get('orientation'),
+                    playerIndex: index
+                });
+            }
+            if (me.isPlayerMoved) {
+                me.emitEventToBots('server_move_player', {
+                    x: active.get('x'),
+                    y: active.get('y'),
+                    playerIndex: index
+                });
+            }
+            me.isPlayerMoved = false;
+            me.isFenceMoved = false;
+        }
+        getNextActiveBot(next) {
+            var _a;
+            return (_a = this.bots) === null || _a === void 0 ? void 0 : _a.find(bot => {
+                return bot.currentPlayer === next;
+            });
+        }
+        emitEventToBots(eventName, param) {
+            var _a, _b;
+            const next = this.players.at(this.get('activePlayer')).get("url");
+            (_a = this.bots) === null || _a === void 0 ? void 0 : _a.forEach(bot => {
+                if (next !== bot.currentPlayer) {
+                    bot.trigger(eventName, param);
+                }
+            });
+            (_b = this.getNextActiveBot(next)) === null || _b === void 0 ? void 0 : _b.trigger(eventName, param);
+        }
+        isOnlineGame() {
+            return false;
+        }
+        onMovePlayer(x, y) {
+            const me = this;
+            console.log("onMovePlayer", x, y);
+            if (me.isValidCurrentPlayerPosition(x, y)) {
+                const current = me.getActivePlayer();
+                current.moveTo(x, y);
+                me.fences.clearBusy();
+                me.isFenceMoved = false;
+                me.isPlayerMoved = true;
+            }
+            else {
+                const activeBot = me.getActiveBot();
+                if (activeBot) {
+                    activeBot.trigger('server_turn_fail');
+                }
+            }
+        }
+        updateInfo() {
+            this.infoModel.set({
+                currentPlayer: this.get('currentPlayer'),
+                activePlayer: this.get('activePlayer'),
+                fences: this.players.pluck('fencesRemaining')
+            });
+        }
+        onFenceSelected(model) {
+            if (this.canSelectFences() &&
+                this.fences.validateFenceAndSibling(model) &&
+                this.notBreakSomePlayerPath(model)) {
+                this.fences.clearBusy();
+                this.fences.validateAndTriggerEventOnFenceAndSibling(model, 'movefence');
+                this.players.updatePlayersPositions();
+                this.isPlayerMoved = false;
+                this.isFenceMoved = true;
+            }
+            else {
+                const activeBot = this.getActiveBot();
+                if (activeBot) {
+                    activeBot.trigger('server_turn_fail');
+                }
+            }
+        }
+        initEvents() {
+            const me = this;
+            me.on('maketurn', this.makeTurn);
+            this.fields.on('moveplayer', me.onMovePlayer, this);
+            this.fields.on('beforeselectfield', (x, y, model) => {
+                if (me.isValidCurrentPlayerPosition(x, y)) {
+                    model.selectField();
+                }
+            });
+            this.on('change:activePlayer', this.updateInfo, this);
+            this.on('change:currentPlayer', this.updateInfo, this);
+            this.fences.on({
+                'selected': (model) => me.onFenceSelected(model),
+                'highlight_current_and_sibling': (model) => {
+                    if (me.canSelectFences() &&
+                        me.fences.validateFenceAndSibling(model) &&
+                        me.notBreakSomePlayerPath(model)) {
+                        me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markfence');
+                    }
+                },
+                'reset_current_and_sibling': (model) => {
+                    me.fences.triggerEventOnFenceAndSibling(model, 'unmarkfence');
+                }
+            });
+        }
+        run(activePlayer, currentPlayer) {
+            this.set({
+                activePlayer: activePlayer,
+                currentPlayer: currentPlayer,
+            });
+            if (!this.isOnlineGame()) {
+                this.history.initPlayers();
+            }
+            this.connectBots();
+        }
+        stop() {
+            var _a;
+            (_a = this.bots) === null || _a === void 0 ? void 0 : _a.forEach(bot => {
+                bot.terminate();
+            });
+            this.timerModel.stop();
+        }
+        connectBots() {
+            if (this.get('botsCount') === undefined) {
+                return;
+            }
+            const me = this;
+            this.bots = [];
+            const turns = this.history.get('turns').toJSON();
+            (0, underscore_11.default)(this.get('botsCount')).times(i => {
+                const botIndex = i + (this.get('playersCount') - this.get('botsCount'));
+                const bot = new BotWrapper_1.BotWrapper({
+                    id: botIndex,
+                    botType: 'medium'
+                });
+                bot.on('client_move_player', (pos) => me.onSocketMovePlayer(pos));
+                bot.on('client_move_fence', (pos) => {
+                    if (this.onSocketMoveFence(pos) === false) {
+                        const activeBot = this.getActiveBot();
+                        if (activeBot) {
+                            activeBot.trigger('server_turn_fail');
+                        }
+                    }
+                });
+                bot.trigger('server_start', botIndex, this.get('activePlayer'), turns, this.get('playersCount'));
+                this.bots.push(bot);
+            });
+        }
+        initialize() {
+            this.createModels();
+            this.initEvents();
+            this.initModels();
+            this.updateInfo();
+            this.afterInitialize();
+        }
+        afterInitialize() {
+            this.on('confirmturn', this.makeTurn);
+            this.run(0, 0);
+        }
+    }
+    exports.BoardModel = BoardModel;
+});
+define("models/PlayerModel", ["require", "exports", "underscore", "models/BackboneModel"], function (require, exports, underscore_12, BackboneModel_8) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.PlayersCollection = exports.PlayerModel = void 0;
-    underscore_8 = __importDefault(underscore_8);
-    class PlayerModel extends BackboneModel_4.BackboneModel {
+    underscore_12 = __importDefault(underscore_12);
+    class PlayerModel extends BackboneModel_8.BackboneModel {
         defaults() {
             return {
                 fencesRemaining: 0
@@ -831,7 +1720,7 @@ define("models/PlayerModel", ["require", "exports", "underscore", "models/Backbo
         }
     }
     exports.PlayerModel = PlayerModel;
-    class PlayersCollection extends BackboneModel_4.BackboneCollection {
+    class PlayersCollection extends BackboneModel_8.BackboneCollection {
         constructor() {
             super(...arguments);
             this.model = PlayerModel;
@@ -858,7 +1747,7 @@ define("models/PlayerModel", ["require", "exports", "underscore", "models/Backbo
             }
         }
         getPlayerNames() {
-            return (0, underscore_8.default)(this.playersPositions).pluck('name');
+            return (0, underscore_12.default)(this.playersPositions).pluck('name');
         }
         getNextActivePlayer(currentPlayer) {
             this.checkWin(currentPlayer);
@@ -867,7 +1756,7 @@ define("models/PlayerModel", ["require", "exports", "underscore", "models/Backbo
                 'prev_x': current.get('x'),
                 'prev_y': current.get('y')
             });
-            return (currentPlayer + 1) < this.length ? currentPlayer + 1 : 0;
+            return (currentPlayer + 1) < this.length ? (currentPlayer + 1) : 0;
         }
         checkWin(playerIndex) {
             const pos = this.at(playerIndex).pick('x', 'y'), x = pos.x, y = pos.y;
@@ -885,7 +1774,7 @@ define("models/PlayerModel", ["require", "exports", "underscore", "models/Backbo
                 me.playersPositions.splice(1, 1);
             }
             const fences = Math.round(me.fencesCount / playersCount);
-            (0, underscore_8.default)(playersCount).times(player => {
+            (0, underscore_12.default)(playersCount).times(player => {
                 const position = me.playersPositions[player];
                 const model = new PlayerModel({
                     url: player,
@@ -1019,895 +1908,6 @@ define("models/PlayerModel", ["require", "exports", "underscore", "models/Backbo
         }
     }
     exports.PlayersCollection = PlayersCollection;
-});
-define("models/Bot", ["require", "exports", "models/BackboneModel", "underscore", "models/TurnModel"], function (require, exports, BackboneModel_5, underscore_9, TurnModel_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.Bot = void 0;
-    underscore_9 = __importDefault(underscore_9);
-    class Bot extends BackboneModel_5.BackboneModel {
-        get playerId() {
-            var _a;
-            return (_a = this._playerId) !== null && _a !== void 0 ? _a : null;
-        }
-        get currentPlayer() {
-            var _a;
-            return (_a = this._currentPlayer) !== null && _a !== void 0 ? _a : null;
-        }
-        get playersCount() {
-            var _a;
-            return (_a = this._playersCount) !== null && _a !== void 0 ? _a : null;
-        }
-        get fencesPositions() {
-            var _a;
-            return (_a = this._fencesPositions) !== null && _a !== void 0 ? _a : [];
-        }
-        get newPositions() {
-            var _a;
-            return (_a = this._newPositions) !== null && _a !== void 0 ? _a : [];
-        }
-        constructor(id) {
-            super();
-            this.fencesRemaining = 0;
-            this.attemptsCount = 0;
-            this.fencesCount = 20;
-            this.setDelay = setTimeout;
-            this.random = underscore_9.default.random;
-            this.id = id;
-            this._playerId = id;
-            this.initEvents();
-        }
-        startGame(currentPlayer, activePlayer, history, playersCount) {
-            this.onStart(currentPlayer, activePlayer, history, playersCount, 9);
-            if (currentPlayer === activePlayer) {
-                this.turn();
-            }
-        }
-        onStart(currentPlayer, _activePlayer, history, playersCount, boardSize) {
-            var _a, _b;
-            this._playersCount = playersCount;
-            const historyModel = new TurnModel_1.GameHistoryModel({
-                turns: new TurnModel_1.TurnsCollection(),
-                boardSize: boardSize,
-                playersCount: playersCount
-            });
-            historyModel.get('turns').reset(history);
-            const playerPositions = historyModel.getPlayerPositions();
-            const position = playerPositions[currentPlayer];
-            if (position) {
-                this.x = (_a = position.x) !== null && _a !== void 0 ? _a : 0;
-                this.y = (_b = position.y) !== null && _b !== void 0 ? _b : 0;
-                this._newPositions = [];
-                this._fencesPositions = [];
-                this._currentPlayer = currentPlayer;
-                this.fencesRemaining = Math.round(this.fencesCount / playersCount) - position.movedFences;
-            }
-        }
-        getNextActivePlayer(currentPlayer) {
-            var _a;
-            currentPlayer++;
-            return currentPlayer < ((_a = this.playersCount) !== null && _a !== void 0 ? _a : 0) ? currentPlayer : 0;
-        }
-        initEvents() {
-            this.on('server_move_player', this.onMovePlayer, this);
-            this.on('server_move_fence', this.onMoveFence, this);
-            this.on('server_start', this.startGame, this);
-            this.on('server_turn_fail', this.makeTurn, this);
-        }
-        isPlayerCanMakeTurn(playerIndex) {
-            return this.currentPlayer === this.getNextActivePlayer(playerIndex);
-        }
-        onMovePlayer(params) {
-            if (this.currentPlayer === params.playerIndex) {
-                this.x = params.x;
-                this.y = params.y;
-            }
-            if (this.isPlayerCanMakeTurn(params.playerIndex)) {
-                this.turn();
-            }
-        }
-        onMoveFence(params) {
-            if (this.currentPlayer === params.playerIndex) {
-                this.fencesRemaining--;
-            }
-            if (this.isPlayerCanMakeTurn(params.playerIndex)) {
-                this.turn();
-            }
-        }
-        turn() {
-            this.attemptsCount = 0;
-            this._newPositions = this.getJumpPositions();
-            this.makeTurn();
-        }
-        makeTurn() {
-            this.attemptsCount++;
-            if (this.attemptsCount > 50) {
-                console.warn('bot can`t make a turn');
-                return;
-            }
-            this.setDelay.call(window, () => this.doTurn(), 1000);
-        }
-        getFencePosition() {
-            const y = this.random(0, 8);
-            const x = this.random(0, 8);
-            const type = this.random(0, 1) ? 'H' : 'V';
-            const res = { y: y, x: x, type: type };
-            if ((0, underscore_9.default)(this.fencesPositions).contains(res)) {
-                return this.getFencePosition();
-            }
-            this.fencesPositions.push(res);
-            return res;
-        }
-        doTurn() {
-            const bot = this;
-            const random = this.random(0, 1);
-            if (bot.canMovePlayer() && (random || !bot.canMoveFence())) {
-                let playerPosition = bot.getPossiblePosition();
-                if (playerPosition) {
-                    bot.trigger('client_move_player', playerPosition);
-                }
-                return;
-            }
-            if (bot.canMoveFence()) {
-                const res = this.getFencePosition();
-                const eventInfo = {
-                    x: res.x,
-                    y: res.y,
-                    type: res.type,
-                    playerIndex: bot.id
-                };
-                bot.trigger('client_move_fence', eventInfo);
-                return;
-            }
-            console.warn('something going wrong');
-        }
-        getJumpPositions() {
-            return [
-                {
-                    x: this.x + 1,
-                    y: this.y
-                },
-                {
-                    x: this.x - 1,
-                    y: this.y
-                },
-                {
-                    x: this.x,
-                    y: this.y + 1
-                },
-                {
-                    x: this.x,
-                    y: this.y - 1
-                }
-            ];
-        }
-        canMoveFence() {
-            return this.fencesRemaining > 0;
-        }
-        canMovePlayer() {
-            return this.newPositions && this.newPositions.length > 0;
-        }
-        getPossiblePosition() {
-            const random = this.random(0, this.newPositions.length - 1);
-            const position = this.newPositions[random];
-            this.newPositions.splice(random, 1);
-            return position;
-        }
-    }
-    exports.Bot = Bot;
-});
-define("models/SmartBot", ["require", "exports", "underscore", "models/Bot", "models/FenceModel", "models/PlayerModel", "models/TurnModel", "models/BoardValidation"], function (require, exports, underscore_10, Bot_1, FenceModel_1, PlayerModel_1, TurnModel_2, BoardValidation_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.SmartBot = void 0;
-    underscore_10 = __importDefault(underscore_10);
-    class SmartBot extends Bot_1.Bot {
-        constructor() {
-            super(...arguments);
-            this.fencesRemaining = 0;
-        }
-        onMovePlayer(params) {
-            this.board.players.at(params.playerIndex).set({
-                x: params.x,
-                y: params.y,
-                prev_x: params.x,
-                prev_y: params.y
-            });
-            if (this.isPlayerCanMakeTurn(params.playerIndex)) {
-                this.turn();
-            }
-        }
-        onMoveFence(params) {
-            const fence = this.board.fences.findWhere({
-                x: params.x,
-                y: params.y,
-                type: params.type
-            });
-            const sibling = this.board.fences.getSibling(fence);
-            fence === null || fence === void 0 ? void 0 : fence.set('state', 'busy');
-            sibling === null || sibling === void 0 ? void 0 : sibling.set('state', 'busy');
-            if (this.currentPlayer === params.playerIndex) {
-                this.fencesRemaining--;
-            }
-            if (this.isPlayerCanMakeTurn(params.playerIndex)) {
-                this.turn();
-            }
-        }
-        onStart(currentPlayer, _activePlayer, history, playersCount, boardSize) {
-            this._newPositions = [];
-            this._fencesPositions = [];
-            this._currentPlayer = currentPlayer;
-            this._playersCount = playersCount;
-            const historyModel = new TurnModel_2.GameHistoryModel({
-                turns: new TurnModel_2.TurnsCollection(),
-                boardSize: boardSize,
-                playersCount: playersCount
-            });
-            if (history.length) {
-                historyModel.get('turns').reset(history);
-            }
-            else {
-                historyModel.initPlayers();
-            }
-            this.board = new BoardValidation_1.BoardValidation({
-                boardSize: historyModel.get('boardSize'),
-                playersCount: historyModel.get('playersCount'),
-                currentPlayer: this.currentPlayer,
-                activePlayer: this.activePlayer,
-                botsCount: 0
-            });
-            this.board.fences = new FenceModel_1.FencesCollection();
-            this.board.fences.createFences(historyModel.get('boardSize'));
-            this.board.players = new PlayerModel_1.PlayersCollection(historyModel.getPlayerPositions(), { model: PlayerModel_1.PlayerModel });
-            this.player = this.board.players.at(currentPlayer);
-            const position = historyModel.getPlayerPositions()[currentPlayer];
-            if (position) {
-                this.fencesRemaining = Math.round(this.fencesCount / playersCount) - position.movedFences;
-            }
-        }
-        getPossiblePosition() {
-            const board = this.board.copy();
-            if (this.currentPlayer === null) {
-                console.error("this.currentPlayer is null");
-            }
-            const player = board.players.at(this.currentPlayer);
-            const goalPath = this.findPathToGoal(player, board);
-            const result = goalPath.pop();
-            return { x: result.x, y: result.y };
-        }
-        findPathToGoal(player, board) {
-            const playerXY = player.pick('x', 'y');
-            const indexPlayer = board.players.indexOf(player);
-            board.players.each((p, i) => {
-                if (i !== indexPlayer) {
-                    p.set({ x: -1, y: -1, prev_x: -1, prev_y: -1 });
-                }
-            });
-            const closed = this.processBoardForGoal(board, player);
-            const goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]);
-            const path = this.buildPath(goal, playerXY, board, closed, player);
-            return path;
-        }
-        processBoardForGoal(board, player) {
-            const open = [{
-                    x: player.get('x'),
-                    y: player.get('y'),
-                    deep: 0
-                }], closed = [];
-            const indexPlayer = board.players.indexOf(player);
-            let currentCoordinate;
-            const newDeep = { value: 0 };
-            const busyFences = board.getBusyFences();
-            const notVisitedPositions = board.generatePositions(board.get('boardSize'));
-            delete notVisitedPositions[10 * player.get('x') + player.get('y')];
-            const addNewCoordinates = board.getAddNewCoordinateFunc(notVisitedPositions, open, newDeep);
-            let winPositionsCount = 0;
-            while (open.length) {
-                currentCoordinate = open.shift();
-                newDeep.value = currentCoordinate.deep + 1;
-                closed.push({
-                    x: currentCoordinate.x,
-                    y: currentCoordinate.y,
-                    deep: currentCoordinate.deep
-                });
-                if (board.players.playersPositions[indexPlayer].isWin(currentCoordinate.x, currentCoordinate.y)) {
-                    winPositionsCount++;
-                }
-                if (winPositionsCount >= board.get('boardSize')) {
-                    return closed;
-                }
-                player.set({
-                    x: currentCoordinate.x,
-                    y: currentCoordinate.y,
-                    prev_x: currentCoordinate.x,
-                    prev_y: currentCoordinate.y
-                });
-                (0, underscore_10.default)(board.getValidPositions(currentCoordinate, busyFences)).each(addNewCoordinates);
-            }
-            return closed;
-        }
-        findGoal(closed, pawn) {
-            const winPositions = (0, underscore_10.default)(closed).filter(item => {
-                return pawn.isWin(item.x, item.y);
-            }).sort((a, b) => {
-                return a.deep - b.deep;
-            });
-            return winPositions[0];
-        }
-        buildPath(from, to, board, closed, player) {
-            if (!from) {
-                return [];
-            }
-            let current = from;
-            const path = [];
-            const func = (pos) => {
-                return (pos.deep === current.deep - 1) &&
-                    (0, underscore_10.default)(board.getNearestPositions(current)).findWhere({ x: pos.x, y: pos.y }) !== undefined;
-            };
-            while (current.x !== to.x || current.y !== to.y) {
-                player.set({
-                    x: current.x,
-                    y: current.y,
-                    prev_x: current.x,
-                    prev_y: current.y
-                });
-                path.push(current);
-                current = (0, underscore_10.default)(closed).detect(func);
-                if (!current) {
-                    console.log('cannot build path');
-                    return [];
-                }
-            }
-            return path;
-        }
-    }
-    exports.SmartBot = SmartBot;
-});
-define("models/MegaBot", ["require", "exports", "underscore", "async", "models/SmartBot", "models/utils"], function (require, exports, underscore_11, async_1, SmartBot_1, utils_3) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.MegaBot = void 0;
-    underscore_11 = __importDefault(underscore_11);
-    async_1 = __importDefault(async_1);
-    class MegaBot extends SmartBot_1.SmartBot {
-        constructor() {
-            super(...arguments);
-            this.possibleWallsMoves = [];
-            this.satisfiedRate = 1;
-        }
-        doTurn() {
-            const self = this;
-            self.getBestTurn(turn => {
-                const eventInfo = {
-                    x: turn.x,
-                    y: turn.y,
-                    type: turn.type,
-                    playerIndex: this.id
-                };
-                if (turn.type === 'P') {
-                    self.trigger('client_move_player', eventInfo);
-                }
-                else {
-                    self.trigger('client_move_fence', eventInfo);
-                }
-            });
-        }
-        getBestTurn(callback) {
-            const board = this.board.copy();
-            const player = board.players.at(this.currentPlayer);
-            const moves = this.getPossibleMoves(board, player);
-            async_1.default.waterfall([
-                (callback1) => {
-                    callback1(null, { moves: moves, player: player, board: board, rates: [] });
-                },
-                this.getRatesForPlayersMoves.bind(this),
-                this.getRatesForWallsMoves.bind(this),
-            ], (_err, result) => {
-                const rates = result === null || result === void 0 ? void 0 : result.rates.sort((move1, move2) => {
-                    return move1.rate - move2.rate;
-                });
-                const minRate = (0, underscore_11.default)((0, underscore_11.default)(rates).pluck('rate')).min();
-                const types = { H: 0, V: 1, P: 2 };
-                const filtered = (0, underscore_11.default)(rates).filter(move => {
-                    return move.rate === minRate;
-                });
-                const minRatedMoves = filtered.sort((a, b) => {
-                    return types[b.type] - types[a.type];
-                });
-                callback(minRatedMoves[underscore_11.default.random(0, minRatedMoves.length - 1)]);
-            });
-        }
-        getRatesForPlayersMoves({ moves, player, board, rates }, callback) {
-            const result = [];
-            (0, underscore_11.default)(moves).each(move => {
-                if (move.type === 'P') {
-                    const prevPosition = player.pick('x', 'y', 'prev_x', 'prev_y');
-                    player.set({
-                        x: move.x,
-                        y: move.y,
-                        prev_x: move.x,
-                        prev_y: move.y
-                    });
-                    player.set(prevPosition);
-                    result.push(Object.assign(Object.assign({}, move), { rate: this.calcHeuristic(player, board) }));
-                }
-            });
-            callback(null, { moves: moves, player: player, board: board, rates: rates.concat(result) });
-        }
-        getRatesForWallsMoves({ moves, player, board, rates }, callback) {
-            const self = this;
-            let satisfiedCount = 0;
-            const result = [];
-            if (!this.canMoveFence()) {
-                callback(null, { moves, player, board, rates });
-                return;
-            }
-            async_1.default.some(moves, (item, callback) => {
-                const move = { x: item.x, y: item.y, type: item.type, rate: 0 };
-                if (move.type === 'P') {
-                    callback(false);
-                    return false;
-                }
-                const fence = board.fences.findWhere(move);
-                if (!board.fences.validateFenceAndSibling(fence)) {
-                    self.removePossibleWallsMove(move);
-                }
-                else if (fence && !board.breakSomePlayerPath(fence)) {
-                    const sibling = board.fences.getSibling(fence);
-                    const prevStateFence = fence.get('state');
-                    const prevStateSibling = sibling === null || sibling === void 0 ? void 0 : sibling.get('state');
-                    fence.set({ state: 'busy' });
-                    sibling === null || sibling === void 0 ? void 0 : sibling.set({ state: 'busy' });
-                    move.rate = self.calcHeuristic(player, board);
-                    result.push(move);
-                    fence.set({ state: prevStateFence });
-                    sibling === null || sibling === void 0 ? void 0 : sibling.set({ state: prevStateSibling });
-                    if (move.rate <= self.satisfiedRate) {
-                        satisfiedCount++;
-                    }
-                }
-                callback(satisfiedCount >= 2);
-                return satisfiedCount >= 2;
-            }, () => {
-                self.satisfiedRate = 0;
-                callback(null, { moves, player, board, rates: rates.concat(result) });
-            });
-        }
-        calcHeuristic(_player, board) {
-            const otherPlayersPaths = [];
-            let currentPlayerPathLength = 0;
-            board.players.each((player, index) => {
-                if (this.currentPlayer === index) {
-                    currentPlayerPathLength = this.getCountStepsToGoal(player, board) + 1;
-                }
-                else {
-                    otherPlayersPaths.push(this.getCountStepsToGoal(player, board));
-                }
-            });
-            const othersMinPathLength = (0, underscore_11.default)(otherPlayersPaths).min();
-            return currentPlayerPathLength - othersMinPathLength;
-        }
-        getCountStepsToGoal(player, board) {
-            const indexPlayer = board.players.indexOf(player);
-            const prevPositions = [];
-            board.players.each((p, i) => {
-                prevPositions.push(p.pick('x', 'y', 'prev_x', 'prev_y'));
-                if (i !== indexPlayer) {
-                    p.set({ x: -1, y: -1, prev_x: -1, prev_y: -1 });
-                }
-            });
-            const closed = this.processBoardForGoal(board, player);
-            const goal = this.findGoal(closed, board.players.playersPositions[indexPlayer]);
-            board.players.forEach((p, i) => { p.set(prevPositions[i]); });
-            return goal ? goal.deep : 9999;
-        }
-        initPossibleMoves() {
-            this.possibleWallsMoves = this.possibleWallsMoves || this.selectWallsMoves();
-        }
-        getPossibleMoves(board, player) {
-            this.initPossibleMoves();
-            const playerPositions = board.getValidPositions(player.pick('x', 'y'), []).map(playerPosition => {
-                const move = Object.assign(Object.assign({}, playerPosition), { type: "P" });
-                return move;
-            });
-            return player.hasFences()
-                ? playerPositions.concat(this.possibleWallsMoves) : playerPositions;
-        }
-        removePossibleWallsMove(move) {
-            const item = (0, underscore_11.default)(this.possibleWallsMoves).findWhere(move);
-            const index = (0, underscore_11.default)(this.possibleWallsMoves).indexOf(item);
-            if (index !== -1) {
-                this.possibleWallsMoves.splice(index, 1);
-            }
-        }
-        selectWallsMoves() {
-            const positions = [];
-            const boardSize = this.board.get('boardSize');
-            (0, utils_3.iter)([boardSize, boardSize - 1], (i, j) => {
-                positions.push({ x: i, y: j, type: 'H' });
-            });
-            (0, utils_3.iter)([boardSize, boardSize - 1], (i, j) => {
-                positions.push({ x: i, y: j, type: 'V' });
-            });
-            return positions;
-        }
-    }
-    exports.MegaBot = MegaBot;
-});
-define("models/BotWrapper", ["require", "exports", "models/BackboneModel", "models/SmartBot", "models/MegaBot", "models/Bot"], function (require, exports, BackboneModel_6, SmartBot_2, MegaBot_1, Bot_2) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.BotWrapper = void 0;
-    class BotWrapper extends BackboneModel_6.BackboneModel {
-        constructor() {
-            super(...arguments);
-            this.trigger = (name, ...param) => {
-                console.log("trigger", name, ...param);
-                if (!this.bot) {
-                    BackboneModel_6.BackboneModel.prototype.trigger.call(this, name, ...param);
-                }
-                this.bot.trigger(name, ...param);
-                return this;
-            };
-        }
-        initialize() {
-            const type = this.get('botType');
-            const id = this.get('id');
-            this.currentPlayer = id;
-            if (type === 'simple') {
-                this.bot = new Bot_2.Bot(id);
-            }
-            else if (type === 'medium') {
-                this.bot = new SmartBot_2.SmartBot(id);
-            }
-            else if (type === 'super') {
-                this.bot = new MegaBot_1.MegaBot(id);
-            }
-        }
-        on(name, callback) {
-            this.bot.on(name, callback);
-            return this;
-        }
-        terminate() {
-            this.trigger = function () { return this; };
-        }
-    }
-    exports.BotWrapper = BotWrapper;
-});
-define("models/TimerModel", ["require", "exports", "models/BackboneModel"], function (require, exports, BackboneModel_7) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.TimerModel = void 0;
-    class TimerModel extends BackboneModel_7.BackboneModel {
-        constructor() {
-            super(...arguments);
-            this.isStopped = false;
-            this.interval = 0;
-        }
-        defaults() {
-            return {
-                playerNames: [],
-                timePrev: 0,
-                allTime: 0,
-                times: [0, 0, 0, 0],
-                time: 0
-            };
-        }
-        next(current) {
-            if (this.isStopped) {
-                return;
-            }
-            const timer = this;
-            this.get('times')[current] = this.get('times')[current] + this.get('time');
-            timer.set('allTime', timer.get('allTime') + this.get('time'));
-            timer.set('timePrev', timer.get('time'));
-            timer.set('time', 0);
-            clearInterval(this.interval);
-            timer.interval = setInterval(() => {
-                timer.set('time', timer.get('time') + 1);
-            }, 1000);
-        }
-        reset() {
-            this.set('timePrev', this.get('time'));
-            this.set('time', 0);
-            this.set('allTime', 0);
-            this.set('times', [0, 0, 0, 0]);
-        }
-        stop() {
-            this.isStopped = true;
-            clearInterval(this.interval);
-        }
-    }
-    exports.TimerModel = TimerModel;
-});
-define("models/BoardModel", ["require", "exports", "underscore", "models/BackboneModel", "models/BotWrapper", "models/FieldModel", "models/FenceModel", "models/PlayerModel", "models/TimerModel", "models/TurnModel"], function (require, exports, underscore_12, BackboneModel_8, BotWrapper_1, FieldModel_1, FenceModel_2, PlayerModel_2, TimerModel_1, TurnModel_3) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.BoardModel = void 0;
-    underscore_12 = __importDefault(underscore_12);
-    class BoardModel extends BackboneModel_8.BackboneModel {
-        constructor() {
-            super(...arguments);
-            this.isPlayerMoved = false;
-            this.isFenceMoved = false;
-            this.auto = false;
-        }
-        defaults() {
-            return {
-                botsCount: 0,
-                boardSize: 9,
-                playersCount: 2,
-                currentPlayer: null,
-                activePlayer: -1,
-            };
-        }
-        ;
-        getActivePlayer() {
-            return this.players.at(this.get('activePlayer'));
-        }
-        getActiveBot() {
-            return (0, underscore_12.default)(this.bots).find(bot => {
-                return bot.currentPlayer === this.get('activePlayer');
-            });
-        }
-        onSocketMoveFence(pos) {
-            const fence = this.fences.findWhere({
-                type: pos.orientation,
-                x: pos.x,
-                y: pos.y
-            });
-            if (!fence) {
-                return false;
-            }
-            this.auto = true;
-            fence.trigger('selected', fence);
-            this.auto = false;
-            this.trigger('maketurn');
-            return true;
-        }
-        onSocketMovePlayer(pos) {
-            if (pos.timeout) {
-                this.isPlayerMoved = true;
-            }
-            this.auto = true;
-            this.fields.trigger('moveplayer', pos.x, pos.y);
-            this.auto = false;
-            this.trigger('maketurn');
-        }
-        createModels() {
-            this.fences = new FenceModel_2.FencesCollection();
-            this.fields = new FieldModel_1.FieldsCollection();
-            this.players = new PlayerModel_2.PlayersCollection();
-            this.timerModel = new TimerModel_1.TimerModel({
-                playersCount: this.get('playersCount')
-            });
-            this.infoModel = new BackboneModel_8.BackboneModel({
-                playersPositions: this.players.playersPositions
-            });
-            this.history = new TurnModel_3.GameHistoryModel({
-                turns: new TurnModel_3.TurnsCollection(),
-                debug: this.get('debug'),
-                boardSize: this.get('boardSize'),
-                playersCount: this.get('playersCount')
-            });
-        }
-        initModels() {
-            const me = this;
-            const count = me.get('playersCount');
-            if (count !== 2 && count !== 4) {
-                me.set('playersCount', 2);
-            }
-            me.set('botsCount', Math.min(me.get('playersCount'), me.get('botsCount')));
-            me.fields.createFields(me.get('boardSize'));
-            me.fences.createFences(me.get('boardSize'));
-            me.players.createPlayers(me.get('playersCount'));
-            this.history.set('playerNames', this.players.getPlayerNames());
-            this.timerModel.set('playerNames', this.players.getPlayerNames());
-        }
-        switchActivePlayer() {
-            if (this.history.get('turns').length > this.get('playersCount')) {
-                this.timerModel.next(this.get('activePlayer'));
-            }
-            this.set('activePlayer', this.players.getNextActivePlayer(this.get('activePlayer')));
-        }
-        makeTurn() {
-            const me = this;
-            if (!(me.isPlayerMoved || me.isFenceMoved)) {
-                return;
-            }
-            const active = me.getActivePlayer();
-            const preBusy = me.fences.getMovedFence();
-            const index = me.get('activePlayer');
-            if (me.isFenceMoved) {
-                me.getActivePlayer().placeFence();
-                const preBusySibling = me.fences.getSibling(preBusy);
-                if (preBusySibling) {
-                    me.history.add({
-                        x: preBusy.get('x'),
-                        y: preBusy.get('y'),
-                        x2: preBusySibling.get('x'),
-                        y2: preBusySibling.get('y'),
-                        t: 'f'
-                    });
-                }
-                me.fences.setBusy();
-            }
-            if (me.isPlayerMoved) {
-                me.history.add({
-                    x: active.get('x'),
-                    y: active.get('y'),
-                    t: 'p'
-                });
-            }
-            me.switchActivePlayer();
-            me.players.each(player => {
-                player.trigger('resetstate');
-            });
-            me.getActivePlayer().trigger('setcurrent');
-            if (!me.isOnlineGame()) {
-                if (!me.getNextActiveBot(me.get('activePlayer'))) {
-                    me.set('currentPlayer', me.get('activePlayer'));
-                }
-            }
-            if (me.isFenceMoved) {
-                me.emitEventToBots('server_move_fence', {
-                    x: preBusy.get('x'),
-                    y: preBusy.get('y'),
-                    type: preBusy.get('orientation'),
-                    playerIndex: index
-                });
-            }
-            if (me.isPlayerMoved) {
-                me.emitEventToBots('server_move_player', {
-                    x: active.get('x'),
-                    y: active.get('y'),
-                    playerIndex: index
-                });
-            }
-            me.isPlayerMoved = false;
-            me.isFenceMoved = false;
-        }
-        getNextActiveBot(next) {
-            var _a;
-            return (_a = this.bots) === null || _a === void 0 ? void 0 : _a.find(bot => {
-                return bot.currentPlayer === next;
-            });
-        }
-        emitEventToBots(eventName, param) {
-            var _a, _b;
-            const next = this.players.at(this.get('activePlayer')).get("url");
-            (_a = this.bots) === null || _a === void 0 ? void 0 : _a.forEach(bot => {
-                if (next !== bot.currentPlayer) {
-                    bot.trigger(eventName, param);
-                }
-            });
-            (_b = this.getNextActiveBot(next)) === null || _b === void 0 ? void 0 : _b.trigger(eventName, param);
-        }
-        isOnlineGame() {
-            return this.get('roomId');
-        }
-        onMovePlayer(x, y) {
-            const me = this;
-            console.log("onMovePlayer", x, y);
-            if (me.isValidCurrentPlayerPosition(x, y)) {
-                const current = me.getActivePlayer();
-                current.moveTo(x, y);
-                me.fences.clearBusy();
-                me.isFenceMoved = false;
-                me.isPlayerMoved = true;
-            }
-            else {
-                const activeBot = me.getActiveBot();
-                if (activeBot) {
-                    activeBot.trigger('server_turn_fail');
-                }
-            }
-        }
-        updateInfo() {
-            this.infoModel.set({
-                currentPlayer: this.get('currentPlayer'),
-                activePlayer: this.get('activePlayer'),
-                fences: this.players.pluck('fencesRemaining')
-            });
-        }
-        onFenceSelected(model) {
-            if (this.canSelectFences() &&
-                this.fences.validateFenceAndSibling(model) &&
-                this.notBreakSomePlayerPath(model)) {
-                this.fences.clearBusy();
-                this.fences.validateAndTriggerEventOnFenceAndSibling(model, 'movefence');
-                this.players.updatePlayersPositions();
-                this.isPlayerMoved = false;
-                this.isFenceMoved = true;
-            }
-            else {
-                const activeBot = this.getActiveBot();
-                if (activeBot) {
-                    activeBot.trigger('server_turn_fail');
-                }
-            }
-        }
-        initEvents() {
-            const me = this;
-            me.on('maketurn', this.makeTurn);
-            this.fields.on('moveplayer', me.onMovePlayer, this);
-            this.fields.on('beforeselectfield', (x, y, model) => {
-                if (me.isValidCurrentPlayerPosition(x, y)) {
-                    model.selectField();
-                }
-            });
-            this.on('change:activePlayer', this.updateInfo, this);
-            this.on('change:currentPlayer', this.updateInfo, this);
-            this.fences.on({
-                'selected': (model) => me.onFenceSelected(model),
-                'highlight_current_and_sibling': (model) => {
-                    if (me.canSelectFences() &&
-                        me.fences.validateFenceAndSibling(model) &&
-                        me.notBreakSomePlayerPath(model)) {
-                        me.fences.validateAndTriggerEventOnFenceAndSibling(model, 'markfence');
-                    }
-                },
-                'reset_current_and_sibling': (model) => {
-                    me.fences.triggerEventOnFenceAndSibling(model, 'unmarkfence');
-                }
-            });
-        }
-        run(activePlayer, currentPlayer) {
-            this.set({
-                activePlayer: activePlayer,
-                currentPlayer: currentPlayer,
-            });
-            if (!this.isOnlineGame()) {
-                this.history.initPlayers();
-            }
-            this.connectBots();
-        }
-        stop() {
-            var _a;
-            (_a = this.bots) === null || _a === void 0 ? void 0 : _a.forEach(bot => {
-                bot.terminate();
-            });
-            this.timerModel.stop();
-        }
-        connectBots() {
-            if (this.get('botsCount') === undefined) {
-                return;
-            }
-            const me = this;
-            this.bots = [];
-            const turns = this.history.get('turns').toJSON();
-            (0, underscore_12.default)(this.get('botsCount')).times(i => {
-                const botIndex = i + (this.get('playersCount') - this.get('botsCount'));
-                const bot = new BotWrapper_1.BotWrapper({
-                    id: botIndex,
-                    botType: 'medium'
-                });
-                bot.on('client_move_player', (pos) => me.onSocketMovePlayer(pos));
-                bot.on('client_move_fence', (pos) => {
-                    if (this.onSocketMoveFence(pos) === false) {
-                        const activeBot = this.getActiveBot();
-                        if (activeBot) {
-                            activeBot.trigger('server_turn_fail');
-                        }
-                    }
-                });
-                bot.trigger('server_start', botIndex, this.get('activePlayer'), turns, this.get('playersCount'));
-                this.bots.push(bot);
-            });
-        }
-        initialize() {
-            this.createModels();
-            this.initEvents();
-            this.initModels();
-            this.updateInfo();
-            this.afterInitialize();
-        }
-        afterInitialize() {
-            this.on('confirmturn', this.makeTurn);
-            this.run(0, 0);
-        }
-    }
-    exports.BoardModel = BoardModel;
 });
 define("models/BoardValidation", ["require", "exports", "underscore", "models/PlayerModel", "models/FenceModel", "models/utils", "models/BoardModel"], function (require, exports, underscore_13, PlayerModel_3, FenceModel_3, utils_4, BoardModel_1) {
     "use strict";
@@ -2369,26 +2369,7 @@ define("models/urlParser", ["require", "exports"], function (require, exports) {
     };
     exports.parseUrl = parseUrl;
 });
-define("app/app", ["require", "exports", "views/BoardView", "models/urlParser", "models/BoardValidation"], function (require, exports, BoardView_1, urlParser_1, BoardValidation_2) {
-    "use strict";
-    var _a, _b, _c;
-    Object.defineProperty(exports, "__esModule", { value: true });
-    const params = (0, urlParser_1.parseUrl)(document.location.search);
-    const boardModel = new BoardValidation_2.BoardValidation({
-        currentPlayer: +((_a = params.currentPlayer) !== null && _a !== void 0 ? _a : 0),
-        playersCount: +((_b = params.playersCount) !== null && _b !== void 0 ? _b : 2),
-        botsCount: +((_c = params.botsCount) !== null && _c !== void 0 ? _c : 0),
-        boardSize: 9,
-        activePlayer: 0,
-        roomId: params.roomId
-    });
-    window.boardModel = boardModel;
-    const view = new BoardView_1.BoardView({
-        model: boardModel
-    });
-    view.render();
-});
-define("models/BoardSocketEvents", ["require", "exports", "underscore", "models/BoardValidation"], function (require, exports, underscore_15, BoardValidation_3) {
+define("models/BoardSocketEvents", ["require", "exports", "underscore", "models/BoardValidation"], function (require, exports, underscore_15, BoardValidation_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BoardSocketEvents = void 0;
@@ -2438,12 +2419,15 @@ define("models/BoardSocketEvents", ["require", "exports", "underscore", "models/
     const fetchGameState = (path, resourceID) => {
         return fetch(`${path}/b/${resourceID}/latest`, { headers: { "X-Access-Key": accessToken, "X-Bin-Meta": "false" } }).then(r => r.json());
     };
-    class BoardSocketEvents extends BoardValidation_3.BoardValidation {
+    class BoardSocketEvents extends BoardValidation_2.BoardValidation {
+        isOnlineGame() {
+            return true;
+        }
         remoteEvents(currentPlayer) {
             const me = this;
             const gameId = me.get("roomId");
             if (gameId) {
-                this.on('confirmturn', this._onTurnSendSocketEvent);
+                this.on('confirmturn', this.onTurnSendSocketEvent);
                 this.on('change:activePlayer', this.updateActivePlayer, this);
                 setInterval(() => {
                     fetchGameState(SERVICE_PATH, gameId).then(data => {
@@ -2480,7 +2464,7 @@ define("models/BoardSocketEvents", ["require", "exports", "underscore", "models/
             boardState.activePlayer = this.get("activePlayer");
             saveData(SERVICE_PATH, gameId, boardState);
         }
-        _onTurnSendSocketEvent() {
+        onTurnSendSocketEvent() {
             if (!this.isPlayerMoved && !this.isFenceMoved) {
                 return;
             }
@@ -2557,6 +2541,24 @@ define("models/BoardSocketEvents", ["require", "exports", "underscore", "models/
         }
     }
     exports.BoardSocketEvents = BoardSocketEvents;
+});
+define("app/app", ["require", "exports", "views/BoardView", "models/urlParser", "models/BoardValidation", "models/BoardSocketEvents"], function (require, exports, BoardView_1, urlParser_1, BoardValidation_3, BoardSocketEvents_1) {
+    "use strict";
+    var _a, _b, _c;
+    Object.defineProperty(exports, "__esModule", { value: true });
+    const params = (0, urlParser_1.parseUrl)(document.location.search);
+    const options = {
+        currentPlayer: +((_a = params.currentPlayer) !== null && _a !== void 0 ? _a : 0),
+        playersCount: +((_b = params.playersCount) !== null && _b !== void 0 ? _b : 2),
+        botsCount: +((_c = params.botsCount) !== null && _c !== void 0 ? _c : 0),
+        boardSize: 9,
+        activePlayer: 0,
+        roomId: params.roomId
+    };
+    const boardModel = params.roomId ? new BoardSocketEvents_1.BoardSocketEvents(options) : new BoardValidation_3.BoardValidation(options);
+    window.boardModel = boardModel;
+    const view = new BoardView_1.BoardView({ model: boardModel });
+    view.render();
 });
 define("models/BotWorker", ["require", "exports", "models/Bot", "models/SmartBot", "models/MegaBot"], function (require, exports, Bot_3, SmartBot_3, MegaBot_2) {
     "use strict";

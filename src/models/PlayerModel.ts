@@ -1,5 +1,6 @@
 import _ from "underscore";
 import { BackboneCollection, BackboneModel, Position } from "../models/BackboneModel";
+import { PlayerNumber } from "./BoardModel";
 
 export class PlayerModel extends BackboneModel<Position & {
     fencesRemaining: number;
@@ -76,7 +77,7 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
         return _(this.playersPositions).pluck('name');
     }
 
-    public getNextActivePlayer (currentPlayer: number) {
+    public getNextActivePlayer (currentPlayer: PlayerNumber): PlayerNumber {
         this.checkWin(currentPlayer);
 
         const current = this.at(currentPlayer);
@@ -85,7 +86,7 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
             'prev_y': current.get('y')
         });
 
-        return (currentPlayer + 1) < this.length ? currentPlayer + 1 : 0;
+        return (currentPlayer + 1) < this.length ? (currentPlayer + 1) as PlayerNumber : 0 as const;
     }
 
     public checkWin (playerIndex: number) {

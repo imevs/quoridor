@@ -1,5 +1,7 @@
-import { BackboneModel, Position } from "./BackboneModel";
 import _ from "underscore";
+
+import { BackboneModel, Position } from "./BackboneModel";
+import { PlayerNumber } from "./BoardModel";
 import { GameHistoryModel, TurnsCollection } from "../models/TurnModel";
 
 type PlayerPosition = Position & { playerIndex: number; };
@@ -11,7 +13,7 @@ export class Bot extends BackboneModel {
     _playerId?: number;
     fencesRemaining = 0;
     attemptsCount = 0;
-    _currentPlayer?: number;
+    _currentPlayer?: PlayerNumber;
     _playersCount?: number;
     fencesCount = 20;
     _fencesPositions?: { x: number; y: number; type: "H" | "V"; }[];
@@ -45,7 +47,7 @@ export class Bot extends BackboneModel {
         this.initEvents();
     }
 
-    public startGame(currentPlayer: number, activePlayer: number, history: {}[], playersCount: number)  {
+    public startGame(currentPlayer: PlayerNumber, activePlayer: PlayerNumber, history: {}[], playersCount: number)  {
         this.onStart(currentPlayer, activePlayer, history, playersCount, 9);
         if (currentPlayer === activePlayer) {
             this.turn();
@@ -55,7 +57,7 @@ export class Bot extends BackboneModel {
     public setDelay = setTimeout;
     public random: (min: number, max: number) => number = _.random;
 
-    public onStart(currentPlayer: number, _activePlayer: number, history: {}[], playersCount: number, boardSize: number) {
+    public onStart(currentPlayer: PlayerNumber, _activePlayer: PlayerNumber, history: {}[], playersCount: number, boardSize: number) {
         this._playersCount = playersCount;
         const historyModel = new GameHistoryModel({
             turns: new TurnsCollection(),

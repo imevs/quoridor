@@ -11,15 +11,19 @@ import { PlayersCollection } from "./PlayerModel";
 import { TimerModel } from "./TimerModel";
 import { GameHistoryModel, TurnsCollection } from "./TurnModel";
 
-export abstract class BoardModel extends BackboneModel<{
+export type PlayerNumber = -1 | 0 | 1 | 2 | 3;
+
+export type BoardOptions = {
     debug?: boolean;
     roomId?: string;
     playersCount: number;
     botsCount: number;
     boardSize: number;
-    currentPlayer: number | null;
-    activePlayer: number;
-}> {
+    currentPlayer: PlayerNumber | null;
+    activePlayer: PlayerNumber;
+};
+
+export abstract class BoardModel extends BackboneModel<BoardOptions> {
     public isPlayerMoved = false;
     public isFenceMoved = false;
     public auto = false;
@@ -41,7 +45,7 @@ export abstract class BoardModel extends BackboneModel<{
         boardSize: 9,
         playersCount: 2,
         currentPlayer: null,
-        activePlayer: -1,
+        activePlayer: -1 as const,
     }; };
 
     public getActivePlayer() {
@@ -208,7 +212,7 @@ export abstract class BoardModel extends BackboneModel<{
     }
 
     public isOnlineGame() {
-        return this.get('roomId');
+        return false;
     }
 
     public onMovePlayer(x: number, y: number) {
@@ -285,7 +289,7 @@ export abstract class BoardModel extends BackboneModel<{
         });
     }
 
-    public run(activePlayer: number, currentPlayer: number) {
+    public run(activePlayer: PlayerNumber, currentPlayer: PlayerNumber) {
         this.set({
             activePlayer: activePlayer,
             currentPlayer: currentPlayer,

@@ -1,10 +1,11 @@
 import _ from "underscore";
+import { PlayerNumber } from "../models/BoardModel";
 import { BoardValidation } from "../models/BoardValidation";
 import { Position } from "../models/BackboneModel";
 import { FencePosition } from "../models/FenceModel";
 
 let boardState = {
-    activePlayer: 0,
+    activePlayer: 0 as PlayerNumber,
     playersCount: 2,
     history: [] as { 
         x: number; y: number; orientation: "H" | "V" | "P"; 
@@ -60,12 +61,16 @@ const fetchGameState = (path: string, resourceID: string): Promise<typeof boardS
 
 export class BoardSocketEvents extends BoardValidation {
 
-    remoteEvents(currentPlayer: number) {
+    public isOnlineGame() {
+        return true;
+    }
+
+    private remoteEvents(currentPlayer: PlayerNumber) {
         const me = this;
         const gameId = me.get("roomId");
 
         if (gameId) {
-            this.on('confirmturn', this._onTurnSendSocketEvent);
+            this.on('confirmturn', this.onTurnSendSocketEvent);
             this.on('change:activePlayer', this.updateActivePlayer, this);
 
             setInterval(() => {
@@ -96,12 +101,14 @@ export class BoardSocketEvents extends BoardValidation {
             });
         }
     }
-    updateActivePlayer() {
+    
+    private updateActivePlayer() {
         const gameId = this.get("roomId")!;
         boardState.activePlayer = this.get("activePlayer")!;
         saveData(SERVICE_PATH, gameId, boardState);
     }
-    _onTurnSendSocketEvent() {
+
+    private onTurnSendSocketEvent() {
         if (!this.isPlayerMoved && !this.isFenceMoved) {
             return;
         }
@@ -126,7 +133,7 @@ export class BoardSocketEvents extends BoardValidation {
         saveData(SERVICE_PATH, gameId, boardState);
     }
 
-    onSocketMoveFence(pos: FencePosition) {
+    public onSocketMoveFence(pos: FencePosition) {
         const fence = this.fences.findWhere({
             type: pos.orientation,
             x   : pos.x,
@@ -142,7 +149,7 @@ export class BoardSocketEvents extends BoardValidation {
         return true;
     }
 
-    onStart(currentPlayer: 'error' | number, activePlayer: number, history: {}[]) {
+    private onStart(currentPlayer: 'error' | PlayerNumber, activePlayer: PlayerNumber, history: {}[]) {
         if (currentPlayer === 'error') {
             alert('Game is busy');
             return;
