@@ -2,7 +2,7 @@ import _ from "underscore";
 import { Bot } from "../models/Bot";
 import { FencesCollection } from "../models/FenceModel";
 import { PlayerModel, PlayersCollection } from "../models/PlayerModel";
-import { GameHistoryModel, TurnsCollection } from "../models/TurnModel";
+import {GameHistoryModel, TurnModelProps, TurnsCollection} from "../models/TurnModel";
 import { BoardValidation } from "../models/BoardValidation";
 import { PlayerNumber } from "../models/BoardModel";
 import { Position } from "../models/BackboneModel";
@@ -48,7 +48,7 @@ export class SmartBot extends Bot {
         }
     }
 
-    public onStart(currentPlayer: PlayerNumber, _activePlayer: PlayerNumber, history: {}[], playersCount: number, boardSize: number) {
+    public onStart(currentPlayer: PlayerNumber, _activePlayer: PlayerNumber, history: TurnModelProps[], playersCount: number, boardSize: number) {
         this._newPositions = [];
         this._fencesPositions = [];
         this._currentPlayer = currentPlayer;

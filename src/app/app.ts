@@ -13,7 +13,7 @@ const options = {
     activePlayer: 0 as const,
     roomId: params.roomId as string
 };
-const boardModel = params.roomId ? new BoardSocketEvents(options) : new BoardValidation(options);
+const boardModel = params.roomId !== undefined ? new BoardSocketEvents(options) : new BoardValidation(options);
 (window as any).boardModel = boardModel;
 const view = new BoardView({ model: boardModel });
 view.render();

@@ -1,12 +1,12 @@
 import _ from "underscore";
 import { BackboneCollection, BackboneModel, Position } from "../models/BackboneModel";
 
-let boardSize = 8;
+let boardSize = 9;
 
-type TurnModelProps = Position & {
+export type TurnModelProps = Position & {
     x2?: number;
     y2?: number;
-    t?: "f" | "p";
+    t: "f" | "p";
     debug?: boolean;
 };
 
@@ -44,8 +44,8 @@ export class TurnModel extends BackboneModel<TurnModelProps> {
             this.getX(this.get('x2')!) + this.getY(this.get('y2')! + dy) +  '';
     }
 
-    public toJSON() {
-        const result = { ...this.attributes };
+    public toJSON(): TurnModelProps {
+        const result = { ...this.attributes } as TurnModelProps;
         delete result.debug;
         return result;
     }
@@ -54,11 +54,18 @@ export class TurnModel extends BackboneModel<TurnModelProps> {
 
 export class TurnsCollection extends BackboneCollection<TurnModel> {
     model = TurnModel;
+
+    public toJSON() {
+        return this.map(function(model){ return model.toJSON(); });
+    }
+
+    public reset(models?: Array<TurnModelProps | TurnModel>, options?: Backbone.Silenceable): TurnModel[] {
+        return super.reset(models, options);
+    }
 }
 
 export class GameHistoryModel extends BackboneModel<{
     debug?: boolean;
-    t?: "f" | "p";
     boardSize: number;
     playersCount: number;
     playerNames?: string[];
@@ -120,7 +127,7 @@ export class GameHistoryModel extends BackboneModel<{
 
         const result: string[] = [];
         const startIndex = index * this.get('playersCount');
-        const playersCount = +self.get('playersCount');
+        const playersCount = self.get('playersCount');
         const turns = this.get('turns').filter((_value, index) => {
             return index >= startIndex && index < startIndex + playersCount;
         });

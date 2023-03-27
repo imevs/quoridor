@@ -637,7 +637,7 @@ define("models/TurnModel", ["require", "exports", "underscore", "models/Backbone
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GameHistoryModel = exports.TurnsCollection = exports.TurnModel = void 0;
     underscore_6 = __importDefault(underscore_6);
-    let boardSize = 8;
+    let boardSize = 9;
     class TurnModel extends BackboneModel_3.BackboneModel {
         constructor() {
             super(...arguments);
@@ -682,6 +682,12 @@ define("models/TurnModel", ["require", "exports", "underscore", "models/Backbone
         constructor() {
             super(...arguments);
             this.model = TurnModel;
+        }
+        toJSON() {
+            return this.map(function (model) { return model.toJSON(); });
+        }
+        reset(models, options) {
+            return super.reset(models, options);
         }
     }
     exports.TurnsCollection = TurnsCollection;
@@ -734,7 +740,7 @@ define("models/TurnModel", ["require", "exports", "underscore", "models/Backbone
             const self = this;
             const result = [];
             const startIndex = index * this.get('playersCount');
-            const playersCount = +self.get('playersCount');
+            const playersCount = self.get('playersCount');
             const turns = this.get('turns').filter((_value, index) => {
                 return index >= startIndex && index < startIndex + playersCount;
             });
@@ -844,12 +850,13 @@ define("models/Bot", ["require", "exports", "underscore", "models/BackboneModel"
         onStart(currentPlayer, _activePlayer, history, playersCount, boardSize) {
             var _a, _b;
             this._playersCount = playersCount;
+            const turns = new TurnModel_1.TurnsCollection();
             const historyModel = new TurnModel_1.GameHistoryModel({
-                turns: new TurnModel_1.TurnsCollection(),
+                turns: turns,
                 boardSize: boardSize,
                 playersCount: playersCount
             });
-            historyModel.get('turns').reset(history);
+            turns.reset(history);
             const playerPositions = historyModel.getPlayerPositions();
             const position = playerPositions[currentPlayer];
             if (position) {
@@ -1648,7 +1655,7 @@ define("models/BoardModel", ["require", "exports", "underscore", "models/Backbon
             this.timerModel.stop();
         }
         connectBots() {
-            if (this.get('botsCount') === undefined) {
+            if (!this.get('botsCount')) {
                 return;
             }
             const me = this;
@@ -2433,11 +2440,15 @@ define("models/BoardSocketEvents", ["require", "exports", "underscore", "models/
                     fetchGameState(SERVICE_PATH, gameId).then(data => {
                         if (data.history && data.history.length && data.history.length !== me.history.get('turns').length) {
                             const lastMove = data.history[data.history.length - 1];
-                            if (lastMove.orientation === "P") {
+                            if (lastMove.t === "p") {
                                 this.onSocketMovePlayer(lastMove);
                             }
                             else {
-                                this.onSocketMoveFence(lastMove);
+                                this.onSocketMoveFence({
+                                    x: lastMove.x,
+                                    y: lastMove.y,
+                                    orientation: lastMove.x === lastMove.x2 ? "V" : "H",
+                                });
                             }
                         }
                     });
@@ -2470,14 +2481,16 @@ define("models/BoardSocketEvents", ["require", "exports", "underscore", "models/
             }
             boardState.history = this.history.get('turns').toJSON();
             if (this.isPlayerMoved) {
-                boardState.history.push(Object.assign(Object.assign({}, this.getActivePlayer().pick('x', 'y')), { orientation: "P" }));
+                boardState.history.push(Object.assign(Object.assign({}, this.getActivePlayer().pick('x', 'y')), { t: "p" }));
             }
             if (this.isFenceMoved) {
                 const eventInfo = this.fences.getMovedFence().pick('x', 'y', 'orientation');
                 boardState.history.push({
                     x: eventInfo.x,
                     y: eventInfo.y,
-                    orientation: eventInfo.orientation,
+                    t: "f",
+                    x2: eventInfo.orientation === "V" ? eventInfo.x : eventInfo.x + 1,
+                    y2: eventInfo.orientation === "V" ? eventInfo.y + 1 : eventInfo.y,
                 });
             }
             const gameId = this.get("roomId");
@@ -2499,10 +2512,6 @@ define("models/BoardSocketEvents", ["require", "exports", "underscore", "models/
             return true;
         }
         onStart(currentPlayer, activePlayer, history) {
-            if (currentPlayer === 'error') {
-                alert('Game is busy');
-                return;
-            }
             const me = this;
             if (history.length) {
                 me.history.get('turns').reset(history);
@@ -2555,7 +2564,7 @@ define("app/app", ["require", "exports", "views/BoardView", "models/urlParser", 
         activePlayer: 0,
         roomId: params.roomId
     };
-    const boardModel = params.roomId ? new BoardSocketEvents_1.BoardSocketEvents(options) : new BoardValidation_3.BoardValidation(options);
+    const boardModel = params.roomId !== undefined ? new BoardSocketEvents_1.BoardSocketEvents(options) : new BoardValidation_3.BoardValidation(options);
     window.boardModel = boardModel;
     const view = new BoardView_1.BoardView({ model: boardModel });
     view.render();

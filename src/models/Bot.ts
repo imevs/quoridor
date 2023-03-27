@@ -2,7 +2,7 @@ import _ from "underscore";
 
 import { BackboneModel, Position } from "./BackboneModel";
 import { PlayerNumber } from "./BoardModel";
-import { GameHistoryModel, TurnsCollection } from "../models/TurnModel";
+import {GameHistoryModel, TurnModelProps, TurnsCollection} from "../models/TurnModel";
 
 type PlayerPosition = Position & { playerIndex: number; };
 
@@ -47,7 +47,7 @@ export class Bot extends BackboneModel {
         this.initEvents();
     }
 
-    public startGame(currentPlayer: PlayerNumber, activePlayer: PlayerNumber, history: {}[], playersCount: number)  {
+    public startGame(currentPlayer: PlayerNumber, activePlayer: PlayerNumber, history: TurnModelProps[], playersCount: number)  {
         this.onStart(currentPlayer, activePlayer, history, playersCount, 9);
         if (currentPlayer === activePlayer) {
             this.turn();
@@ -57,14 +57,15 @@ export class Bot extends BackboneModel {
     public setDelay = setTimeout;
     public random: (min: number, max: number) => number = _.random;
 
-    public onStart(currentPlayer: PlayerNumber, _activePlayer: PlayerNumber, history: {}[], playersCount: number, boardSize: number) {
+    public onStart(currentPlayer: PlayerNumber, _activePlayer: PlayerNumber, history: TurnModelProps[], playersCount: number, boardSize: number) {
         this._playersCount = playersCount;
+        const turns = new TurnsCollection();
         const historyModel = new GameHistoryModel({
-            turns: new TurnsCollection(),
+            turns: turns,
             boardSize: boardSize,
             playersCount: playersCount
         });
-        historyModel.get('turns')!.reset(history);
+        turns.reset(history);
         const playerPositions = historyModel.getPlayerPositions();
         const position = playerPositions[currentPlayer];
         if (position) {

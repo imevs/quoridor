@@ -3,13 +3,13 @@ import { PlayerNumber } from "../models/BoardModel";
 import { BoardValidation } from "../models/BoardValidation";
 import { Position } from "../models/BackboneModel";
 import { FencePosition } from "../models/FenceModel";
+import {TurnModelProps} from "./TurnModel";
 
+type HistoryItem = TurnModelProps;
 let boardState = {
     activePlayer: 0 as PlayerNumber,
     playersCount: 2,
-    history: [] as { 
-        x: number; y: number; orientation: "H" | "V" | "P"; 
-    }[],
+    history: [] as HistoryItem[],
 };
 
 const SERVICE_PATH = "https://api.jsonbin.io/v3";
@@ -77,10 +77,14 @@ export class BoardSocketEvents extends BoardValidation {
                 fetchGameState(SERVICE_PATH, gameId).then(data => {
                     if (data.history && data.history.length && data.history.length !== me.history.get('turns').length) {
                         const lastMove = data.history[data.history.length - 1]!;
-                        if (lastMove.orientation === "P") {
+                        if (lastMove.t === "p") {
                             this.onSocketMovePlayer(lastMove);
                         } else {
-                            this.onSocketMoveFence(lastMove as FencePosition);
+                            this.onSocketMoveFence({
+                                x: lastMove.x,
+                                y: lastMove.y,
+                                orientation: lastMove.x === lastMove.x2 ? "V" : "H",
+                            });
                         }
                     }
                 });
@@ -118,7 +122,7 @@ export class BoardSocketEvents extends BoardValidation {
         if (this.isPlayerMoved) {
             boardState.history.push({
                 ...(this.getActivePlayer().pick('x', 'y') as Position),
-                orientation: "P"
+                t: "p"
             });
         }
         if (this.isFenceMoved) {
@@ -126,7 +130,9 @@ export class BoardSocketEvents extends BoardValidation {
             boardState.history.push({
                 x: eventInfo.x,
                 y: eventInfo.y,
-                orientation: eventInfo.orientation,
+                t: "f",
+                x2: eventInfo.orientation === "V" ? eventInfo.x : eventInfo.x + 1,
+                y2: eventInfo.orientation === "V" ? eventInfo.y + 1 : eventInfo.y,
             });
         }
         const gameId = this.get("roomId")!;
@@ -149,11 +155,7 @@ export class BoardSocketEvents extends BoardValidation {
         return true;
     }
 
-    private onStart(currentPlayer: 'error' | PlayerNumber, activePlayer: PlayerNumber, history: {}[]) {
-        if (currentPlayer === 'error') {
-            alert('Game is busy');
-            return;
-        }
+    private onStart(currentPlayer: PlayerNumber, activePlayer: PlayerNumber, history: HistoryItem[]) {
         const me = this;
         if (history.length) {
             // TODO: trigger update of UI

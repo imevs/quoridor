@@ -308,7 +308,7 @@ export abstract class BoardModel extends BackboneModel<BoardOptions> {
     }
 
     public connectBots() {
-        if (this.get('botsCount') === undefined) {
+        if (!this.get('botsCount')) {
             return;
         }
         const me = this;
