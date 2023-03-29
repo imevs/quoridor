@@ -1,20 +1,18 @@
 import _ from "underscore";
 
 import { GameObject, ViewOptions } from "./GameObject";
-import { BackboneModel } from "../models/BackboneModel";
 import { RaphaelEl } from "./backbone.raphael";
-import {InfoModel} from "../models/BoardModel";
+import { InfoModel } from "../models/BoardModel";
 
 export class InfoView extends GameObject {
     fences!: Required<RaphaelEl>[];
-    private current!: any[] | undefined;
+    private current!: [Required<RaphaelEl>, Required<RaphaelEl>] | undefined;
     private active: [Required<RaphaelEl>, Required<RaphaelEl>] | undefined;
     playersPositions!: ({ color: string; })[];
     model!: InfoModel;
 
-    initialize(params: { model: BackboneModel<{ playersPositions: { color: string; }[]; }> }) {
+    initialize(params: { model: InfoModel }) {
         const me = this;
-        params = params || {};
         me.fences = [];
         me.playersPositions = params.model.get("playersPositions");
         this.$el = $('#game-info');
@@ -29,7 +27,9 @@ export class InfoView extends GameObject {
         });
         this.clearFences();
         this.drawRemainingFences();
-        this.displayCurrentPlayer();
+        if (this.model.get("showCurrent")) {
+            this.displayCurrentPlayer();
+        }
         this.displayActivePlayer();
         return this;
     }

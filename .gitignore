@@ -2,3 +2,4 @@ pid.txt
 .idea
 node_modules
 /public/dist/bundle.js
+*.tsbuildinfo

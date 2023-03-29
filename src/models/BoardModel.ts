@@ -27,6 +27,7 @@ export type InfoModel = BackboneModel<{
     playersPositions: ({ color: string; })[];
     currentPlayer?: number;
     activePlayer?: number;
+    showCurrent: boolean;
     fences: { fencesRemaining: number; }[];
 }>;
 
@@ -102,6 +103,7 @@ export abstract class BoardModel extends BackboneModel<BoardOptions> {
         this.infoModel = new BackboneModel({
             playersPositions: this.players.playersPositions,
             fences: [],
+            showCurrent: this.isOnlineGame() || this.get("botsCount") > 0,
         });
         this.history = new GameHistoryModel({
             turns: new TurnsCollection(),
@@ -204,7 +206,7 @@ export abstract class BoardModel extends BackboneModel<BoardOptions> {
         });
     }
 
-    public emitEventToBots(eventName: string, param: any) {
+    public emitEventToBots(eventName: string, param: Record<string, string | number>) {
         const next = this.players.at(this.get('activePlayer')).get("url");
         this.bots?.forEach(bot => {
             if (next !== bot.currentPlayer) {
