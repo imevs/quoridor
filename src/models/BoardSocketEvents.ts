@@ -1,9 +1,10 @@
 import _ from "underscore";
-import { PlayerNumber } from "../models/BoardModel";
-import { BoardValidation } from "../models/BoardValidation";
-import { Position } from "../models/BackboneModel";
-import { FencePosition } from "../models/FenceModel";
-import {TurnModelProps} from "./TurnModel";
+import { PlayerNumber } from "./BoardModel";
+import { BoardValidation } from "./BoardValidation";
+import { Position } from "./BackboneModel";
+import { FencePosition } from "./FenceModel";
+import { TurnModelProps } from "./TurnModel";
+import { buildQuery, parseUrl } from "./urlParser";
 
 type HistoryItem = TurnModelProps;
 let boardState = {
@@ -101,7 +102,8 @@ export class BoardSocketEvents extends BoardValidation {
         } else {
             createData(SERVICE_PATH, boardState).then((id: string) => {
                 this.set("roomId", id);
-                document.location = location.href + "&roomId=" + id;
+                document.location =
+                    location.href + "?" + buildQuery({ ...parseUrl(location.search), roomId: id });
             });
         }
     }

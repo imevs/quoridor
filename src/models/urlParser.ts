@@ -4,8 +4,12 @@ function createUrlObject(url: string) {
     return a;
 }
 
-export const parseUrl = (url: string) => {
-    let queryString = url, result: Record<string, string | string[]> = {}, i, s, seg;
+export const parseUrl = (url: string): Record<string, string | string[]> => {
+    const result: Record<string, string | string[]> = {};
+    let queryString = url;
+    let i;
+    let s;
+    let seg;
     const isArrayExp = /(\w+)\[(\d*)\]/;
 
     if (url.charAt(0) !== '?') {
@@ -38,3 +42,7 @@ export const parseUrl = (url: string) => {
 
     return result;
 };
+
+export function buildQuery(params: Record<string, string | string[]>): string {
+    return Object.keys(params).map(key => key + "=" + params[key]).join("&");
+}
