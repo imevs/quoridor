@@ -1,14 +1,13 @@
-import { GameObject, ViewOptions } from "../views/GameObject";
+import { GameObject, ViewOptions } from "./GameObject";
 import { FieldModel } from "../models/FieldModel";
-import { RaphaelEl } from "../views/backbone.raphael";
+import { RaphaelEl } from "./backbone.raphael";
 
-export class FieldView extends GameObject<FieldModel> {
+export class FieldView extends GameObject {
 
     public defaults() { return {
         color: '#742'
     }; }
-    // @ts-ignore
-    model: FieldModel;
+    model!: FieldModel;
 
     events() { return {
         click      : this.movePlayer,

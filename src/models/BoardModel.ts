@@ -23,6 +23,13 @@ export type BoardOptions = {
     activePlayer: PlayerNumber;
 };
 
+export type InfoModel = BackboneModel<{
+    playersPositions: ({ color: string; })[];
+    currentPlayer?: number;
+    activePlayer?: number;
+    fences: { fencesRemaining: number; }[];
+}>;
+
 export abstract class BoardModel extends BackboneModel<BoardOptions> {
     public isPlayerMoved = false;
     public isFenceMoved = false;
@@ -33,12 +40,7 @@ export abstract class BoardModel extends BackboneModel<BoardOptions> {
     public players!: PlayersCollection;
     public history!: GameHistoryModel;
     public timerModel!: TimerModel;
-    public infoModel!: BackboneModel<{ 
-        playersPositions: ({ color: string; })[];
-        currentPlayer?: number;
-        activePlayer?: number;
-        fences?: { fencesRemaining: number; }[];
-     }>;
+    public infoModel!: InfoModel;
 
     public defaults() { return {
         botsCount: 0,
@@ -98,7 +100,8 @@ export abstract class BoardModel extends BackboneModel<BoardOptions> {
             playersCount: this.get('playersCount')
         });
         this.infoModel = new BackboneModel({
-            playersPositions: this.players.playersPositions
+            playersPositions: this.players.playersPositions,
+            fences: [],
         });
         this.history = new GameHistoryModel({
             turns: new TurnsCollection(),

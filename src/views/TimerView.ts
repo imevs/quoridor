@@ -1,9 +1,11 @@
 import _ from "underscore";
 import { View } from "backbone";
+import { TimerModel } from "../models/TimerModel";
 
 export class TimerView extends View {
 
     template!: string;
+    model!: TimerModel;
 
     initialize() {
         const me = this;

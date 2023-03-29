@@ -1,6 +1,9 @@
 import { GameObject, ViewOptions } from "./GameObject";
+import { PlayerModel } from "../models/PlayerModel";
 
 export class PlayerView extends GameObject {
+
+    model!: PlayerModel;
 
     initialize() {
         const cls = ViewOptions;

@@ -9,9 +9,9 @@ import { TimerView } from "./TimerView";
 import { GameHistoryView } from "./GameHistoryView";
 import { BoardValidation } from "../models/BoardValidation";
 
-export class BoardView extends GameObject<BoardValidation> {
+export class BoardView extends GameObject {
     selector = '#board';
-    // @ts-ignore
+
     model!: BoardValidation;
     events() { return {
         click: this.move,

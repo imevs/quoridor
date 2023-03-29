@@ -1,8 +1,11 @@
-import { GameObject, ViewOptions } from "../views/GameObject";
+import { GameObject, ViewOptions } from "./GameObject";
 import { FenceModel } from "../models/FenceModel";
-import { RaphaelEl } from "../views/backbone.raphael";
+import { RaphaelEl } from "./backbone.raphael";
 
 export class FenceView extends GameObject {
+
+    model!: FenceModel;
+
     events() { return {
         click    : this.onClick,
         mouseover: this.highlightCurrentAndSibling,

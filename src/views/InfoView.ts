@@ -1,20 +1,16 @@
 import _ from "underscore";
 
-import { GameObject, ViewOptions } from "../views/GameObject";
+import { GameObject, ViewOptions } from "./GameObject";
 import { BackboneModel } from "../models/BackboneModel";
-import { RaphaelEl } from "../views/backbone.raphael";
+import { RaphaelEl } from "./backbone.raphael";
+import {InfoModel} from "../models/BoardModel";
 
 export class InfoView extends GameObject {
-    fences!: (Required<RaphaelEl>)[];
+    fences!: Required<RaphaelEl>[];
     private current!: any[] | undefined;
     private active: [Required<RaphaelEl>, Required<RaphaelEl>] | undefined;
     playersPositions!: ({ color: string; })[];
-    model!: BackboneModel<{ 
-        currentPlayer: number;
-        activePlayer: number;
-        fences: { fencesRemaining: number; }[];
-        playersPositions: { color: string; }[]; 
-    }>;
+    model!: InfoModel;
 
     initialize(params: { model: BackboneModel<{ playersPositions: { color: string; }[]; }> }) {
         const me = this;
@@ -87,7 +83,9 @@ export class InfoView extends GameObject {
             this.active[1].remove();
         }
         const active = this.model.get('activePlayer');
-        this.active = this.displayPlayer(active, cls.squareWidth * 4, 70, 'Active');
+        if (active !== undefined) {
+            this.active = this.displayPlayer(active, cls.squareWidth * 4, 70, 'Active');
+        }
     }
 
     displayCurrentPlayer() {
@@ -97,7 +95,9 @@ export class InfoView extends GameObject {
             this.current[1].remove();
         }
         const current = this.model.get('currentPlayer');
-        this.current = this.displayPlayer(current, cls.squareWidth, 70, 'You');
+        if (current !== undefined) {
+            this.current = this.displayPlayer(current, cls.squareWidth, 70, 'You');
+        }
     }
 
     displayPlayer(index: number, dx: number, dy: number, text: string): [Required<RaphaelEl>, Required<RaphaelEl>] | undefined {
