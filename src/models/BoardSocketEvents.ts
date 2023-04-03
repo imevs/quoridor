@@ -1,5 +1,5 @@
 import _ from "underscore";
-import { PlayerNumber } from "./BoardModel";
+import { PlayerNumber } from "./PlayerModel";
 import { BoardValidation } from "./BoardValidation";
 import { Position } from "./BackboneModel";
 import { FencePosition } from "./FenceModel";
@@ -77,6 +77,7 @@ export class BoardSocketEvents extends BoardValidation {
             setInterval(() => {
                 fetchGameState(SERVICE_PATH, gameId).then(data => {
                     if (data.history && data.history.length && data.history.length !== me.history.get('turns').length) {
+                        this.infoModel.set("isActive", true);
                         const lastMove = data.history[data.history.length - 1]!;
                         if (lastMove.t === "p") {
                             this.onSocketMovePlayer(lastMove);
@@ -103,7 +104,9 @@ export class BoardSocketEvents extends BoardValidation {
             createData(SERVICE_PATH, boardState).then((id: string) => {
                 this.set("roomId", id);
                 document.location =
-                    location.href + "?" + buildQuery({ ...parseUrl(location.search), roomId: id });
+                    location.origin
+                    + location.pathname + "?"
+                    + buildQuery({ ...parseUrl(location.search), roomId: id });
             });
         }
     }
@@ -138,6 +141,7 @@ export class BoardSocketEvents extends BoardValidation {
             });
         }
         const gameId = this.get("roomId")!;
+        this.infoModel.set("isActive", false);
         saveData(SERVICE_PATH, gameId, boardState);
     }
 

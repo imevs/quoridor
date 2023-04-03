@@ -1,8 +1,8 @@
 import _ from "underscore";
 
 import { BackboneModel, Position } from "./BackboneModel";
-import { PlayerNumber } from "./BoardModel";
-import {GameHistoryModel, TurnModelProps, TurnsCollection} from "../models/TurnModel";
+import { PlayerNumber } from "./PlayerModel";
+import {GameHistoryModel, TurnModelProps, TurnsCollection} from "./TurnModel";
 
 type PlayerPosition = Position & { playerIndex: number; };
 

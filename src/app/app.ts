@@ -1,6 +1,6 @@
 import { BoardView } from "../views/BoardView";
 import { parseUrl } from "../models/urlParser";
-import { PlayerNumber } from "../models/BoardModel";
+import { PlayerNumber } from "../models/PlayerModel";
 import { BoardValidation } from "../models/BoardValidation";
 import { BoardSocketEvents } from "../models/BoardSocketEvents";
 

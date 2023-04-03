@@ -1,6 +1,7 @@
 import _ from "underscore";
-import { BackboneCollection, BackboneModel, Position } from "../models/BackboneModel";
-import { PlayerNumber } from "./BoardModel";
+import { BackboneCollection, BackboneModel, Position } from "./BackboneModel";
+
+export type PlayerNumber = -1 | 0 | 1 | 2 | 3;
 
 export class PlayerModel extends BackboneModel<Position & {
     fencesRemaining: number;
@@ -10,7 +11,7 @@ export class PlayerModel extends BackboneModel<Position & {
     id?: string;
     state?: string;
     color: string;
-    url: number;
+    url: PlayerNumber;
 }> {
     public defaults() {
         return {
@@ -110,7 +111,7 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
         _(playersCount).times(player => {
             const position = me.playersPositions[player]!;
             const model = new PlayerModel({
-                url            : player,
+                url            : player as PlayerNumber,
                 color          : position.color,
                 x              : position.x,
                 prev_x         : position.x,
@@ -128,7 +129,7 @@ export class PlayersCollection extends BackboneCollection<PlayerModel> {
             const position = me.playersPositions[i]!;
             const fences = Math.round(me.fencesCount / me.length);
             player.set({
-                url            : i,
+                url            : i as PlayerNumber,
                 x              : position.x,
                 prev_x         : position.x,
                 y              : position.y,

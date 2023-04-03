@@ -7,11 +7,9 @@ import {
     FencesCollection,
     FenceModel
 } from "./FenceModel";
-import { PlayersCollection } from "./PlayerModel";
+import { PlayerNumber, PlayersCollection} from "./PlayerModel";
 import { TimerModel } from "./TimerModel";
 import { GameHistoryModel, TurnsCollection } from "./TurnModel";
-
-export type PlayerNumber = -1 | 0 | 1 | 2 | 3;
 
 export type BoardOptions = {
     debug?: boolean;
@@ -23,13 +21,16 @@ export type BoardOptions = {
     activePlayer: PlayerNumber;
 };
 
-export type InfoModel = BackboneModel<{
+type InfoModelParams = {
     playersPositions: ({ color: string; })[];
-    currentPlayer?: number;
-    activePlayer?: number;
+    currentPlayer?: PlayerNumber;
+    activePlayer?: PlayerNumber;
     showCurrent: boolean;
+    isActive: boolean;
     fences: { fencesRemaining: number; }[];
-}>;
+};
+
+export type InfoModel = BackboneModel<InfoModelParams>;
 
 export abstract class BoardModel extends BackboneModel<BoardOptions> {
     public isPlayerMoved = false;
@@ -43,7 +44,7 @@ export abstract class BoardModel extends BackboneModel<BoardOptions> {
     public timerModel!: TimerModel;
     public infoModel!: InfoModel;
 
-    public defaults() { return {
+    public defaults(): BoardOptions { return {
         botsCount: 0,
         boardSize: 9,
         playersCount: 2,
@@ -103,6 +104,7 @@ export abstract class BoardModel extends BackboneModel<BoardOptions> {
         this.infoModel = new BackboneModel({
             playersPositions: this.players.playersPositions,
             fences: [],
+            isActive: true,
             showCurrent: this.isOnlineGame() || this.get("botsCount") > 0,
         });
         this.history = new GameHistoryModel({

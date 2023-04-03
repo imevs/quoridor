@@ -1,11 +1,10 @@
 import _ from "underscore";
-import { Bot } from "../models/Bot";
-import { FencesCollection } from "../models/FenceModel";
-import { PlayerModel, PlayersCollection } from "../models/PlayerModel";
-import {GameHistoryModel, TurnModelProps, TurnsCollection} from "../models/TurnModel";
-import { BoardValidation } from "../models/BoardValidation";
-import { PlayerNumber } from "../models/BoardModel";
-import { Position } from "../models/BackboneModel";
+import { Bot } from "./Bot";
+import { FencesCollection } from "./FenceModel";
+import { PlayerModel, PlayersCollection, PlayerNumber } from "./PlayerModel";
+import {GameHistoryModel, TurnModelProps, TurnsCollection} from "./TurnModel";
+import { BoardValidation } from "./BoardValidation";
+import { Position } from "./BackboneModel";
 
 type PositionWithDeep = Position & { deep: number; };
 type PlayerPosition = Position & { playerIndex: number; };

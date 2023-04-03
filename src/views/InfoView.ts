@@ -21,7 +21,7 @@ export class InfoView extends GameObject {
     }
     render() {
         const me = this;
-        me.$el.html(_.template(me.template, {variable: 'data'})(me.model.toJSON()));
+        me.$el.html(_.template(me.template, { variable: 'data' })(me.model.toJSON()));
         me.$el.find('.move').click(() => {
             me.trigger('click');
         });
