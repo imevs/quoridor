@@ -27,7 +27,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
-        run: npm i && npm run test && npm run tsc
+        run: npm i && npm run copy && npm run test && npm run tsc
 
       - name: Deploy to GitHub Pages
         if: success()

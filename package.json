@@ -5,6 +5,10 @@
   "author": "Vitaliy Medvedev <medvedev.vs@gmail.com>",
   "description": "quoridor game",
   "scripts": {
+    "cp-backbone": "cp ./node_modules/backbone/backbone-min.js ./public/backbone.js",
+    "cp-underscore": "cp ./node_modules/underscore/underscore-min.js ./public/underscore.js",
+    "cp-async": "cp ./node_modules/async/lib/async.js ./public/async.js",
+    "copy": "npm run cp-backbone && npm run cp-underscore && npm run cp-async",
     "tsc": "tsc",
     "ts-mocha": "ts-mocha",
     "test": "ts-mocha -p tsconfig.test.json --type-check ./tests/clientSideTests/**/*.ts"
