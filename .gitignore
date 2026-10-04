@@ -1,0 +1,17 @@
+# OS & Editors
+.DS_Store
+.idea/
+.vscode/
+
+# Blender backup files
+*.blend1
+*.blend2
+
+# Python
+__pycache__/
+*.pyc
+
+# Node / Vite
+node_modules/
+dist/
+coverage/
