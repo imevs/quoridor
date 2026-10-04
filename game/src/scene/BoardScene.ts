@@ -158,7 +158,7 @@ export class BoardScene {
     const hemi = new THREE.HemisphereLight(0xdff0ff, 0x4a6b2a, 0.9);
     this.scene.add(hemi);
 
-    // Warm golden sun (matches the Blender key light direction)
+    // Key directional light
     const sun = new THREE.DirectionalLight(0xfff0d9, 2.6);
     sun.position.set(-7, 14, 9);
     sun.castShadow = true;
@@ -178,7 +178,7 @@ export class BoardScene {
     fill.position.set(8, 6, -6);
     this.scene.add(fill);
 
-    // Soft contact shadow below the floating diorama
+    // Ground plane for shadow reception
     const ground = new THREE.Mesh(
       new THREE.CircleGeometry(16, 64),
       new THREE.ShadowMaterial({ color: 0x1d3317, opacity: 0.22 }),
@@ -206,11 +206,9 @@ export class BoardScene {
     const [gltf, wood, lawn, hedge] = await Promise.all([gltfPromise, loadTex(woodUrl), loadTex(lawnUrl), loadTex(hedgeUrl)]);
     onProgress(1);
 
-    // --- Project materials (re-created from the Blender node setups) ---------
     const woodMat = new THREE.MeshStandardMaterial({ map: wood, roughness: 0.62, color: new THREE.Color(1.05, 0.98, 0.92) });
     addGrading(
       woodMat,
-      // darker end-grain on tile sides, like the Blender "mix_sides" node
       'float side = 1.0 - smoothstep(0.35, 0.85, abs(vWN.y));\ndiffuseColor.rgb *= mix(vec3(1.0), vec3(0.62, 0.48, 0.38), side);',
     );
     const lawnMat = new THREE.MeshStandardMaterial({ map: lawn, roughness: 0.95 });
@@ -488,7 +486,6 @@ export class BoardScene {
     pawn.model.position.y = 0;
   }
 
-  /** Simple leaf / confetti particle burst. */
   private burst(origin: THREE.Vector3, colors: number[], count: number, speed: number): void {
     const positions = new Float32Array(count * 3);
     const cols = new Float32Array(count * 3);

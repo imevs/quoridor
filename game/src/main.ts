@@ -114,13 +114,13 @@ class Game {
       this.hud.setTurn(seat, label);
       this.hud.setHint(
         s.players[s.turn].walls > 0
-          ? 'Click a glowing tile to move  ·  hover a groove to plant a hedge'
-          : 'No hedges left — click a glowing tile to move',
+          ? 'Click a tile to move, or hover a groove to place a wall'
+          : 'No walls remaining — click a tile to move',
       );
       this.scene.showMoveMarkers(legalMoves(s, s.turn));
       if (this.config.mode === 'local') void this.scene.focusSeat(s.turn, 0.9);
     } else {
-      this.hud.setTurn(seat, `${a.name} is thinking…`);
+      this.hud.setTurn(seat, `${a.name} is thinking...`);
       this.hud.setHint('');
       this.scene.showMoveMarkers([]);
       this.scene.showGhost(null);

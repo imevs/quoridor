@@ -141,9 +141,8 @@ export class Hud {
   showWin(seat: Seat, isHumanWin: boolean, vsAi: boolean): void {
     const a = ANIMALS[seat.animal];
     $<HTMLElement>('win-emoji').textContent = a.emoji;
-    $<HTMLElement>('win-title').textContent = vsAi ? (isHumanWin ? 'You win! 🎉' : `${a.name} wins`) : `${a.name} wins! 🎉`;
-    $<HTMLElement>('win-sub').textContent =
-      vsAi && !isHumanWin ? 'The hedges got the better of you this time — try again?' : 'A masterful dash through the garden maze.';
+    $<HTMLElement>('win-title').textContent = vsAi ? (isHumanWin ? 'You win' : `${a.name} wins`) : `${a.name} wins`;
+    $<HTMLElement>('win-sub').textContent = vsAi && !isHumanWin ? 'Opponent reached the goal line.' : 'Goal line reached.';
     this.win.showModal();
   }
 }

@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Quoridors — 3D Hedge Maze Strategy Game</title>
+    <title>Quoridors — 3D Board Game</title>
     <meta
       name="description"
-      content="Quoridors is a cozy 3D take on the classic Quoridor board game. Guide your woodland animal across a wooden board and plant hedges to block your rivals."
+      content="3D implementation of the Quoridor board game built with Three.js and TypeScript."
     />
     <meta name="theme-color" content="#cfe3c2" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" />
@@ -23,17 +23,15 @@
     <!-- Loading screen -->
     <div id="loader" class="loader" role="progressbar" aria-label="Loading board" aria-valuemin="0" aria-valuemax="100">
       <div class="loader-card">
-        <div class="loader-logo">🌿</div>
         <p class="loader-title">Quoridors</p>
         <div class="loader-bar"><span id="loader-fill"></span></div>
-        <p class="loader-text">Growing the hedges…</p>
+        <p class="loader-text">Loading 3D assets…</p>
       </div>
     </div>
 
     <!-- Top bar -->
     <header class="topbar glass">
       <div class="brand">
-        <span class="brand-mark" aria-hidden="true">🌿</span>
         <h1>Quoridors</h1>
       </div>
       <div id="turn-pill" class="turn-pill" aria-live="polite">
@@ -67,16 +65,15 @@
     <dialog id="menu-dialog" class="panel">
       <form id="menu-form" method="dialog">
         <div class="panel-hero">
-          <span class="hero-emoji" aria-hidden="true">🦊🌿🐺</span>
           <h2>New Game</h2>
-          <p>Race your animal to the far side of the garden — and plant hedges to slow your rivals.</p>
+          <p>Reach the opposite edge first. Place walls to delay your rivals.</p>
         </div>
 
         <fieldset class="field">
           <legend>Mode</legend>
           <div class="segmented">
-            <label><input type="radio" name="mode" value="ai" checked /><span>🤖 vs Computer</span></label>
-            <label><input type="radio" name="mode" value="local" /><span>🤝 Pass &amp; Play</span></label>
+            <label><input type="radio" name="mode" value="ai" checked /><span>vs Computer</span></label>
+            <label><input type="radio" name="mode" value="local" /><span>Pass &amp; Play</span></label>
           </div>
         </fieldset>
 
@@ -91,14 +88,14 @@
         <fieldset class="field" id="difficulty-field">
           <legend>Difficulty</legend>
           <div class="segmented">
-            <label><input type="radio" name="difficulty" value="easy" /><span>🌱 Easy</span></label>
-            <label><input type="radio" name="difficulty" value="medium" checked /><span>🌳 Medium</span></label>
-            <label><input type="radio" name="difficulty" value="hard" /><span>🌲 Hard</span></label>
+            <label><input type="radio" name="difficulty" value="easy" /><span>Easy</span></label>
+            <label><input type="radio" name="difficulty" value="medium" checked /><span>Medium</span></label>
+            <label><input type="radio" name="difficulty" value="hard" /><span>Hard</span></label>
           </div>
         </fieldset>
 
         <fieldset class="field">
-          <legend>Your animal</legend>
+          <legend>Pawn</legend>
           <div id="animal-picker" class="animal-picker"></div>
         </fieldset>
 
@@ -110,19 +107,17 @@
     <dialog id="rules-dialog" class="panel" closedby="any">
       <form method="dialog">
         <div class="panel-hero">
-          <span class="hero-emoji" aria-hidden="true">📜</span>
           <h2>How to Play</h2>
         </div>
         <ol class="rules">
-          <li><strong>Goal:</strong> be the first to reach the opposite side of the board.</li>
-          <li><strong>On your turn</strong> either <em>move</em> your animal one tile, or <em>plant a hedge</em>.</li>
-          <li><strong>Move:</strong> click a glowing tile. You can jump over an adjacent animal; if a hedge is behind it, step diagonally.</li>
-          <li><strong>Hedge:</strong> hover the groove between tiles — a ghost hedge appears. Click to plant it. Hedges span two tiles.</li>
-          <li>Hedges can't overlap or cross, and can never fully trap a player.</li>
-          <li>Each player has <strong>10 hedges</strong> (5 in a 4-player game).</li>
+          <li><strong>Goal:</strong> Be the first player to reach the opposite side of the board.</li>
+          <li><strong>Turn:</strong> Either move your pawn one tile, or place a wall in a groove.</li>
+          <li><strong>Move:</strong> Step to an adjacent tile. Jump straight over an adjacent opponent; if a wall blocks the jump, step diagonally.</li>
+          <li><strong>Walls:</strong> Walls span two tiles. They cannot overlap, cross, or completely trap any player.</li>
+          <li><strong>Inventory:</strong> 10 walls each in 2-player games, 5 in 4-player games.</li>
         </ol>
         <p class="keys"><kbd>Z</kbd> undo · <kbd>C</kbd> reset camera · <kbd>Esc</kbd> menu · drag to orbit, scroll to zoom</p>
-        <button class="primary-btn" type="submit">Got it</button>
+        <button class="primary-btn" type="submit">Close</button>
       </form>
     </dialog>
 
@@ -130,10 +125,10 @@
     <dialog id="win-dialog" class="panel win">
       <form method="dialog">
         <div class="win-emoji" id="win-emoji">🦊</div>
-        <h2 id="win-title">Fox wins!</h2>
-        <p id="win-sub">What a race through the hedges.</p>
+        <h2 id="win-title">Victory</h2>
+        <p id="win-sub"></p>
         <div class="win-actions">
-          <button class="ghost-btn" type="submit" value="menu">Change setup</button>
+          <button class="ghost-btn" type="submit" value="menu">New setup</button>
           <button class="primary-btn" type="submit" value="again">Play again</button>
         </div>
       </form>
