@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build --mode online && vite build --mode offline",
+    "build:online": "tsc && vite build --mode online",
+    "build:offline": "tsc && vite build --mode offline",
     "preview": "vite preview",
+    "preview:offline": "vite preview --outDir dist-offline",
     "test": "vitest run"
   },
   "devDependencies": {

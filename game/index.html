@@ -33,6 +33,7 @@
     <header class="topbar glass">
       <div class="brand">
         <h1>Quoridors</h1>
+        <span id="net-status" class="net-status" hidden></span>
       </div>
       <div id="turn-pill" class="turn-pill" aria-live="polite">
         <span id="turn-emoji" class="turn-emoji"></span>
@@ -54,6 +55,15 @@
       </nav>
     </header>
 
+    <!-- Undo banner -->
+    <div id="undo-banner" class="undo-banner glass" hidden>
+      <span id="undo-text" class="undo-text"></span>
+      <div id="undo-actions" class="undo-actions" hidden>
+        <button id="undo-decline" class="ghost-btn small" type="button">Decline</button>
+        <button id="undo-accept" class="primary-btn small" type="button">Accept</button>
+      </div>
+    </div>
+
     <!-- Player cards -->
     <aside id="players" class="players" aria-label="Players"></aside>
 
@@ -74,6 +84,7 @@
           <div class="segmented">
             <label><input type="radio" name="mode" value="ai" checked /><span>vs Computer</span></label>
             <label><input type="radio" name="mode" value="local" /><span>Pass &amp; Play</span></label>
+            <label id="mode-online"><input type="radio" name="mode" value="online" /><span>Online</span></label>
           </div>
         </fieldset>
 
@@ -103,6 +114,35 @@
       </form>
     </dialog>
 
+    <!-- Online Lobby Dialog -->
+    <dialog id="lobby-dialog" class="panel lobby">
+      <div class="lobby-content">
+        <div class="panel-hero">
+          <h2>Online Game</h2>
+          <p id="lobby-status">Share the link with friends to play together.</p>
+        </div>
+
+        <div class="invite-box">
+          <label for="invite-link" class="field-label">Invite link</label>
+          <div class="invite-row">
+            <input id="invite-link" type="text" readonly spellcheck="false" />
+            <button id="btn-copy" class="ghost-btn small" type="button">Copy</button>
+            <button id="btn-share" class="ghost-btn small" type="button" hidden>Share</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label">Players</span>
+          <ul id="lobby-seats" class="lobby-seats"></ul>
+        </div>
+
+        <div class="lobby-actions">
+          <button id="btn-leave" class="ghost-btn" type="button">Leave</button>
+          <button id="btn-lobby-start" class="primary-btn" type="button">Start Game</button>
+        </div>
+      </div>
+    </dialog>
+
     <!-- Rules dialog -->
     <dialog id="rules-dialog" class="panel" closedby="any">
       <form method="dialog">
@@ -129,7 +169,7 @@
         <p id="win-sub"></p>
         <div class="win-actions">
           <button class="ghost-btn" type="submit" value="menu">New setup</button>
-          <button class="primary-btn" type="submit" value="again">Play again</button>
+          <button id="btn-again" class="primary-btn" type="submit" value="again">Play again</button>
         </div>
       </form>
     </dialog>

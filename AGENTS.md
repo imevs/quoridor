@@ -6,7 +6,7 @@ This document outlines architecture rules, constraints, and development guidelin
 
 ## 1. Repository Architecture & Boundaries
 
-The codebase is split into two environments:
+The codebase is split into three environments:
 
 1. **Root Directory (`/`) — Blender 3D Authoring Pipeline**:
    - `build_quoridor_board.py` is the single source of truth for all 3D geometry and procedural models.
@@ -16,7 +16,15 @@ The codebase is split into two environments:
 2. **Game Directory (`/game`) — Web Application**:
    - Built with **Three.js**, **TypeScript** (strict mode, bundler resolution), and **Vite**.
    - Tests run via **Vitest**.
-   - Imports assets (`quoridor_board.glb` and `textures/`) from the parent directory via Vite's `server.fs.allow: ['..']` config.
+   - Supports two build targets:
+     - Online mode (`npm run build:online`): Full game with online multiplayer, invite links, WS client, local pass-and-play, and vs-AI.
+     - Offline mode (`npm run build:offline`): Standalone bundle (`dist-offline/`) with all networking tree-shaken out.
+   - Imports assets (`quoridor_board.glb` and `textures/`) from parent directory.
+
+3. **Server Directory (`/server`) — Authoritative Multiplayer Backend**:
+   - Built with **Node.js 24**, **TypeScript**, `ws`, and built-in `node:sqlite`.
+   - Directly imports and shares rules and session logic from `game/src/game/`.
+   - Manages game sessions, validates moves, persists states to SQLite, and serves the static web bundle.
 
 ---
 

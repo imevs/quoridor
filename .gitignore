@@ -14,4 +14,10 @@ __pycache__/
 # Node / Vite
 node_modules/
 dist/
+dist-offline/
 coverage/
+
+# Server
+server/data/
+*.db
+

@@ -5,10 +5,14 @@ import { type GameState, shortestPath } from '../game/rules';
 export interface Seat {
   animal: AnimalId;
   human: boolean;
+  /** Controlled from this client. */
+  local: boolean;
+  /** Remote human who is currently disconnected. */
+  away?: boolean;
 }
 
 export interface GameConfig {
-  mode: 'ai' | 'local';
+  mode: 'ai' | 'local' | 'online';
   players: 2 | 4;
   difficulty: Difficulty;
   animal: AnimalId;
@@ -30,9 +34,12 @@ export class Hud {
   readonly rules = $<HTMLDialogElement>('rules-dialog');
   readonly win = $<HTMLDialogElement>('win-dialog');
   readonly undoBtn = $<HTMLButtonElement>('btn-undo');
+  private netEl = $<HTMLElement>('net-status');
+  private undoBanner = $<HTMLElement>('undo-banner');
 
   constructor() {
     this.buildAnimalPicker();
+    $<HTMLElement>('mode-online').hidden = !__ONLINE__;
     const form = $<HTMLFormElement>('menu-form');
     form.addEventListener('change', () => this.syncMenuFields());
     this.restoreConfig();
@@ -62,6 +69,7 @@ export class Hud {
   private syncMenuFields(): void {
     const mode = this.formValue('mode');
     $<HTMLElement>('difficulty-field').hidden = mode !== 'ai';
+    $<HTMLElement>('btn-start').textContent = mode === 'online' ? 'Create Online Game' : 'Start Game';
   }
 
   private formValue(name: string): string {
@@ -70,8 +78,9 @@ export class Hud {
   }
 
   readConfig(): GameConfig {
+    const mode = this.formValue('mode');
     const cfg: GameConfig = {
-      mode: this.formValue('mode') === 'local' ? 'local' : 'ai',
+      mode: mode === 'local' ? 'local' : mode === 'online' && __ONLINE__ ? 'online' : 'ai',
       players: this.formValue('players') === '4' ? 4 : 2,
       difficulty: (this.formValue('difficulty') || 'medium') as Difficulty,
       animal: (this.formValue('animal') || 'fox') as AnimalId,
@@ -88,7 +97,7 @@ export class Hud {
         const el = document.querySelector<HTMLInputElement>(`#menu-form input[name="${name}"][value="${value}"]`);
         if (el) el.checked = true;
       };
-      set('mode', cfg.mode);
+      set('mode', cfg.mode === 'online' && !__ONLINE__ ? 'ai' : cfg.mode);
       set('players', String(cfg.players));
       set('difficulty', cfg.difficulty);
       set('animal', cfg.animal);
@@ -100,16 +109,23 @@ export class Hud {
   // ---------------------------------------------------------------- In-game
   renderPlayers(state: GameState, seats: Seat[]): void {
     const wallsMax = seats.length === 2 ? 10 : 5;
+    const localHumans = seats.filter((s) => s.human && s.local).length;
     this.playersEl.innerHTML = state.players
       .map((p, i) => {
         const seat = seats[i];
         const a = ANIMALS[seat.animal];
-        const badge = seat.human ? (seats.filter((s) => s.human).length > 1 ? `P${i + 1}` : 'You') : 'CPU';
+        const badge = !seat.human
+          ? 'CPU'
+          : seat.away
+            ? 'Away'
+            : seat.local && localHumans === 1
+              ? 'You'
+              : `P${i + 1}`;
         const steps = shortestPath(state, i);
         const pips = Array.from({ length: wallsMax }, (_, k) => `<span class="pip ${k >= p.walls ? 'used' : ''}"></span>`).join('');
-        return `<article class="player-card ${state.turn === i && state.winner === null ? 'active' : ''}" style="--pc:${a.color}">
+        return `<article class="player-card ${state.turn === i && state.winner === null ? 'active' : ''} ${seat.away ? 'away' : ''}" style="--pc:${a.color}">
           <div class="avatar" aria-hidden="true">${a.emoji}</div>
-          <div class="player-head">${a.name}<span class="badge ${seat.human ? 'you' : ''}">${badge}</span>
+          <div class="player-head">${a.name}<span class="badge ${seat.local ? 'you' : ''}">${badge}</span>
             <span class="steps" title="Shortest path to goal">${steps} step${steps === 1 ? '' : 's'}</span></div>
           <div class="pips" title="${p.walls} hedges left" aria-label="${p.walls} hedges left">${pips}</div>
         </article>`;
@@ -138,11 +154,27 @@ export class Hud {
     this.toastTimer = window.setTimeout(() => this.toastEl.classList.remove('show'), 1800);
   }
 
-  showWin(seat: Seat, isHumanWin: boolean, vsAi: boolean): void {
+  showWin(seat: Seat, title: string, sub: string, canPlayAgain: boolean): void {
     const a = ANIMALS[seat.animal];
     $<HTMLElement>('win-emoji').textContent = a.emoji;
-    $<HTMLElement>('win-title').textContent = vsAi ? (isHumanWin ? 'You win' : `${a.name} wins`) : `${a.name} wins`;
-    $<HTMLElement>('win-sub').textContent = vsAi && !isHumanWin ? 'Opponent reached the goal line.' : 'Goal line reached.';
+    $<HTMLElement>('win-title').textContent = title;
+    $<HTMLElement>('win-sub').textContent = sub;
+    const again = $<HTMLButtonElement>('btn-again');
+    again.disabled = !canPlayAgain;
+    again.textContent = canPlayAgain ? 'Play again' : 'Waiting for host…';
     this.win.showModal();
+  }
+
+  // ---------------------------------------------------------------- Online
+  setNet(text: string | null, tone: 'ok' | 'warn' = 'ok'): void {
+    this.netEl.hidden = text === null;
+    this.netEl.textContent = text ?? '';
+    this.netEl.dataset.tone = tone;
+  }
+
+  showUndo(text: string | null, canVote = false): void {
+    this.undoBanner.hidden = text === null;
+    $<HTMLElement>('undo-text').textContent = text ?? '';
+    $<HTMLElement>('undo-actions').hidden = !canVote;
   }
 }

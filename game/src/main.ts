@@ -1,28 +1,24 @@
 import './style.css';
 import { BoardScene, type Pick } from './scene/BoardScene';
 import { Hud, type GameConfig, type Seat } from './ui/Hud';
-import { ANIMALS, ANIMAL_ORDER } from './game/animals';
-import { chooseAction } from './game/ai';
+import { ANIMALS } from './game/animals';
 import {
   type Action,
   type GameState,
-  applyAction,
   checkWall,
-  cloneState,
-  createGame,
-  isLegal,
   legalMoves,
 } from './game/rules';
+import type { GameController, Update } from './net/controller';
+import { LocalController } from './net/LocalController';
 
 class Game {
   private scene: BoardScene;
   private hud = new Hud();
-  private config!: GameConfig;
+  private controller: GameController | null = null;
   private seats: Seat[] = [];
   private state!: GameState;
-  private history: GameState[] = [];
-  private busy = false;
-  private epoch = 0; // invalidates pending AI turns / animations after restart or undo
+  private queue: Update[] = [];
+  private processing = false;
   private downAt: { x: number; y: number } | null = null;
 
   constructor() {
@@ -33,7 +29,18 @@ class Game {
     await this.scene.load((p) => this.hud.setLoading(p));
     this.bindUi();
     this.hud.hideLoader();
-    this.hud.menu.showModal();
+
+    // Check if entering via an invite link (?game=...)
+    const params = new URLSearchParams(window.location.search);
+    const joinId = params.get('game');
+    if (__ONLINE__ && joinId) {
+      void this.startOnline({ join: joinId });
+    } else if (LocalController.hasSavedGame()) {
+      const savedCfg = LocalController.getSavedConfig() ?? this.hud.readConfig();
+      this.startLocal(savedCfg, true);
+    } else {
+      this.hud.menu.showModal();
+    }
   }
 
   // ------------------------------------------------------------------ Setup
@@ -50,11 +57,24 @@ class Game {
     canvas.addEventListener('pointerleave', () => this.clearPreview());
 
     this.hud.menu.addEventListener('close', () => {
-      if (this.hud.menu.returnValue === 'start') this.start(this.hud.readConfig());
+      if (this.hud.menu.returnValue === 'start') {
+        const cfg = this.hud.readConfig();
+        if (cfg.mode === 'online' && __ONLINE__) {
+          void this.startOnline({ create: { players: cfg.players, animal: cfg.animal } });
+        } else {
+          this.startLocal(cfg);
+        }
+      }
     });
+
     this.hud.win.addEventListener('close', () => {
-      if (this.hud.win.returnValue === 'again') this.start(this.config);
-      else if (this.hud.win.returnValue === 'menu') this.openMenu();
+      if (this.hud.win.returnValue === 'again') {
+        if (this.controller?.canRematch()) {
+          this.controller.rematch();
+        }
+      } else if (this.hud.win.returnValue === 'menu') {
+        this.openMenu();
+      }
     });
 
     document.getElementById('btn-menu')!.addEventListener('click', () => this.openMenu());
@@ -71,46 +91,129 @@ class Game {
   }
 
   private openMenu(): void {
+    LocalController.clearSaved();
+    this.controller?.dispose();
+    this.controller = null;
+    this.queue = [];
+    this.processing = false;
+    this.clearPreview();
     this.hud.menu.returnValue = '';
     if (!this.hud.menu.open) this.hud.menu.showModal();
   }
 
-  private start(config: GameConfig): void {
-    this.epoch++;
-    this.busy = false;
-    this.config = config;
-    const others = ANIMAL_ORDER.filter((a) => a !== config.animal);
-    this.seats = Array.from({ length: config.players }, (_, i) => ({
-      animal: i === 0 ? config.animal : others[i - 1],
-      human: config.mode === 'local' || i === 0,
-    }));
-    this.state = createGame(config.players);
-    this.history = [];
-    this.scene.setupPlayers(this.seats.map((s) => s.animal));
-    this.scene.syncState(this.state);
-    void this.scene.focusSeat(0, 1.2);
-    this.beginTurn();
+  private startLocal(config: GameConfig, restoreExisting = false): void {
+    if (!restoreExisting) {
+      LocalController.clearSaved();
+    }
+    this.setController(new LocalController(config), restoreExisting);
   }
 
-  // ------------------------------------------------------------------ Turn flow
-  private get currentSeat(): Seat {
-    return this.seats[this.state.turn];
+  private async startOnline(intent: import('./net/OnlineController').OnlineIntent): Promise<void> {
+    if (!__ONLINE__) return;
+    const { OnlineController } = await import('./net/OnlineController');
+    this.setController(new OnlineController(this.hud, intent));
   }
 
-  private isHumanTurn(): boolean {
-    return this.state.winner === null && this.currentSeat.human && !this.busy;
+  private setController(ctrl: GameController, restoreExisting = false): void {
+    this.controller?.dispose();
+    this.controller = ctrl;
+    this.queue = [];
+    this.processing = false;
+
+    ctrl.onUpdate = (u) => {
+      this.queue.push(u);
+      void this.drainQueue();
+    };
+
+    ctrl.onExit = (msg) => {
+      if (msg) this.hud.toast(msg);
+      this.openMenu();
+    };
+
+    ctrl.start(restoreExisting);
   }
 
-  private beginTurn(): void {
+  // ------------------------------------------------------------------ Queue processing
+  private async drainQueue(): Promise<void> {
+    if (this.processing) return;
+    this.processing = true;
+
+    while (this.queue.length > 0) {
+      const u = this.queue.shift()!;
+      await this.applyUpdate(u);
+    }
+
+    this.processing = false;
+    this.updateControls();
+    this.controller?.idle();
+  }
+
+  private async applyUpdate(u: Update): Promise<void> {
+    switch (u.type) {
+      case 'reset': {
+        this.seats = u.seats;
+        this.state = u.state;
+        this.clearPreview();
+        this.scene.setupPlayers(this.seats.map((s) => s.animal));
+        this.scene.syncState(this.state);
+        const focus = this.controller ? this.controller.viewSeat(this.state) : 0;
+        void this.scene.focusSeat(focus, 1.2);
+        this.refreshTurnUi();
+        break;
+      }
+      case 'seats': {
+        this.seats = u.seats;
+        this.refreshTurnUi();
+        break;
+      }
+      case 'sync': {
+        this.state = u.state;
+        this.clearPreview();
+        this.scene.syncState(this.state);
+        this.refreshTurnUi();
+        break;
+      }
+      case 'action': {
+        this.clearPreview();
+        this.scene.showMoveMarkers([]);
+        if (u.action.type === 'move') {
+          await this.scene.animateMove(u.seat, u.action);
+        } else {
+          await this.scene.animateWall(u.action.wall);
+        }
+        this.state = u.state;
+        this.refreshTurnUi();
+        if (this.state.winner !== null) {
+          await this.finish(this.state.winner);
+        }
+        break;
+      }
+    }
+  }
+
+  // ------------------------------------------------------------------ Turn & HUD
+  private get currentSeat(): Seat | undefined {
+    return this.seats[this.state?.turn];
+  }
+
+  private isMyTurn(): boolean {
+    return !!this.state && !!this.controller?.canAct(this.state) && !this.processing;
+  }
+
+  private refreshTurnUi(): void {
+    if (!this.state || !this.currentSeat) return;
     const s = this.state;
     const seat = this.currentSeat;
     const a = ANIMALS[seat.animal];
+
     this.hud.renderPlayers(s, this.seats);
     this.scene.setActiveSeat(s.turn);
-    this.hud.undoBtn.disabled = this.history.length === 0;
+    this.updateControls();
 
-    if (seat.human) {
-      const label = this.config.mode === 'ai' ? 'Your turn' : `${a.name}'s turn`;
+    if (s.winner !== null) return;
+
+    if (this.isMyTurn()) {
+      const label = this.controller?.kind === 'local' ? `${a.name}'s turn` : 'Your turn';
       this.hud.setTurn(seat, label);
       this.hud.setHint(
         s.players[s.turn].walls > 0
@@ -118,72 +221,55 @@ class Game {
           : 'No walls remaining — click a tile to move',
       );
       this.scene.showMoveMarkers(legalMoves(s, s.turn));
-      if (this.config.mode === 'local') void this.scene.focusSeat(s.turn, 0.9);
+      if (this.controller?.kind === 'local') {
+        void this.scene.focusSeat(s.turn, 0.9);
+      }
     } else {
-      this.hud.setTurn(seat, `${a.name} is thinking...`);
+      const label = !seat.human
+        ? `${a.name} is thinking...`
+        : seat.away
+          ? `${a.name} (Away)`
+          : `${a.name}'s turn`;
+      this.hud.setTurn(seat, label);
       this.hud.setHint('');
       this.scene.showMoveMarkers([]);
       this.scene.showGhost(null);
-      const epoch = this.epoch;
-      window.setTimeout(() => {
-        if (epoch !== this.epoch) return;
-        const action = chooseAction(this.state, this.config.difficulty);
-        void this.perform(action);
-      }, 550);
     }
   }
 
-  private async perform(action: Action): Promise<void> {
-    if (this.busy || !isLegal(this.state, action)) return;
-    const epoch = this.epoch;
-    this.busy = true;
-    this.clearPreview();
-    this.scene.showMoveMarkers([]);
-
-    const seatIdx = this.state.turn;
-    this.history.push(cloneState(this.state));
-    applyAction(this.state, action);
-
-    if (action.type === 'move') await this.scene.animateMove(seatIdx, action);
-    else await this.scene.animateWall(action.wall);
-    if (epoch !== this.epoch) return;
-
-    this.busy = false;
-    if (this.state.winner !== null) {
-      this.finish(this.state.winner);
-      return;
-    }
-    this.beginTurn();
+  private updateControls(): void {
+    this.hud.undoBtn.disabled = !this.controller?.canUndo() || this.processing;
   }
 
   private async finish(winner: number): Promise<void> {
-    const epoch = this.epoch;
     const seat = this.seats[winner];
     this.hud.renderPlayers(this.state, this.seats);
     this.hud.setTurn(seat, `${ANIMALS[seat.animal].name} wins!`);
     this.hud.setHint('');
-    this.busy = true;
     await this.scene.celebrate(winner);
-    if (epoch !== this.epoch) return;
-    this.busy = false;
-    this.hud.showWin(seat, seat.human, this.config.mode === 'ai');
+
+    const kind = this.controller?.kind;
+    const canRematch = this.controller ? this.controller.canRematch() : false;
+    let title = `${ANIMALS[seat.animal].name} wins`;
+    let sub = 'Goal line reached.';
+    if (kind === 'ai') {
+      title = seat.human ? 'You win' : `${ANIMALS[seat.animal].name} wins`;
+      sub = seat.human ? 'Goal line reached.' : 'Opponent reached the goal line.';
+    } else if (kind === 'online') {
+      title = seat.local ? 'Victory!' : `${ANIMALS[seat.animal].name} wins`;
+    }
+
+    this.hud.showWin(seat, title, sub, canRematch);
   }
 
   private undo(): void {
-    if (this.busy || this.history.length === 0) return;
-    let prev = this.history.pop()!;
-    // Against the computer, rewind to the human's previous turn
-    if (this.config.mode === 'ai') {
-      while (!this.seats[prev.turn].human && this.history.length > 0) prev = this.history.pop()!;
-    }
-    this.epoch++;
-    this.state = prev;
-    this.scene.syncState(this.state);
-    this.beginTurn();
+    if (this.processing || !this.controller?.canUndo()) return;
+    this.controller.undo();
   }
 
   private resetCamera(): void {
-    const seat = this.config?.mode === 'local' && this.state ? this.state.turn : 0;
+    if (!this.state || !this.controller) return;
+    const seat = this.controller.viewSeat(this.state);
     void this.scene.focusSeat(seat, 0.8);
   }
 
@@ -204,7 +290,7 @@ class Game {
   }
 
   private onHover(e: PointerEvent): void {
-    if (!this.state || !this.isHumanTurn() || e.buttons !== 0) {
+    if (!this.state || !this.isMyTurn() || e.buttons !== 0) {
       if (e.buttons === 0) this.clearPreview();
       return;
     }
@@ -226,7 +312,7 @@ class Game {
   }
 
   private onClick(e: PointerEvent): void {
-    if (!this.state || !this.isHumanTurn()) return;
+    if (!this.state || !this.isMyTurn()) return;
     const action = this.previewFor(this.scene.pick(e.clientX, e.clientY));
     if (!action) return;
     if (action.type === 'wall') {
@@ -234,7 +320,7 @@ class Game {
       const check = checkWall(this.state, action.wall);
       if (!check.ok) return this.hud.toast(check.reason);
     }
-    void this.perform(action);
+    this.controller?.submit(action);
   }
 }
 
