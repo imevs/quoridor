@@ -144,7 +144,7 @@ class Game {
     }
 
     this.processing = false;
-    this.updateControls();
+    this.refreshTurnUi();
     this.controller?.idle();
   }
 
@@ -197,7 +197,7 @@ class Game {
   }
 
   private isMyTurn(): boolean {
-    return !!this.state && !!this.controller?.canAct(this.state) && !this.processing;
+    return !!this.state && !!this.controller?.canAct(this.state);
   }
 
   private refreshTurnUi(): void {
@@ -290,7 +290,7 @@ class Game {
   }
 
   private onHover(e: PointerEvent): void {
-    if (!this.state || !this.isMyTurn() || e.buttons !== 0) {
+    if (!this.state || !this.isMyTurn() || this.processing || e.buttons !== 0) {
       if (e.buttons === 0) this.clearPreview();
       return;
     }
@@ -312,7 +312,7 @@ class Game {
   }
 
   private onClick(e: PointerEvent): void {
-    if (!this.state || !this.isMyTurn()) return;
+    if (!this.state || !this.isMyTurn() || this.processing) return;
     const action = this.previewFor(this.scene.pick(e.clientX, e.clientY));
     if (!action) return;
     if (action.type === 'wall') {
