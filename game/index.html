@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Quoridors — 3D Hedge Maze Strategy Game</title>
+    <meta
+      name="description"
+      content="Quoridors is a cozy 3D take on the classic Quoridor board game. Guide your woodland animal across a wooden board and plant hedges to block your rivals."
+    />
+    <meta name="theme-color" content="#cfe3c2" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <main id="stage" aria-label="3D game board"></main>
+
+    <!-- Loading screen -->
+    <div id="loader" class="loader" role="progressbar" aria-label="Loading board" aria-valuemin="0" aria-valuemax="100">
+      <div class="loader-card">
+        <div class="loader-logo">🌿</div>
+        <p class="loader-title">Quoridors</p>
+        <div class="loader-bar"><span id="loader-fill"></span></div>
+        <p class="loader-text">Growing the hedges…</p>
+      </div>
+    </div>
+
+    <!-- Top bar -->
+    <header class="topbar glass">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">🌿</span>
+        <h1>Quoridors</h1>
+      </div>
+      <div id="turn-pill" class="turn-pill" aria-live="polite">
+        <span id="turn-emoji" class="turn-emoji"></span>
+        <span id="turn-text">—</span>
+      </div>
+      <nav class="actions" aria-label="Game actions">
+        <button id="btn-undo" class="icon-btn" type="button" title="Undo (Z)" aria-label="Undo">
+          <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></svg>
+        </button>
+        <button id="btn-camera" class="icon-btn" type="button" title="Reset view (C)" aria-label="Reset camera">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" /></svg>
+        </button>
+        <button id="btn-rules" class="icon-btn" type="button" title="How to play" aria-label="How to play">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M9.6 9.2a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.7" /><path d="M12 17h.01" /></svg>
+        </button>
+        <button id="btn-menu" class="icon-btn accent" type="button" title="New game (Esc)" aria-label="New game">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Player cards -->
+    <aside id="players" class="players" aria-label="Players"></aside>
+
+    <!-- Contextual hint + toast -->
+    <div id="hint" class="hint glass"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- New game dialog -->
+    <dialog id="menu-dialog" class="panel">
+      <form id="menu-form" method="dialog">
+        <div class="panel-hero">
+          <span class="hero-emoji" aria-hidden="true">🦊🌿🐺</span>
+          <h2>New Game</h2>
+          <p>Race your animal to the far side of the garden — and plant hedges to slow your rivals.</p>
+        </div>
+
+        <fieldset class="field">
+          <legend>Mode</legend>
+          <div class="segmented">
+            <label><input type="radio" name="mode" value="ai" checked /><span>🤖 vs Computer</span></label>
+            <label><input type="radio" name="mode" value="local" /><span>🤝 Pass &amp; Play</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend>Players</legend>
+          <div class="segmented">
+            <label><input type="radio" name="players" value="2" checked /><span>2 players</span></label>
+            <label><input type="radio" name="players" value="4" /><span>4 players</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="field" id="difficulty-field">
+          <legend>Difficulty</legend>
+          <div class="segmented">
+            <label><input type="radio" name="difficulty" value="easy" /><span>🌱 Easy</span></label>
+            <label><input type="radio" name="difficulty" value="medium" checked /><span>🌳 Medium</span></label>
+            <label><input type="radio" name="difficulty" value="hard" /><span>🌲 Hard</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend>Your animal</legend>
+          <div id="animal-picker" class="animal-picker"></div>
+        </fieldset>
+
+        <button id="btn-start" class="primary-btn" type="submit" value="start">Start Game</button>
+      </form>
+    </dialog>
+
+    <!-- Rules dialog -->
+    <dialog id="rules-dialog" class="panel" closedby="any">
+      <form method="dialog">
+        <div class="panel-hero">
+          <span class="hero-emoji" aria-hidden="true">📜</span>
+          <h2>How to Play</h2>
+        </div>
+        <ol class="rules">
+          <li><strong>Goal:</strong> be the first to reach the opposite side of the board.</li>
+          <li><strong>On your turn</strong> either <em>move</em> your animal one tile, or <em>plant a hedge</em>.</li>
+          <li><strong>Move:</strong> click a glowing tile. You can jump over an adjacent animal; if a hedge is behind it, step diagonally.</li>
+          <li><strong>Hedge:</strong> hover the groove between tiles — a ghost hedge appears. Click to plant it. Hedges span two tiles.</li>
+          <li>Hedges can't overlap or cross, and can never fully trap a player.</li>
+          <li>Each player has <strong>10 hedges</strong> (5 in a 4-player game).</li>
+        </ol>
+        <p class="keys"><kbd>Z</kbd> undo · <kbd>C</kbd> reset camera · <kbd>Esc</kbd> menu · drag to orbit, scroll to zoom</p>
+        <button class="primary-btn" type="submit">Got it</button>
+      </form>
+    </dialog>
+
+    <!-- Win dialog -->
+    <dialog id="win-dialog" class="panel win">
+      <form method="dialog">
+        <div class="win-emoji" id="win-emoji">🦊</div>
+        <h2 id="win-title">Fox wins!</h2>
+        <p id="win-sub">What a race through the hedges.</p>
+        <div class="win-actions">
+          <button class="ghost-btn" type="submit" value="menu">Change setup</button>
+          <button class="primary-btn" type="submit" value="again">Play again</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
