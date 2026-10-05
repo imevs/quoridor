@@ -40,10 +40,17 @@
         <span id="turn-text">—</span>
       </div>
       <nav class="actions" aria-label="Game actions">
+        <button id="btn-sound" class="icon-btn" type="button" title="Toggle sound (M)" aria-label="Toggle sound">
+          <svg id="icon-sound-on" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          <svg id="icon-sound-off" viewBox="0 0 24 24" hidden><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M23 9l-6 6"/><path d="M17 9l6 6"/></svg>
+        </button>
+        <button id="btn-history" class="icon-btn" type="button" title="Match history (H)" aria-label="Match history">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
+        </button>
         <button id="btn-undo" class="icon-btn" type="button" title="Undo (Z)" aria-label="Undo">
           <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></svg>
         </button>
-        <button id="btn-camera" class="icon-btn" type="button" title="Reset view (C)" aria-label="Reset camera">
+        <button id="btn-camera" class="icon-btn" type="button" title="Switch view (C): Player / Top-Down / Isometric" aria-label="Camera preset">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" /></svg>
         </button>
         <button id="btn-rules" class="icon-btn" type="button" title="How to play" aria-label="How to play">
@@ -159,6 +166,21 @@
         <p class="keys"><kbd>Z</kbd> undo · <kbd>C</kbd> reset camera · <kbd>Esc</kbd> menu · drag to orbit, scroll to zoom</p>
         <button class="primary-btn" type="submit">Close</button>
       </form>
+    </dialog>
+
+    <!-- Match History dialog -->
+    <dialog id="history-dialog" class="panel history-panel" closedby="any">
+      <div class="panel-content">
+        <div class="panel-hero">
+          <h2>Match History</h2>
+          <p>Recent completed games and outcomes</p>
+        </div>
+        <div id="history-list" class="history-list"></div>
+        <div class="history-actions">
+          <button id="btn-clear-history" class="ghost-btn small" type="button">Clear</button>
+          <button id="btn-close-history" class="primary-btn" type="button">Close</button>
+        </div>
+      </div>
     </dialog>
 
     <!-- Win dialog -->

@@ -1,5 +1,5 @@
 import './style.css';
-import { BoardScene, type Pick } from './scene/BoardScene';
+import { BoardScene, type CameraPreset, type Pick } from './scene/BoardScene';
 import { Hud, type GameConfig, type Seat } from './ui/Hud';
 import { ANIMALS } from './game/animals';
 import {
@@ -10,6 +10,8 @@ import {
 } from './game/rules';
 import type { GameController, Update } from './net/controller';
 import { LocalController } from './net/LocalController';
+import { MatchHistoryManager } from './game/history';
+import { sounds } from './scene/sounds';
 
 class Game {
   private scene: BoardScene;
@@ -20,6 +22,8 @@ class Game {
   private queue: Update[] = [];
   private processing = false;
   private downAt: { x: number; y: number } | null = null;
+  private cameraPreset: CameraPreset = 'seat';
+  private movesCount = 0;
 
   constructor() {
     this.scene = new BoardScene(document.getElementById('stage')!);
@@ -28,6 +32,7 @@ class Game {
   async init(): Promise<void> {
     await this.scene.load((p) => this.hud.setLoading(p));
     this.bindUi();
+    this.hud.updateSoundUi(sounds.isEnabled);
     this.hud.hideLoader();
 
     // Check if entering via an invite link (?game=...)
@@ -79,13 +84,18 @@ class Game {
 
     document.getElementById('btn-menu')!.addEventListener('click', () => this.openMenu());
     document.getElementById('btn-rules')!.addEventListener('click', () => this.hud.rules.showModal());
-    document.getElementById('btn-camera')!.addEventListener('click', () => this.resetCamera());
+    this.hud.cameraBtn.addEventListener('click', () => this.cycleCameraPreset());
+    this.hud.soundBtn.addEventListener('click', () => this.toggleSound());
+    this.hud.historyBtn.addEventListener('click', () => this.showHistory());
+    this.hud.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
     this.hud.undoBtn.addEventListener('click', () => this.undo());
 
     window.addEventListener('keydown', (e) => {
       if (document.querySelector('dialog[open]')) return;
       if (e.key === 'z' || e.key === 'Z') this.undo();
-      else if (e.key === 'c' || e.key === 'C') this.resetCamera();
+      else if (e.key === 'c' || e.key === 'C') this.cycleCameraPreset();
+      else if (e.key === 'm' || e.key === 'M') this.toggleSound();
+      else if (e.key === 'h' || e.key === 'H') this.showHistory();
       else if (e.key === 'Escape') this.openMenu();
     });
   }
@@ -153,11 +163,12 @@ class Game {
       case 'reset': {
         this.seats = u.seats;
         this.state = u.state;
+        this.movesCount = 0;
         this.clearPreview();
         this.scene.setupPlayers(this.seats.map((s) => s.animal));
         this.scene.syncState(this.state);
         const focus = this.controller ? this.controller.viewSeat(this.state) : 0;
-        void this.scene.focusSeat(focus, 1.2);
+        void this.scene.setCameraPreset(this.cameraPreset, focus, 1.2);
         this.refreshTurnUi();
         break;
       }
@@ -177,6 +188,7 @@ class Game {
         this.clearPreview();
         this.scene.showMoveMarkers([]);
         if (u.action.type === 'move') {
+          this.movesCount++;
           await this.scene.animateMove(u.seat, u.action);
         } else {
           await this.scene.animateWall(u.action.wall);
@@ -221,7 +233,7 @@ class Game {
           : 'No walls remaining — click a tile to move',
       );
       this.scene.showMoveMarkers(legalMoves(s, s.turn));
-      if (this.controller?.kind === 'local') {
+      if (this.controller?.kind === 'local' && this.cameraPreset === 'seat') {
         void this.scene.focusSeat(s.turn, 0.9);
       }
     } else {
@@ -246,9 +258,20 @@ class Game {
     this.hud.renderPlayers(this.state, this.seats);
     this.hud.setTurn(seat, `${ANIMALS[seat.animal].name} wins!`);
     this.hud.setHint('');
+
+    const kind = (this.controller?.kind ?? 'ai') as 'ai' | 'local' | 'online';
+    MatchHistoryManager.record({
+      mode: kind,
+      players: (this.state.players.length === 4 ? 4 : 2),
+      winner,
+      winnerAnimal: seat.animal,
+      winnerName: ANIMALS[seat.animal].name,
+      movesCount: this.movesCount,
+      wallsCount: this.state.wallList.length,
+    });
+
     await this.scene.celebrate(winner);
 
-    const kind = this.controller?.kind;
     const canRematch = this.controller ? this.controller.canRematch() : false;
     let title = `${ANIMALS[seat.animal].name} wins`;
     let sub = 'Goal line reached.';
@@ -264,13 +287,46 @@ class Game {
 
   private undo(): void {
     if (this.processing || !this.controller?.canUndo()) return;
+    sounds.playWhoosh();
     this.controller.undo();
   }
 
-  private resetCamera(): void {
-    if (!this.state || !this.controller) return;
-    const seat = this.controller.viewSeat(this.state);
-    void this.scene.focusSeat(seat, 0.8);
+  private toggleSound(): void {
+    const enabled = sounds.toggle();
+    this.hud.updateSoundUi(enabled);
+    if (enabled) sounds.playTick();
+    this.hud.toast(enabled ? 'Sound On' : 'Sound Muted');
+  }
+
+  private showHistory(): void {
+    sounds.playTick();
+    this.hud.renderHistory(MatchHistoryManager.list());
+    this.hud.historyDialog.showModal();
+  }
+
+  private clearHistory(): void {
+    MatchHistoryManager.clear();
+    sounds.playTick();
+    this.hud.renderHistory([]);
+    this.hud.toast('Match history cleared');
+  }
+
+  private cycleCameraPreset(): void {
+    const next: Record<CameraPreset, CameraPreset> = {
+      seat: 'top',
+      top: 'iso',
+      iso: 'seat',
+    };
+    this.cameraPreset = next[this.cameraPreset];
+    const seat = this.controller ? this.controller.viewSeat(this.state) : 0;
+    void this.scene.setCameraPreset(this.cameraPreset, seat, 0.7);
+
+    const labels: Record<CameraPreset, string> = {
+      seat: 'Player View',
+      top: 'Top-Down View',
+      iso: 'Isometric View',
+    };
+    this.hud.toast(`Camera: ${labels[this.cameraPreset]}`);
   }
 
   // ------------------------------------------------------------------ Input

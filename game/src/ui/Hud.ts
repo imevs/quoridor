@@ -1,6 +1,7 @@
 import { ANIMALS, ANIMAL_ORDER, type AnimalId } from '../game/animals';
 import type { Difficulty } from '../game/ai';
 import { type GameState, shortestPath } from '../game/rules';
+import type { HistoryRecord } from '../game/history';
 
 export interface Seat {
   animal: AnimalId;
@@ -33,7 +34,16 @@ export class Hud {
   readonly menu = $<HTMLDialogElement>('menu-dialog');
   readonly rules = $<HTMLDialogElement>('rules-dialog');
   readonly win = $<HTMLDialogElement>('win-dialog');
+  readonly historyDialog = $<HTMLDialogElement>('history-dialog');
+  readonly historyList = $<HTMLElement>('history-list');
   readonly undoBtn = $<HTMLButtonElement>('btn-undo');
+  readonly soundBtn = $<HTMLButtonElement>('btn-sound');
+  readonly soundOnIcon = $<HTMLElement>('icon-sound-on');
+  readonly soundOffIcon = $<HTMLElement>('icon-sound-off');
+  readonly historyBtn = $<HTMLButtonElement>('btn-history');
+  readonly clearHistoryBtn = $<HTMLButtonElement>('btn-clear-history');
+  readonly closeHistoryBtn = $<HTMLButtonElement>('btn-close-history');
+  readonly cameraBtn = $<HTMLButtonElement>('btn-camera');
   private netEl = $<HTMLElement>('net-status');
   private undoBanner = $<HTMLElement>('undo-banner');
 
@@ -42,6 +52,9 @@ export class Hud {
     $<HTMLElement>('mode-online').hidden = !__ONLINE__;
     const form = $<HTMLFormElement>('menu-form');
     form.addEventListener('change', () => this.syncMenuFields());
+    this.closeHistoryBtn.addEventListener('click', () => {
+      this.historyDialog.close();
+    });
     this.restoreConfig();
     this.syncMenuFields();
   }
@@ -163,6 +176,43 @@ export class Hud {
     again.disabled = !canPlayAgain;
     again.textContent = canPlayAgain ? 'Play again' : 'Waiting for host…';
     this.win.showModal();
+  }
+
+  updateSoundUi(enabled: boolean): void {
+    this.soundOnIcon.hidden = !enabled;
+    this.soundOffIcon.hidden = enabled;
+    this.soundBtn.setAttribute('aria-label', enabled ? 'Mute sound' : 'Unmute sound');
+    this.soundBtn.title = enabled ? 'Mute sound (M)' : 'Unmute sound (M)';
+  }
+
+  renderHistory(records: HistoryRecord[]): void {
+    if (records.length === 0) {
+      this.historyList.innerHTML = '<div class="history-empty">No matches played yet. Win or finish a game to record it!</div>';
+      return;
+    }
+    this.historyList.innerHTML = records
+      .map((r) => {
+        const a = ANIMALS[r.winnerAnimal] ?? ANIMALS.fox;
+        const dateStr = new Date(r.date).toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const modeLabel = r.mode === 'ai' ? 'vs AI' : r.mode === 'online' ? 'Online' : 'Pass & Play';
+        return `<article class="history-item" style="--pc:${a.color}">
+          <div class="avatar" aria-hidden="true">${a.emoji}</div>
+          <div class="history-item-main">
+            <b>${r.winnerName} won</b>
+            <small>${modeLabel} · ${r.players} Players · ${dateStr}</small>
+          </div>
+          <div class="history-item-meta">
+            <span>${r.movesCount} moves</span>
+            <br><small>${r.wallsCount} hedges</small>
+          </div>
+        </article>`;
+      })
+      .join('');
   }
 
   // ---------------------------------------------------------------- Online

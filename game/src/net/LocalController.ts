@@ -4,6 +4,7 @@ import { type Action, type GameState, applyAction, cloneState, createGame, isLeg
 import { fromWire, toWire, type WireState } from '../game/serialize';
 import type { GameConfig, Seat } from '../ui/Hud';
 import type { GameController, Update } from './controller';
+import type { AiWorkerRequest, AiWorkerResponse } from '../worker/ai.worker';
 
 const AI_THINK_MS = 550;
 export const LOCAL_STORAGE_KEY = 'quoridors.offline_game';
@@ -25,10 +26,24 @@ export class LocalController implements GameController {
   private state!: GameState;
   private history: GameState[] = [];
   private timer = 0;
+  private worker: Worker | null = null;
+  private reqId = 0;
 
   constructor(config: GameConfig) {
     this.config = config;
     this.kind = config.mode === 'local' ? 'local' : 'ai';
+    if (typeof Worker !== 'undefined') {
+      try {
+        this.worker = new Worker(new URL('../worker/ai.worker.ts', import.meta.url), { type: 'module' });
+        this.worker.onmessage = (e: MessageEvent<AiWorkerResponse>) => {
+          if (e.data.id === this.reqId) {
+            this.submit(e.data.action);
+          }
+        };
+      } catch {
+        /* fallback to synchronous chooseAction */
+      }
+    }
   }
 
   static hasSavedGame(): boolean {
@@ -133,6 +148,7 @@ export class LocalController implements GameController {
   undo(): void {
     if (this.history.length === 0) return;
     window.clearTimeout(this.timer);
+    this.reqId++;
     let prev = this.history.pop()!;
     // Against the computer, rewind to the human's previous turn
     if (this.kind === 'ai') {
@@ -159,10 +175,21 @@ export class LocalController implements GameController {
     window.clearTimeout(this.timer);
     const s = this.state;
     if (s.winner !== null || this.seats[s.turn].human) return;
-    this.timer = window.setTimeout(() => this.submit(chooseAction(this.state, this.config.difficulty)), AI_THINK_MS);
+
+    this.timer = window.setTimeout(() => {
+      if (this.worker) {
+        const id = ++this.reqId;
+        this.worker.postMessage({ id, state: cloneState(this.state), difficulty: this.config.difficulty } satisfies AiWorkerRequest);
+      } else {
+        this.submit(chooseAction(this.state, this.config.difficulty));
+      }
+    }, AI_THINK_MS);
   }
 
   dispose(): void {
     window.clearTimeout(this.timer);
+    this.reqId++;
+    this.worker?.terminate();
+    this.worker = null;
   }
 }

@@ -12,6 +12,9 @@ import hedgeUrl from '../../../textures/hedge_leaf_texture.jpg?url';
 import { ANIMALS, type AnimalId } from '../game/animals';
 import { type Cell, type GameState, type Wall, N } from '../game/rules';
 import { Tweener, ease } from './tween';
+import { sounds } from './sounds';
+
+export type CameraPreset = 'seat' | 'top' | 'iso';
 
 /** Board geometry constants (must match build_quoridor_board.py). */
 const PITCH = 1.2;
@@ -444,6 +447,7 @@ export class BoardScene {
       pawn.model.rotation.y = yawFrom + dYaw * k * 0.5;
     }, ease.outCubic);
     // Hop arc
+    sounds.playHop();
     await this.tween.run(0.38 + dist * 0.05, (k) => {
       pawn.group.position.lerpVectors(from, target, k);
       pawn.model.position.y = Math.sin(Math.PI * k) * height;
@@ -462,6 +466,7 @@ export class BoardScene {
   }
 
   async animateWall(w: Wall): Promise<void> {
+    sounds.playWall();
     const obj = this.addWallMesh(w);
     obj.scale.set(1, 0.01, 1);
     const pos = wallToWorld(w).setY(0.5);
@@ -473,6 +478,7 @@ export class BoardScene {
   }
 
   async celebrate(seat: number): Promise<void> {
+    sounds.playWin();
     const pawn = this.pawns[seat];
     const base = pawn.group.position.clone();
     this.burst(base.clone().setY(1.2), [0xff8a3d, 0xf5c94c, 0x8fd14f, 0x7fb2e5, 0xff5d8f], 120, 4.5);
@@ -571,15 +577,37 @@ export class BoardScene {
   /** Smoothly orbit the camera behind a seat. */
   async focusSeat(seat: number, duration = 1.0): Promise<void> {
     const az = (this.seatCount === 4 ? SEAT_AZ_4 : SEAT_AZ_2)[seat] ?? 0;
+    await this.animateCameraSpherical(az, 0.82, this.idealDistance(), duration);
+  }
+
+  /** Set spectator camera preset (seat POV, direct top-down, or isometric angle). */
+  async setCameraPreset(preset: CameraPreset, seat = 0, duration = 0.8): Promise<void> {
+    sounds.playWhoosh();
+    switch (preset) {
+      case 'top':
+        // Top-down overhead view
+        await this.animateCameraSpherical(0, 0.05, this.idealDistance() * 0.95, duration);
+        break;
+      case 'iso':
+        // Isometric angled spectator view
+        await this.animateCameraSpherical(Math.PI / 4, 0.75, this.idealDistance() * 1.1, duration);
+        break;
+      case 'seat':
+      default:
+        await this.focusSeat(seat, duration);
+        break;
+    }
+  }
+
+  private async animateCameraSpherical(toTheta: number, toPhi: number, toR: number, duration: number): Promise<void> {
     const offset = this.camera.position.clone().sub(this.controls.target);
     const sph = new THREE.Spherical().setFromVector3(offset);
     const fromTheta = sph.theta;
-    let d = az - fromTheta;
+    let d = toTheta - fromTheta;
     d = Math.atan2(Math.sin(d), Math.cos(d));
     const fromPhi = sph.phi;
-    const toPhi = 0.82;
     const fromR = sph.radius;
-    const toR = this.idealDistance();
+
     await this.tween.run(duration, (k) => {
       sph.theta = fromTheta + d * k;
       sph.phi = fromPhi + (toPhi - fromPhi) * k;
