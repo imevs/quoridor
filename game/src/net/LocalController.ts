@@ -18,7 +18,7 @@ export interface LocalSavedGame {
 
 /** Offline play: vs computer or pass & play, with the rules engine in-process and localStorage persistence. */
 export class LocalController implements GameController {
-  readonly kind: 'ai' | 'local';
+  readonly kind: 'ai' | 'local' | 'bot_vs_bot';
   onUpdate: (u: Update) => void = () => {};
   onExit: (message?: string) => void = () => {};
   private config: GameConfig;
@@ -31,7 +31,7 @@ export class LocalController implements GameController {
 
   constructor(config: GameConfig) {
     this.config = config;
-    this.kind = config.mode === 'local' ? 'local' : 'ai';
+    this.kind = config.mode === 'local' ? 'local' : config.mode === 'bot_vs_bot' ? 'bot_vs_bot' : 'ai';
     if (typeof Worker !== 'undefined') {
       try {
         this.worker = new Worker(new URL('../worker/ai.worker.ts', import.meta.url), { type: 'module' });
@@ -101,7 +101,7 @@ export class LocalController implements GameController {
     const { animal, players } = this.config;
     const others = ANIMAL_ORDER.filter((a) => a !== animal);
     this.seats = Array.from({ length: players }, (_, i) => {
-      const human = this.kind === 'local' || i === 0;
+      const human = this.kind === 'local' || (this.kind === 'ai' && i === 0);
       return { animal: i === 0 ? animal : others[i - 1], human, local: human };
     });
     this.state = createGame(players);

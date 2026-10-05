@@ -3,7 +3,7 @@ import type { AnimalId } from './animals';
 export interface HistoryRecord {
   id: string;
   date: number; // timestamp
-  mode: 'ai' | 'local' | 'online';
+  mode: 'ai' | 'local' | 'online' | 'bot_vs_bot';
   players: 2 | 4;
   winner: number;
   winnerAnimal: AnimalId;

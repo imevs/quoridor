@@ -58,12 +58,22 @@ describe('MatchHistoryManager', () => {
       wallsCount: 8,
     });
 
+    const r3 = MatchHistoryManager.record({
+      mode: 'bot_vs_bot',
+      players: 2,
+      winner: 1,
+      winnerAnimal: 'wolf_white',
+      winnerName: 'Arctic Wolf',
+      movesCount: 18,
+      wallsCount: 6,
+    });
+
     const list = MatchHistoryManager.list();
-    expect(list.length).toBe(2);
-    expect(list[0].id).toBe(r2.id);
-    expect(list[0].winnerName).toBe('Bear');
-    expect(list[1].id).toBe(r1.id);
-    expect(list[1].winnerName).toBe('Fox');
+    expect(list.length).toBe(3);
+    expect(list[0].id).toBe(r3.id);
+    expect(list[0].mode).toBe('bot_vs_bot');
+    expect(list[1].id).toBe(r2.id);
+    expect(list[2].id).toBe(r1.id);
   });
 
   it('caps history at 30 items', () => {

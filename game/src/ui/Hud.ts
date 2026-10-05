@@ -12,8 +12,10 @@ export interface Seat {
   away?: boolean;
 }
 
+export type GameMode = 'ai' | 'local' | 'online' | 'bot_vs_bot';
+
 export interface GameConfig {
-  mode: 'ai' | 'local' | 'online';
+  mode: GameMode;
   players: 2 | 4;
   difficulty: Difficulty;
   animal: AnimalId;
@@ -81,8 +83,10 @@ export class Hud {
 
   private syncMenuFields(): void {
     const mode = this.formValue('mode');
-    $<HTMLElement>('difficulty-field').hidden = mode !== 'ai';
-    $<HTMLElement>('btn-start').textContent = mode === 'online' ? 'Create Online Game' : 'Start Game';
+    $<HTMLElement>('difficulty-field').hidden = mode === 'local';
+    $<HTMLElement>('pawn-field').hidden = mode === 'bot_vs_bot';
+    $<HTMLElement>('btn-start').textContent =
+      mode === 'online' ? 'Create Online Game' : mode === 'bot_vs_bot' ? 'Watch Bots Play' : 'Start Game';
   }
 
   private formValue(name: string): string {
@@ -93,7 +97,7 @@ export class Hud {
   readConfig(): GameConfig {
     const mode = this.formValue('mode');
     const cfg: GameConfig = {
-      mode: mode === 'local' ? 'local' : mode === 'online' && __ONLINE__ ? 'online' : 'ai',
+      mode: mode === 'local' ? 'local' : mode === 'bot_vs_bot' ? 'bot_vs_bot' : mode === 'online' && __ONLINE__ ? 'online' : 'ai',
       players: this.formValue('players') === '4' ? 4 : 2,
       difficulty: (this.formValue('difficulty') || 'medium') as Difficulty,
       animal: (this.formValue('animal') || 'fox') as AnimalId,
@@ -199,7 +203,7 @@ export class Hud {
           hour: '2-digit',
           minute: '2-digit',
         });
-        const modeLabel = r.mode === 'ai' ? 'vs AI' : r.mode === 'online' ? 'Online' : 'Pass & Play';
+        const modeLabel = r.mode === 'ai' ? 'vs AI' : r.mode === 'online' ? 'Online' : r.mode === 'bot_vs_bot' ? 'Bot Match' : 'Pass & Play';
         return `<article class="history-item" style="--pc:${a.color}">
           <div class="avatar" aria-hidden="true">${a.emoji}</div>
           <div class="history-item-main">

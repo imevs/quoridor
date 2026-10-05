@@ -114,6 +114,9 @@ class Game {
   private startLocal(config: GameConfig, restoreExisting = false): void {
     if (!restoreExisting) {
       LocalController.clearSaved();
+      if (config.mode === 'bot_vs_bot') {
+        this.cameraPreset = 'iso';
+      }
     }
     this.setController(new LocalController(config), restoreExisting);
   }
@@ -243,7 +246,7 @@ class Game {
           ? `${a.name} (Away)`
           : `${a.name}'s turn`;
       this.hud.setTurn(seat, label);
-      this.hud.setHint('');
+      this.hud.setHint(this.controller?.kind === 'bot_vs_bot' ? 'Spectating bot match · Press C to switch camera' : '');
       this.scene.showMoveMarkers([]);
       this.scene.showGhost(null);
     }
@@ -259,7 +262,7 @@ class Game {
     this.hud.setTurn(seat, `${ANIMALS[seat.animal].name} wins!`);
     this.hud.setHint('');
 
-    const kind = (this.controller?.kind ?? 'ai') as 'ai' | 'local' | 'online';
+    const kind = (this.controller?.kind ?? 'ai') as 'ai' | 'local' | 'online' | 'bot_vs_bot';
     MatchHistoryManager.record({
       mode: kind,
       players: (this.state.players.length === 4 ? 4 : 2),
@@ -278,6 +281,9 @@ class Game {
     if (kind === 'ai') {
       title = seat.human ? 'You win' : `${ANIMALS[seat.animal].name} wins`;
       sub = seat.human ? 'Goal line reached.' : 'Opponent reached the goal line.';
+    } else if (kind === 'bot_vs_bot') {
+      title = `${ANIMALS[seat.animal].name} wins!`;
+      sub = `Bot ${ANIMALS[seat.animal].name} reached the goal line.`;
     } else if (kind === 'online') {
       title = seat.local ? 'Victory!' : `${ANIMALS[seat.animal].name} wins`;
     }
