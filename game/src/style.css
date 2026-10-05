@@ -653,9 +653,55 @@ kbd {
   box-shadow: 0 2px 0 rgb(0 0 0 / 0.1);
 }
 
+dialog.panel form,
+.lobby-content,
+.panel-content {
+  position: relative;
+}
+
+.menu-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.menu-actions button {
+  flex: 1;
+}
+
 .win form {
   text-align: center;
   align-items: center;
+}
+
+.dialog-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0;
+  background: rgb(29 51 25 / 0.08);
+  color: var(--ink-soft);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.dialog-close:hover {
+  background: rgb(29 51 25 / 0.16);
+  color: var(--ink);
+  transform: scale(1.08);
+}
+
+.dialog-close:active {
+  transform: scale(0.95);
 }
 
 .win-emoji {
@@ -679,8 +725,18 @@ kbd {
 
 .win-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
-  margin-top: 8px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.win-actions button {
+  flex: 1 1 calc(50% - 10px);
+  min-width: 130px;
+  padding: 12px 16px;
+  font-size: 16px;
 }
 
 /* ---------------------------------------------------------------- Network status & Undo Banner */

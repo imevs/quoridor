@@ -72,6 +72,8 @@ class Game {
         } else {
           this.startLocal(cfg);
         }
+      } else if (!this.controller) {
+        this.startLocal(this.hud.readConfig());
       }
     });
 
@@ -92,6 +94,7 @@ class Game {
     this.hud.historyBtn.addEventListener('click', () => this.showHistory());
     this.hud.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
     this.hud.movesBtn.addEventListener('click', () => this.showMovesDialog());
+    this.hud.winMovesBtn.addEventListener('click', () => this.showMovesDialog());
     this.hud.undoBtn.addEventListener('click', () => this.undo());
 
     this.hud.historyList.addEventListener('click', (e) => {
@@ -388,7 +391,20 @@ class Game {
         this.hud.movesDialog.close();
       });
     } else {
-      this.hud.renderMovesList(this.matchActions, this.seats, this.matchActions.length);
+      const onSelect = this.state.winner !== null && this.matchActions.length > 0
+        ? (step: number) => {
+            const lastRecord = MatchHistoryManager.list()[0];
+            if (lastRecord && lastRecord.actions && lastRecord.actions.length > 0) {
+              if (this.hud.win.open) this.hud.win.close();
+              this.hud.movesDialog.close();
+              this.startReplay(lastRecord);
+              if (this.controller instanceof ReplayController) {
+                this.controller.jumpTo(step);
+              }
+            }
+          }
+        : undefined;
+      this.hud.renderMovesList(this.matchActions, this.seats, this.matchActions.length, onSelect);
     }
     this.hud.movesDialog.showModal();
   }

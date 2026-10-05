@@ -29,6 +29,7 @@ export class Lobby {
     this.linkEl.addEventListener('focus', () => this.linkEl.select(), { signal });
     this.startBtn.addEventListener('click', () => handlers.onStart(), { signal });
     $('btn-leave').addEventListener('click', () => handlers.onLeave(), { signal });
+    $('btn-lobby-x').addEventListener('click', () => handlers.onLeave(), { signal });
     this.shareBtn.hidden = typeof navigator.share !== 'function';
     this.shareBtn.addEventListener(
       'click',

@@ -35,14 +35,22 @@ export class Hud {
   private toastEl = $<HTMLElement>('toast');
   private toastTimer = 0;
   readonly menu = $<HTMLDialogElement>('menu-dialog');
+  readonly menuCloseBtn = $<HTMLButtonElement>('btn-menu-close');
+  readonly menuXBtn = $<HTMLButtonElement>('btn-menu-x');
   readonly rules = $<HTMLDialogElement>('rules-dialog');
+  readonly rulesXBtn = $<HTMLButtonElement>('btn-rules-x');
   readonly win = $<HTMLDialogElement>('win-dialog');
+  readonly winMovesBtn = $<HTMLButtonElement>('btn-win-moves');
+  readonly winCloseBtn = $<HTMLButtonElement>('btn-win-close');
+  readonly winXBtn = $<HTMLButtonElement>('btn-win-x');
   readonly historyDialog = $<HTMLDialogElement>('history-dialog');
   readonly historyList = $<HTMLElement>('history-list');
+  readonly historyXBtn = $<HTMLButtonElement>('btn-history-x');
   readonly movesDialog = $<HTMLDialogElement>('moves-dialog');
   readonly movesList = $<HTMLElement>('moves-list');
   readonly movesBtn = $<HTMLButtonElement>('btn-moves');
   readonly closeMovesBtn = $<HTMLButtonElement>('btn-close-moves');
+  readonly movesXBtn = $<HTMLButtonElement>('btn-moves-x');
 
   readonly replayBar = $<HTMLElement>('replay-bar');
   readonly replayTitle = $<HTMLElement>('replay-title');
@@ -73,11 +81,32 @@ export class Hud {
     $<HTMLElement>('mode-online').hidden = !__ONLINE__;
     const form = $<HTMLFormElement>('menu-form');
     form.addEventListener('change', () => this.syncMenuFields());
+    this.menuCloseBtn.addEventListener('click', () => {
+      this.menu.close();
+    });
+    this.menuXBtn.addEventListener('click', () => {
+      this.menu.close();
+    });
+    this.rulesXBtn.addEventListener('click', () => {
+      this.rules.close();
+    });
     this.closeHistoryBtn.addEventListener('click', () => {
+      this.historyDialog.close();
+    });
+    this.historyXBtn.addEventListener('click', () => {
       this.historyDialog.close();
     });
     this.closeMovesBtn.addEventListener('click', () => {
       this.movesDialog.close();
+    });
+    this.movesXBtn.addEventListener('click', () => {
+      this.movesDialog.close();
+    });
+    this.winCloseBtn.addEventListener('click', () => {
+      this.win.close();
+    });
+    this.winXBtn.addEventListener('click', () => {
+      this.win.close();
     });
     this.restoreConfig();
     this.syncMenuFields();

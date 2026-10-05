@@ -112,8 +112,9 @@
     </div>
 
     <!-- New game dialog -->
-    <dialog id="menu-dialog" class="panel">
+    <dialog id="menu-dialog" class="panel" closedby="any">
       <form id="menu-form" method="dialog">
+        <button id="btn-menu-x" class="dialog-close" type="button" aria-label="Close dialog">✕</button>
         <div class="panel-hero">
           <h2>New Game</h2>
           <p>Reach the opposite edge first. Place walls to delay your rivals.</p>
@@ -151,13 +152,17 @@
           <div id="animal-picker" class="animal-picker"></div>
         </fieldset>
 
-        <button id="btn-start" class="primary-btn" type="submit" value="start">Start Game</button>
+        <div class="menu-actions">
+          <button id="btn-menu-close" class="ghost-btn" type="button">Close</button>
+          <button id="btn-start" class="primary-btn" type="submit" value="start">Start Game</button>
+        </div>
       </form>
     </dialog>
 
     <!-- Online Lobby Dialog -->
-    <dialog id="lobby-dialog" class="panel lobby">
+    <dialog id="lobby-dialog" class="panel lobby" closedby="any">
       <div class="lobby-content">
+        <button id="btn-lobby-x" class="dialog-close" type="button" aria-label="Close dialog">✕</button>
         <div class="panel-hero">
           <h2>Online Game</h2>
           <p id="lobby-status">Share the link with friends to play together.</p>
@@ -187,6 +192,7 @@
     <!-- Rules dialog -->
     <dialog id="rules-dialog" class="panel" closedby="any">
       <form method="dialog">
+        <button id="btn-rules-x" class="dialog-close" type="button" aria-label="Close dialog">✕</button>
         <div class="panel-hero">
           <h2>How to Play</h2>
         </div>
@@ -205,6 +211,7 @@
     <!-- Match History dialog -->
     <dialog id="history-dialog" class="panel history-panel" closedby="any">
       <div class="panel-content">
+        <button id="btn-history-x" class="dialog-close" type="button" aria-label="Close dialog">✕</button>
         <div class="panel-hero">
           <h2>Match History</h2>
           <p>Recent completed games and outcomes</p>
@@ -220,6 +227,7 @@
     <!-- Move Log dialog -->
     <dialog id="moves-dialog" class="panel moves-panel" closedby="any">
       <div class="panel-content">
+        <button id="btn-moves-x" class="dialog-close" type="button" aria-label="Close dialog">✕</button>
         <div class="panel-hero">
           <h2>Move History</h2>
           <p id="moves-subtitle">Click any move to jump to that board position</p>
@@ -232,12 +240,15 @@
     </dialog>
 
     <!-- Win dialog -->
-    <dialog id="win-dialog" class="panel win">
+    <dialog id="win-dialog" class="panel win" closedby="any">
       <form method="dialog">
+        <button id="btn-win-x" class="dialog-close" type="button" aria-label="Close dialog">✕</button>
         <div class="win-emoji" id="win-emoji">🦊</div>
         <h2 id="win-title">Victory</h2>
         <p id="win-sub"></p>
         <div class="win-actions">
+          <button id="btn-win-moves" class="ghost-btn" type="button">List of steps</button>
+          <button id="btn-win-close" class="ghost-btn" type="button">Close</button>
           <button class="ghost-btn" type="submit" value="menu">New setup</button>
           <button id="btn-again" class="primary-btn" type="submit" value="again">Play again</button>
         </div>
