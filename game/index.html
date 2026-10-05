@@ -59,6 +59,11 @@
         <button id="btn-rules" class="icon-btn" type="button" title="How to play" aria-label="How to play">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M9.6 9.2a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.7" /><path d="M12 17h.01" /></svg>
         </button>
+        <button id="btn-stop-bots" class="stop-btn" type="button" title="Stop bot match (S)" aria-label="Stop bot match" hidden>
+          <svg id="icon-stop-bots" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg>
+          <svg id="icon-resume-bots" viewBox="0 0 24 24" hidden><polygon points="6 4 20 12 6 20 6 4" fill="currentColor"/></svg>
+          <span id="text-stop-bots">Stop Match</span>
+        </button>
         <button id="btn-menu" class="icon-btn accent" type="button" title="New game (Esc)" aria-label="New game">
           <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
         </button>
@@ -154,6 +159,7 @@
 
         <div class="menu-actions">
           <button id="btn-menu-close" class="ghost-btn" type="button">Close</button>
+          <button id="btn-menu-stop" class="ghost-btn alert" type="button" hidden>Stop Match</button>
           <button id="btn-start" class="primary-btn" type="submit" value="start">Start Game</button>
         </div>
       </form>

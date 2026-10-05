@@ -72,8 +72,6 @@ class Game {
         } else {
           this.startLocal(cfg);
         }
-      } else if (!this.controller) {
-        this.startLocal(this.hud.readConfig());
       }
     });
 
@@ -95,6 +93,8 @@ class Game {
     this.hud.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
     this.hud.movesBtn.addEventListener('click', () => this.showMovesDialog());
     this.hud.winMovesBtn.addEventListener('click', () => this.showMovesDialog());
+    this.hud.stopBotsBtn.addEventListener('click', () => this.toggleBotMatch());
+    this.hud.menuStopBtn.addEventListener('click', () => this.toggleBotMatch());
     this.hud.undoBtn.addEventListener('click', () => this.undo());
 
     this.hud.historyList.addEventListener('click', (e) => {
@@ -123,7 +123,11 @@ class Game {
     this.hud.replayLastBtn.addEventListener('click', () => {
       if (this.controller instanceof ReplayController) this.controller.last();
     });
-    this.hud.replayExitBtn.addEventListener('click', () => this.openMenu());
+    this.hud.replayExitBtn.addEventListener('click', () => {
+      this.controller?.dispose();
+      this.controller = null;
+      this.openMenu();
+    });
     this.hud.replayMovesBtn.addEventListener('click', () => this.showMovesDialog());
 
     window.addEventListener('keydown', (e) => {
@@ -160,17 +164,16 @@ class Game {
       else if (e.key === 'm' || e.key === 'M') this.toggleSound();
       else if (e.key === 'h' || e.key === 'H') this.showHistory();
       else if (e.key === 'l' || e.key === 'L') this.showMovesDialog();
+      else if ((e.key === 's' || e.key === 'S') && this.controller?.kind === 'bot_vs_bot') this.toggleBotMatch();
       else if (e.key === 'Escape') this.openMenu();
     });
   }
 
   private openMenu(): void {
     this.hud.setReplayBarVisible(false);
-    LocalController.clearSaved();
-    this.controller?.dispose();
-    this.controller = null;
-    this.queue = [];
-    this.processing = false;
+    if (this.controller?.kind === 'bot_vs_bot' && this.controller instanceof LocalController) {
+      this.hud.updateBotMatchPaused(this.controller.paused);
+    }
     this.clearPreview();
     this.hud.menu.returnValue = '';
     if (!this.hud.menu.open) this.hud.menu.showModal();
@@ -178,6 +181,7 @@ class Game {
 
   private startLocal(config: GameConfig, restoreExisting = false): void {
     this.hud.setReplayBarVisible(false);
+    this.hud.setBotMatchActive(config.mode === 'bot_vs_bot');
     if (!restoreExisting) {
       LocalController.clearSaved();
       if (config.mode === 'bot_vs_bot') {
@@ -190,6 +194,7 @@ class Game {
   private async startOnline(intent: import('./net/OnlineController').OnlineIntent): Promise<void> {
     if (!__ONLINE__) return;
     this.hud.setReplayBarVisible(false);
+    this.hud.setBotMatchActive(false);
     const { OnlineController } = await import('./net/OnlineController');
     this.setController(new OnlineController(this.hud, intent));
   }
@@ -309,15 +314,42 @@ class Game {
         void this.scene.focusSeat(s.turn, 0.9);
       }
     } else {
-      const label = !seat.human
-        ? `${a.name} is thinking...`
-        : seat.away
-          ? `${a.name} (Away)`
-          : `${a.name}'s turn`;
+      const isPaused = this.controller instanceof LocalController && this.controller.paused;
+      const label = isPaused
+        ? `${a.name} (Paused)`
+        : !seat.human
+          ? `${a.name} is thinking...`
+          : seat.away
+            ? `${a.name} (Away)`
+            : `${a.name}'s turn`;
       this.hud.setTurn(seat, label);
-      this.hud.setHint(this.controller?.kind === 'bot_vs_bot' ? 'Spectating bot match · Press C to switch camera' : '');
+      const hintText = this.controller?.kind === 'bot_vs_bot'
+        ? (isPaused
+            ? 'Bot match paused · Press S or Resume to continue'
+            : 'Spectating bot match · Press S to pause · Press C for camera')
+        : '';
+      this.hud.setHint(hintText);
       this.scene.showMoveMarkers([]);
       this.scene.showGhost(null);
+    }
+  }
+
+  private toggleBotMatch(): void {
+    if (!(this.controller instanceof LocalController) || this.controller.kind !== 'bot_vs_bot') return;
+    sounds.playTick();
+    if (this.controller.paused) {
+      this.controller.resume();
+      this.hud.updateBotMatchPaused(false);
+      this.refreshTurnUi();
+      this.hud.toast('Match resumed');
+      if (this.hud.menu.open) this.hud.menu.close();
+    } else {
+      this.controller.pause();
+      this.hud.updateBotMatchPaused(true);
+      const a = ANIMALS[this.seats[this.state.turn].animal];
+      this.hud.setTurn(this.seats[this.state.turn], `${a.name} (Paused)`);
+      this.hud.setHint('Bot match paused · Press S or Resume to continue');
+      this.hud.toast('Match paused');
     }
   }
 
@@ -326,6 +358,7 @@ class Game {
   }
 
   private async finish(winner: number): Promise<void> {
+    this.hud.setBotMatchActive(false);
     const seat = this.seats[winner];
     this.hud.renderPlayers(this.state, this.seats);
     this.hud.setTurn(seat, `${ANIMALS[seat.animal].name} wins!`);
@@ -364,6 +397,7 @@ class Game {
 
   private startReplay(record: HistoryRecord): void {
     LocalController.clearSaved();
+    this.hud.setBotMatchActive(false);
     this.cameraPreset = 'iso';
     this.hud.setReplayBarVisible(true);
     const ctrl = new ReplayController(record);

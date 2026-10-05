@@ -31,5 +31,8 @@ export interface GameController {
   viewSeat(state: GameState): number;
   /** The presenter has finished animating all queued updates. */
   idle(): void;
+  paused?: boolean;
+  pause?(): void;
+  resume?(): void;
   dispose(): void;
 }

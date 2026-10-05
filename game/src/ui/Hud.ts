@@ -72,6 +72,11 @@ export class Hud {
   readonly historyBtn = $<HTMLButtonElement>('btn-history');
   readonly clearHistoryBtn = $<HTMLButtonElement>('btn-clear-history');
   readonly closeHistoryBtn = $<HTMLButtonElement>('btn-close-history');
+  readonly stopBotsBtn = $<HTMLButtonElement>('btn-stop-bots');
+  readonly stopBotsIcon = $<HTMLElement>('icon-stop-bots');
+  readonly resumeBotsIcon = $<HTMLElement>('icon-resume-bots');
+  readonly stopBotsText = $<HTMLElement>('text-stop-bots');
+  readonly menuStopBtn = $<HTMLButtonElement>('btn-menu-stop');
   readonly cameraBtn = $<HTMLButtonElement>('btn-camera');
   private netEl = $<HTMLElement>('net-status');
   private undoBanner = $<HTMLElement>('undo-banner');
@@ -273,6 +278,32 @@ export class Hud {
         </article>`;
       })
       .join('');
+  }
+
+  setBotMatchActive(active: boolean, paused = false): void {
+    this.stopBotsBtn.hidden = !active;
+    this.menuStopBtn.hidden = !active;
+    this.updateBotMatchPaused(paused);
+  }
+
+  updateBotMatchPaused(paused: boolean): void {
+    if (paused) {
+      this.stopBotsBtn.classList.add('paused');
+      this.stopBotsIcon.hidden = true;
+      this.resumeBotsIcon.hidden = false;
+      this.stopBotsText.textContent = 'Resume';
+      this.stopBotsBtn.setAttribute('title', 'Resume bot match (S)');
+      this.stopBotsBtn.setAttribute('aria-label', 'Resume bot match');
+      this.menuStopBtn.textContent = 'Resume Match';
+    } else {
+      this.stopBotsBtn.classList.remove('paused');
+      this.stopBotsIcon.hidden = false;
+      this.resumeBotsIcon.hidden = true;
+      this.stopBotsText.textContent = 'Stop Match';
+      this.stopBotsBtn.setAttribute('title', 'Stop bot match (S)');
+      this.stopBotsBtn.setAttribute('aria-label', 'Stop bot match');
+      this.menuStopBtn.textContent = 'Stop Match';
+    }
   }
 
   setReplayBarVisible(visible: boolean): void {

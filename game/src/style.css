@@ -261,6 +261,51 @@ button {
   border-color: transparent;
 }
 
+.stop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgb(220 53 69 / 0.35);
+  background: color-mix(in srgb, #dc3545 14%, white);
+  color: #c92a2a;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px -4px rgb(220 53 69 / 0.25);
+  transition: transform 0.15s, background 0.15s, box-shadow 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.stop-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.stop-btn:hover {
+  background: color-mix(in srgb, #dc3545 22%, white);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -4px rgb(220 53 69 / 0.35);
+}
+
+.stop-btn:active {
+  transform: translateY(1px);
+}
+
+.stop-btn.paused {
+  border-color: rgb(40 167 69 / 0.35);
+  background: color-mix(in srgb, var(--leaf) 18%, white);
+  color: var(--leaf-deep);
+  box-shadow: 0 4px 12px -4px rgb(40 167 69 / 0.25);
+}
+
+.stop-btn.paused:hover {
+  background: color-mix(in srgb, var(--leaf) 28%, white);
+  box-shadow: 0 6px 16px -4px rgb(40 167 69 / 0.35);
+}
+
 :focus-visible {
   outline: 3px solid color-mix(in srgb, var(--honey) 80%, white);
   outline-offset: 2px;
@@ -624,6 +669,16 @@ dialog.panel form {
 
 .ghost-btn:hover {
   background: rgb(29 51 25 / 0.14);
+}
+
+.ghost-btn.alert {
+  color: #c92a2a;
+  background: color-mix(in srgb, #dc3545 12%, white);
+  border: 1px solid rgb(220 53 69 / 0.25);
+}
+
+.ghost-btn.alert:hover {
+  background: color-mix(in srgb, #dc3545 20%, white);
 }
 
 .rules {

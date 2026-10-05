@@ -19,6 +19,7 @@ export interface LocalSavedGame {
 /** Offline play: vs computer or pass & play, with the rules engine in-process and localStorage persistence. */
 export class LocalController implements GameController {
   readonly kind: 'ai' | 'local' | 'bot_vs_bot';
+  paused = false;
   onUpdate: (u: Update) => void = () => {};
   onExit: (message?: string) => void = () => {};
   private config: GameConfig;
@@ -77,6 +78,7 @@ export class LocalController implements GameController {
   }
 
   start(restoreExisting = false): void {
+    this.paused = false;
     window.clearTimeout(this.timer);
 
     if (restoreExisting) {
@@ -171,10 +173,22 @@ export class LocalController implements GameController {
     return this.kind === 'local' ? s.turn : 0;
   }
 
+  pause(): void {
+    this.paused = true;
+    window.clearTimeout(this.timer);
+    this.reqId++;
+  }
+
+  resume(): void {
+    if (!this.paused) return;
+    this.paused = false;
+    this.idle();
+  }
+
   idle(): void {
     window.clearTimeout(this.timer);
     const s = this.state;
-    if (s.winner !== null || this.seats[s.turn].human) return;
+    if (s.winner !== null || this.seats[s.turn].human || this.paused) return;
 
     this.timer = window.setTimeout(() => {
       if (this.worker) {
@@ -187,6 +201,7 @@ export class LocalController implements GameController {
   }
 
   dispose(): void {
+    this.paused = false;
     window.clearTimeout(this.timer);
     this.reqId++;
     this.worker?.terminate();
