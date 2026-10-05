@@ -1,7 +1,8 @@
 import { ANIMALS, ANIMAL_ORDER, type AnimalId } from '../game/animals';
 import type { Difficulty } from '../game/ai';
-import { type GameState, shortestPath } from '../game/rules';
+import { type Action, type GameState, shortestPath } from '../game/rules';
 import type { HistoryRecord } from '../game/history';
+import { formatActionDescription, formatNotation } from '../game/replay';
 
 export interface Seat {
   animal: AnimalId;
@@ -38,6 +39,24 @@ export class Hud {
   readonly win = $<HTMLDialogElement>('win-dialog');
   readonly historyDialog = $<HTMLDialogElement>('history-dialog');
   readonly historyList = $<HTMLElement>('history-list');
+  readonly movesDialog = $<HTMLDialogElement>('moves-dialog');
+  readonly movesList = $<HTMLElement>('moves-list');
+  readonly movesBtn = $<HTMLButtonElement>('btn-moves');
+  readonly closeMovesBtn = $<HTMLButtonElement>('btn-close-moves');
+
+  readonly replayBar = $<HTMLElement>('replay-bar');
+  readonly replayTitle = $<HTMLElement>('replay-title');
+  readonly replayMoveDesc = $<HTMLElement>('replay-move-desc');
+  readonly replayStep = $<HTMLElement>('replay-step');
+  readonly replayPlayBtn = $<HTMLButtonElement>('btn-replay-play');
+  readonly replayPlayIcon = $<HTMLElement>('replay-play-icon');
+  readonly replayPrevBtn = $<HTMLButtonElement>('btn-replay-prev');
+  readonly replayNextBtn = $<HTMLButtonElement>('btn-replay-next');
+  readonly replayFirstBtn = $<HTMLButtonElement>('btn-replay-first');
+  readonly replayLastBtn = $<HTMLButtonElement>('btn-replay-last');
+  readonly replayExitBtn = $<HTMLButtonElement>('btn-replay-exit');
+  readonly replayMovesBtn = $<HTMLButtonElement>('btn-replay-moves');
+
   readonly undoBtn = $<HTMLButtonElement>('btn-undo');
   readonly soundBtn = $<HTMLButtonElement>('btn-sound');
   readonly soundOnIcon = $<HTMLElement>('icon-sound-on');
@@ -56,6 +75,9 @@ export class Hud {
     form.addEventListener('change', () => this.syncMenuFields());
     this.closeHistoryBtn.addEventListener('click', () => {
       this.historyDialog.close();
+    });
+    this.closeMovesBtn.addEventListener('click', () => {
+      this.movesDialog.close();
     });
     this.restoreConfig();
     this.syncMenuFields();
@@ -204,11 +226,16 @@ export class Hud {
           minute: '2-digit',
         });
         const modeLabel = r.mode === 'ai' ? 'vs AI' : r.mode === 'online' ? 'Online' : r.mode === 'bot_vs_bot' ? 'Bot Match' : 'Pass & Play';
+        const hasReplay = r.actions && r.actions.length > 0;
+        const replayBtn = hasReplay
+          ? `<div class="history-item-actions"><button class="ghost-btn small btn-replay-match" data-id="${r.id}" type="button">▶ Watch Replay</button></div>`
+          : '';
         return `<article class="history-item" style="--pc:${a.color}">
           <div class="avatar" aria-hidden="true">${a.emoji}</div>
           <div class="history-item-main">
             <b>${r.winnerName} won</b>
             <small>${modeLabel} · ${r.players} Players · ${dateStr}</small>
+            ${replayBtn}
           </div>
           <div class="history-item-meta">
             <span>${r.movesCount} moves</span>
@@ -217,6 +244,54 @@ export class Hud {
         </article>`;
       })
       .join('');
+  }
+
+  setReplayBarVisible(visible: boolean): void {
+    this.replayBar.hidden = !visible;
+  }
+
+  updateReplayUi(title: string, desc: string, step: number, total: number, isPlaying: boolean): void {
+    this.replayTitle.textContent = title;
+    this.replayMoveDesc.textContent = desc;
+    this.replayStep.textContent = `${step} / ${total}`;
+    this.replayPlayIcon.textContent = isPlaying ? '❚❚' : '▶';
+    this.replayPlayBtn.setAttribute('title', isPlaying ? 'Pause (Space)' : 'Play (Space)');
+    this.replayPrevBtn.disabled = step <= 0;
+    this.replayFirstBtn.disabled = step <= 0;
+    this.replayNextBtn.disabled = step >= total;
+    this.replayLastBtn.disabled = step >= total;
+  }
+
+  renderMovesList(actions: Action[], seats: Seat[], activeIndex: number, onSelect?: (idx: number) => void): void {
+    if (actions.length === 0) {
+      this.movesList.innerHTML = '<div class="history-empty">No moves played yet.</div>';
+      return;
+    }
+    const numPlayers = seats.length || 2;
+    this.movesList.innerHTML = actions
+      .map((action, i) => {
+        const seat = seats[i % numPlayers];
+        const desc = formatActionDescription(action, seat?.animal);
+        const notation = formatNotation(action);
+        const isActive = i + 1 === activeIndex;
+        return `<div class="move-item ${isActive ? 'active' : ''}" data-step="${i + 1}">
+          <span class="move-num">#${i + 1}</span>
+          <span class="move-desc">${desc}</span>
+          <span class="move-notation">${notation}</span>
+        </div>`;
+      })
+      .join('');
+
+    if (onSelect) {
+      this.movesList.querySelectorAll<HTMLElement>('.move-item').forEach((el) => {
+        el.addEventListener('click', () => {
+          const step = Number(el.dataset.step);
+          if (!Number.isNaN(step)) {
+            onSelect(step);
+          }
+        });
+      });
+    }
   }
 
   // ---------------------------------------------------------------- Online

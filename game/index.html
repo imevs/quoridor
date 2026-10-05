@@ -47,6 +47,9 @@
         <button id="btn-history" class="icon-btn" type="button" title="Match history (H)" aria-label="Match history">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
         </button>
+        <button id="btn-moves" class="icon-btn" type="button" title="Move history log (L)" aria-label="Move history log">
+          <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
         <button id="btn-undo" class="icon-btn" type="button" title="Undo (Z)" aria-label="Undo">
           <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></svg>
         </button>
@@ -77,6 +80,36 @@
     <!-- Contextual hint + toast -->
     <div id="hint" class="hint glass"></div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Replay Bar (Spectator & Match Playback) -->
+    <div id="replay-bar" class="replay-bar glass" hidden>
+      <div class="replay-info">
+        <span id="replay-title" class="replay-title">Replay</span>
+        <span id="replay-move-desc" class="replay-move-desc">—</span>
+      </div>
+      <div class="replay-controls">
+        <button id="btn-replay-first" class="icon-btn small" type="button" title="First move (Home)" aria-label="First move">
+          <svg viewBox="0 0 24 24"><polyline points="11 19 4 12 11 5"/><polyline points="18 19 11 12 18 5"/></svg>
+        </button>
+        <button id="btn-replay-prev" class="icon-btn small" type="button" title="Previous move (Left arrow)" aria-label="Previous move">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button id="btn-replay-play" class="primary-btn small replay-play-btn" type="button" title="Play / Pause (Space)" aria-label="Play">
+          <span id="replay-play-icon">▶</span>
+        </button>
+        <button id="btn-replay-next" class="icon-btn small" type="button" title="Next move (Right arrow)" aria-label="Next move">
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button id="btn-replay-last" class="icon-btn small" type="button" title="Last move (End)" aria-label="Last move">
+          <svg viewBox="0 0 24 24"><polyline points="13 19 20 12 13 5"/><polyline points="6 19 13 12 6 5"/></svg>
+        </button>
+      </div>
+      <div class="replay-meta">
+        <span id="replay-step" class="replay-step">0 / 0</span>
+        <button id="btn-replay-moves" class="ghost-btn small" type="button" title="View move log">Moves</button>
+        <button id="btn-replay-exit" class="ghost-btn small" type="button" title="Exit replay (Esc)">Exit</button>
+      </div>
+    </div>
 
     <!-- New game dialog -->
     <dialog id="menu-dialog" class="panel">
@@ -180,6 +213,20 @@
         <div class="history-actions">
           <button id="btn-clear-history" class="ghost-btn small" type="button">Clear</button>
           <button id="btn-close-history" class="primary-btn" type="button">Close</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Move Log dialog -->
+    <dialog id="moves-dialog" class="panel moves-panel" closedby="any">
+      <div class="panel-content">
+        <div class="panel-hero">
+          <h2>Move History</h2>
+          <p id="moves-subtitle">Click any move to jump to that board position</p>
+        </div>
+        <div id="moves-list" class="moves-list"></div>
+        <div class="moves-actions">
+          <button id="btn-close-moves" class="primary-btn" type="button">Close</button>
         </div>
       </div>
     </dialog>

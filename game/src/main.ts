@@ -10,7 +10,9 @@ import {
 } from './game/rules';
 import type { GameController, Update } from './net/controller';
 import { LocalController } from './net/LocalController';
-import { MatchHistoryManager } from './game/history';
+import { MatchHistoryManager, type HistoryRecord } from './game/history';
+import { ReplayController } from './net/ReplayController';
+import { formatActionDescription } from './game/replay';
 import { sounds } from './scene/sounds';
 
 class Game {
@@ -24,6 +26,7 @@ class Game {
   private downAt: { x: number; y: number } | null = null;
   private cameraPreset: CameraPreset = 'seat';
   private movesCount = 0;
+  private matchActions: Action[] = [];
 
   constructor() {
     this.scene = new BoardScene(document.getElementById('stage')!);
@@ -88,19 +91,78 @@ class Game {
     this.hud.soundBtn.addEventListener('click', () => this.toggleSound());
     this.hud.historyBtn.addEventListener('click', () => this.showHistory());
     this.hud.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
+    this.hud.movesBtn.addEventListener('click', () => this.showMovesDialog());
     this.hud.undoBtn.addEventListener('click', () => this.undo());
+
+    this.hud.historyList.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.btn-replay-match');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const record = MatchHistoryManager.list().find((r) => r.id === id);
+      if (record && record.actions && record.actions.length > 0) {
+        this.hud.historyDialog.close();
+        this.startReplay(record);
+      }
+    });
+
+    this.hud.replayPlayBtn.addEventListener('click', () => {
+      if (this.controller instanceof ReplayController) this.controller.togglePlay();
+    });
+    this.hud.replayPrevBtn.addEventListener('click', () => {
+      if (this.controller instanceof ReplayController) this.controller.prev();
+    });
+    this.hud.replayNextBtn.addEventListener('click', () => {
+      if (this.controller instanceof ReplayController) this.controller.next();
+    });
+    this.hud.replayFirstBtn.addEventListener('click', () => {
+      if (this.controller instanceof ReplayController) this.controller.first();
+    });
+    this.hud.replayLastBtn.addEventListener('click', () => {
+      if (this.controller instanceof ReplayController) this.controller.last();
+    });
+    this.hud.replayExitBtn.addEventListener('click', () => this.openMenu());
+    this.hud.replayMovesBtn.addEventListener('click', () => this.showMovesDialog());
 
     window.addEventListener('keydown', (e) => {
       if (document.querySelector('dialog[open]')) return;
+      if (this.controller instanceof ReplayController) {
+        if (e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
+          this.controller.togglePlay();
+        } else if (e.key === 'ArrowLeft' || e.key === '[') {
+          e.preventDefault();
+          this.controller.prev();
+        } else if (e.key === 'ArrowRight' || e.key === ']') {
+          e.preventDefault();
+          this.controller.next();
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          this.controller.first();
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          this.controller.last();
+        } else if (e.key === 'l' || e.key === 'L') {
+          this.showMovesDialog();
+        } else if (e.key === 'c' || e.key === 'C') {
+          this.cycleCameraPreset();
+        } else if (e.key === 'm' || e.key === 'M') {
+          this.toggleSound();
+        } else if (e.key === 'Escape') {
+          this.openMenu();
+        }
+        return;
+      }
       if (e.key === 'z' || e.key === 'Z') this.undo();
       else if (e.key === 'c' || e.key === 'C') this.cycleCameraPreset();
       else if (e.key === 'm' || e.key === 'M') this.toggleSound();
       else if (e.key === 'h' || e.key === 'H') this.showHistory();
+      else if (e.key === 'l' || e.key === 'L') this.showMovesDialog();
       else if (e.key === 'Escape') this.openMenu();
     });
   }
 
   private openMenu(): void {
+    this.hud.setReplayBarVisible(false);
     LocalController.clearSaved();
     this.controller?.dispose();
     this.controller = null;
@@ -112,6 +174,7 @@ class Game {
   }
 
   private startLocal(config: GameConfig, restoreExisting = false): void {
+    this.hud.setReplayBarVisible(false);
     if (!restoreExisting) {
       LocalController.clearSaved();
       if (config.mode === 'bot_vs_bot') {
@@ -123,6 +186,7 @@ class Game {
 
   private async startOnline(intent: import('./net/OnlineController').OnlineIntent): Promise<void> {
     if (!__ONLINE__) return;
+    this.hud.setReplayBarVisible(false);
     const { OnlineController } = await import('./net/OnlineController');
     this.setController(new OnlineController(this.hud, intent));
   }
@@ -167,6 +231,7 @@ class Game {
         this.seats = u.seats;
         this.state = u.state;
         this.movesCount = 0;
+        this.matchActions = [];
         this.clearPreview();
         this.scene.setupPlayers(this.seats.map((s) => s.animal));
         this.scene.syncState(this.state);
@@ -190,6 +255,7 @@ class Game {
       case 'action': {
         this.clearPreview();
         this.scene.showMoveMarkers([]);
+        this.matchActions.push(u.action);
         if (u.action.type === 'move') {
           this.movesCount++;
           await this.scene.animateMove(u.seat, u.action);
@@ -271,6 +337,8 @@ class Game {
       winnerName: ANIMALS[seat.animal].name,
       movesCount: this.movesCount,
       wallsCount: this.state.wallList.length,
+      animals: this.seats.map((s) => s.animal),
+      actions: [...this.matchActions],
     });
 
     await this.scene.celebrate(winner);
@@ -289,6 +357,40 @@ class Game {
     }
 
     this.hud.showWin(seat, title, sub, canRematch);
+  }
+
+  private startReplay(record: HistoryRecord): void {
+    LocalController.clearSaved();
+    this.cameraPreset = 'iso';
+    this.hud.setReplayBarVisible(true);
+    const ctrl = new ReplayController(record);
+    ctrl.onStepChange = (current, total, action) => {
+      const seat = action ? this.seats[(current - 1) % this.seats.length] : undefined;
+      const desc = action ? formatActionDescription(action, seat?.animal) : 'Starting position';
+      this.hud.updateReplayUi(
+        `Replay · ${record.winnerName} won`,
+        desc,
+        current,
+        total,
+        ctrl.playing,
+      );
+    };
+    this.setController(ctrl);
+    this.hud.toast(`Replay loaded (${record.actions?.length ?? 0} moves)`);
+  }
+
+  private showMovesDialog(): void {
+    sounds.playTick();
+    if (this.controller instanceof ReplayController) {
+      const ctrl = this.controller;
+      this.hud.renderMovesList(ctrl.actions, this.seats, ctrl.currentStep, (step) => {
+        ctrl.jumpTo(step);
+        this.hud.movesDialog.close();
+      });
+    } else {
+      this.hud.renderMovesList(this.matchActions, this.seats, this.matchActions.length);
+    }
+    this.hud.movesDialog.showModal();
   }
 
   private undo(): void {

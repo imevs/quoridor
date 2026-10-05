@@ -1,4 +1,5 @@
 import type { AnimalId } from './animals';
+import type { Action } from './rules';
 
 export interface HistoryRecord {
   id: string;
@@ -10,6 +11,8 @@ export interface HistoryRecord {
   winnerName: string;
   movesCount: number;
   wallsCount: number;
+  animals?: AnimalId[];
+  actions?: Action[];
 }
 
 const STORAGE_KEY = 'quoridors.match_history';
