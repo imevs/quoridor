@@ -1,6 +1,6 @@
 # Quoridors AI Algorithm
 
-The AI in [`game/src/game/ai.ts`](file:///Users/vm/WebstormProjects/quoridors/game/src/game/ai.ts) determines bot actions for single-player and server-filled multiplayer seats. It combines **heuristic path race evaluation**, **targeted candidate move pruning**, and **2-ply minimax lookahead**.
+The AI in [`game/src/game/ai.ts`](file:///Users/vm/WebstormProjects/quoridors/game/src/game/ai.ts) determines bot actions for single-player, bot-vs-bot spectator mode, and server-filled multiplayer seats. It combines **threat-aware heuristic evaluation**, **high-impact wall pruning**, **priority move ordering**, and **3-ply alpha-beta minimax lookahead**.
 
 ---
 
@@ -8,46 +8,64 @@ The AI in [`game/src/game/ai.ts`](file:///Users/vm/WebstormProjects/quoridors/ga
 
 The static evaluation evaluates a state from the perspective of player `me`:
 
-$$\text{Score} = (\text{OpponentMinDist} - \text{MyDist}) \times 10 + (\text{MyWalls} - \text{OpponentMaxWalls}) \times 0.8$$
+$$\text{Score} = \text{RaceScore} + (\text{MyProgress} - \text{OppProgress}) + \text{WallAdvantage} + \text{ThreatPenalty} + \text{SprintBonus}$$
 
-- **Path Race Dominance**: Distance to goal line computed via breadth-first search (`shortestPath`). If the opponent's shortest path is longer than the AI's, the score increases.
-- **Wall Advantage**: A small bonus ($0.8$) per remaining wall encourages preserving walls unless a placement creates a substantial delay.
-- **Terminal States**: Winning states immediately evaluate to $+10,000$ (and $-10,000$ if an opponent wins).
-
----
-
-## 2. Candidate Move Generation (`candidateActions`)
-
-Evaluating all $128$ wall intersections every turn is computationally prohibitive for interactive real-time play. The engine prunes candidate moves as follows:
-
-1. **Pawn Moves**:
-   - Enumerates legal pawn destinations via `legalMoves(state, playerIdx)`.
-   - Handles standard orthogonal moves, straight jumps over opponents, and diagonal sidesteps when blocked by walls.
-2. **Targeted Walls (`candidateWalls`)**:
-   - Calculates the target opponent's shortest path cells via BFS (`shortestPathCells`).
-   - Only considers walls intersecting the first $5$ steps of that path.
-   - Also adds parallel and perpendicular groove slots adjacent to those steps to allow corridor construction.
-   - Filters candidates through `checkWall(state, wall)` to guarantee geometric fit and that no player is completely trapped.
+- **Path Race Dominance ($\text{RaceScore}$)**:
+  - $({\text{OppMinDist}} - \text{MyDist}) \times 20$.
+  - Each tile gained in the race relative to the leading opponent directly shifts the baseline score.
+- **Progression Weighting**:
+  - Distance reductions are non-linear; progressing from 2 steps to 1 step away from the goal is significantly more valuable than early moves.
+- **Threat Urgency Penalties ($\text{ThreatPenalty}$)**:
+  - If the leading opponent is $\le 1$ step from victory: $-500$ penalty.
+  - If the leading opponent is $\le 2$ steps from victory: $-150$ penalty.
+  - Forces the minimax engine to prioritize defensive walls that break the opponent's winning corridor.
+- **Sprint / Endgame Bonus ($\text{SprintBonus}$)**:
+  - When the AI is $\le 1$ step from goal: $+400$.
+  - When the AI is $\le 2$ steps from goal: $+120$.
+  - Discourages placing marginal walls when a clean sprint across the finish line wins the game.
+- **Terminal States**:
+  - Immediate win evaluates to $+100,000$.
+  - Opponent victory evaluates to $-100,000$.
 
 ---
 
-## 3. Decision-Making & Lookahead (`chooseAction`)
+## 2. High-Impact Wall Pruning (`candidateWalls`)
 
-| Difficulty | Search Depth | Walls Used? | Noise / Randomness |
+Instead of blindly evaluating random groove intersections, the engine filters walls using verified path delay deltas:
+
+1. **Shortest-Path Intersection**:
+   - Inspects the first 6 steps of the target opponent's shortest path.
+   - Tests both direct blockers and flanking perpendicular slots.
+2. **Net Delay Verification**:
+   - Computes $\Delta_{\text{opp}} = \text{NewOppDist} - \text{OldOppDist}$ and $\Delta_{\text{me}} = \text{NewMyDist} - \text{OldMyDist}$.
+   - **Zero-impact prune**: Any wall where $\Delta_{\text{opp}} \le 0$ is immediately discarded (opponent can step around with zero added distance).
+   - **Self-impediment prune**: Any wall where $\Delta_{\text{me}} > \Delta_{\text{opp}}$ is discarded to prevent self-sabotage.
+3. **Scoring & Sorting**:
+   - Walls are scored as $\text{Score} = \Delta_{\text{opp}} \times 15 - \Delta_{\text{me}} \times 16$.
+   - The engine retains only the top 8 highest-impact walls for tree search.
+
+---
+
+## 3. Move Ordering & Alpha-Beta Minimax (`chooseAction`)
+
+| Difficulty | Search Depth | Move Ordering | Noise / Randomness |
 | :--- | :--- | :--- | :--- |
-| **Easy** | 1-ply (Greedy) | $\approx 35\%$ chance | High ($\pm 4.5$ random score jitter) |
-| **Medium** | 1-ply (Greedy) | Yes | Low ($\pm 1.25$ random score jitter) |
-| **Hard** | **2-ply Minimax** (2-player) / 1-ply (4-player) | Yes | **0** (pure deterministic best move) |
+| **Easy** | 1-ply (Greedy) | Basic | High ($\pm 14.0$) |
+| **Medium** | 2-ply Minimax | Yes | Low ($\pm 2.5$) |
+| **Hard** | **3-ply Alpha-Beta** (2-player) / **2-ply** (4-player) | Prioritized | **0** (pure deterministic best move) |
 
-### Hard Mode Minimax Lookahead (2-Player)
+### Hard Mode Alpha-Beta Minimax Lookahead (2-Player)
 
-1. **Ply 1 (AI's candidate action $A$)**:
-   - Simulates applying action $A$.
-   - If action $A$ immediately wins, it is selected immediately.
-2. **Ply 2 (Opponent's best reply $B$)**:
-   - For each action $A$, tests all opponent candidate replies $B$.
-   - Identifies the worst-case evaluation for the AI:
-     $$\text{Score}(A) = \min_{B} \text{Evaluate}(\text{State} \circ A \circ B)$$
-   - **Alpha Cutoff**: If any reply $B$ yields an evaluation lower than the current best candidate, the evaluation of action $A$ terminates early.
-3. **Pawn Preference Tempo Bonus**:
-   - Adds $+0.5$ score to pawn moves to favor forward advancement over placing marginal walls.
+1. **Move Ordering**:
+   - Actions are evaluated in descending priority:
+     1. Immediate winning moves ($\text{Priority} = 10,000$).
+     2. Forward pawn steps and jumps ($\text{Priority} = \Delta_{\text{dist}} \times 20$).
+     3. High-impact blocking walls.
+     4. Lateral / sidestep pawn moves.
+   - Good move ordering ensures alpha-beta cutoffs trigger on the 1st or 2nd branch.
+2. **3-Ply Depth**:
+   - **Ply 1 (AI Move)**: Tests candidate moves and top walls.
+   - **Ply 2 (Opponent Reply)**: Evaluates opponent's optimal counter-strategy.
+   - **Ply 3 (AI Follow-up)**: Anticipates the resulting board dynamic, wall economy, and finish-line race.
+3. **Worker Execution**:
+   - Calculations execute in a dedicated Web Worker (`ai.worker.ts`), providing grandmaster-caliber play with zero frame drops on the main render thread.
