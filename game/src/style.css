@@ -1612,6 +1612,20 @@ dialog.panel form,
     display: none;
   }
 
+  .hint.active-hint {
+    display: inline-flex;
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 74px);
+    max-width: calc(100vw - 24px);
+    padding: 6px 12px;
+    font-size: 12px;
+    gap: 8px;
+    white-space: normal;
+  }
+
+  .players[data-count="4"] ~ #hint.active-hint {
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 120px);
+  }
+
   /* Destination goal pill placed above player cards */
   .destination-pill {
     bottom: calc(max(8px, env(safe-area-inset-bottom)) + 74px);

@@ -106,6 +106,7 @@ export class BoardScene {
   private hedgeTemplate!: THREE.Object3D;
   private animalTemplates = new Map<AnimalId, THREE.Object3D>();
   private pawns: Pawn[] = [];
+  private pawnGroups: THREE.Group[] = [];
   private walls = new Map<string, THREE.Object3D>();
   private ghost!: THREE.Object3D;
   private ghostMat!: THREE.MeshStandardMaterial;
@@ -421,6 +422,7 @@ export class BoardScene {
       this.scene.add(group);
       this.pawns.push({ group, model, ring, glow, color });
     });
+    this.pawnGroups = this.pawns.map((p) => p.group);
   }
 
   private seatYaw(seat: number): number {
@@ -627,7 +629,7 @@ export class BoardScene {
     const rect = this.renderer.domElement.getBoundingClientRect();
     const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.camera);
-    const hits = this.raycaster.intersectObjects(this.pawns.map((p) => p.group), true);
+    const hits = this.raycaster.intersectObjects(this.pawnGroups, true);
     if (hits.length > 0) {
       let obj: THREE.Object3D | null = hits[0].object;
       while (obj) {
@@ -738,10 +740,17 @@ export class BoardScene {
     this.camera.updateProjectionMatrix();
   }
 
-  private fitCamera(): void {
+  private fitCamera(preserveAngles = false): void {
     const r = this.idealDistance();
-    const sph = new THREE.Spherical(r, 0.82, 0);
-    this.camera.position.copy(this.controls.target).add(new THREE.Vector3().setFromSpherical(sph));
+    if (preserveAngles) {
+      const offset = this.camera.position.clone().sub(this.controls.target);
+      const sph = new THREE.Spherical().setFromVector3(offset);
+      sph.radius = r;
+      this.camera.position.copy(this.controls.target).add(new THREE.Vector3().setFromSpherical(sph));
+    } else {
+      const sph = new THREE.Spherical(r, 0.82, 0);
+      this.camera.position.copy(this.controls.target).add(new THREE.Vector3().setFromSpherical(sph));
+    }
   }
 
   private onResize(): void {
@@ -750,7 +759,7 @@ export class BoardScene {
     this.updateCameraProjection();
     this.renderer.setSize(w, h);
     this.controls.maxDistance = Math.max(50, this.idealDistance() * 1.45);
-    this.fitCamera();
+    this.fitCamera(true);
   }
 
   // ---------------------------------------------------------------------------

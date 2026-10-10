@@ -166,7 +166,7 @@ export class Hud {
     const mode = this.formValue('mode');
     $<HTMLElement>('difficulty-field').hidden = mode === 'local';
     $<HTMLElement>('pawn-field').hidden = mode === 'bot_vs_bot';
-    $<HTMLElement>('timer-field').hidden = mode === 'bot_vs_bot';
+    $<HTMLElement>('timer-field').hidden = mode === 'bot_vs_bot' || mode === 'online';
     $<HTMLElement>('btn-start').textContent =
       mode === 'online' ? 'Create Online Game' : mode === 'bot_vs_bot' ? 'Watch Bots Play' : 'Start Game';
   }
@@ -179,7 +179,8 @@ export class Hud {
   readConfig(): GameConfig {
     const mode = this.formValue('mode');
     const timerVal = this.formValue('turnTimer');
-    const turnTimer = timerVal !== '' ? Number(timerVal) : 300;
+    const parsedTimer = timerVal !== '' ? Number(timerVal) : 300;
+    const turnTimer = mode === 'bot_vs_bot' || mode === 'online' ? 0 : parsedTimer;
     const cfg: GameConfig = {
       mode: mode === 'local' ? 'local' : mode === 'bot_vs_bot' ? 'bot_vs_bot' : mode === 'online' && __ONLINE__ ? 'online' : 'ai',
       players: this.formValue('players') === '4' ? 4 : 2,
@@ -336,7 +337,11 @@ export class Hud {
     });
   }
 
-  showDestination(seat: Seat, title: string, desc: string): void {
+  get isDestinationPinned(): boolean {
+    return this.tappedSeat !== null;
+  }
+
+  showDestination(seat: Seat, seatIndex: number, title: string, desc: string): void {
     const a = ANIMALS[seat.animal];
     this.destPill.style.setProperty('--pc', a.color);
     this.destAvatar.textContent = a.emoji;
@@ -345,7 +350,7 @@ export class Hud {
     this.destPill.hidden = false;
     this.hintEl.style.opacity = '0';
     this.playersEl.querySelectorAll<HTMLElement>('.player-card').forEach((card) => {
-      if (card.dataset.animal === seat.animal) {
+      if (card.dataset.seat === String(seatIndex)) {
         card.classList.add('dest-hover');
       } else {
         card.classList.remove('dest-hover');

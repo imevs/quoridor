@@ -217,7 +217,9 @@ class Game {
   }
 
   private startLocal(config: GameConfig, restoreExisting = false): void {
-    this.clockInitial = typeof config.turnTimer === 'number' ? config.turnTimer : 300;
+    this.clockInitial = config.mode === 'bot_vs_bot'
+      ? 0
+      : typeof config.turnTimer === 'number' ? config.turnTimer : 300;
     this.hud.setReplayBarVisible(false);
     this.hud.setBotMatchActive(config.mode === 'bot_vs_bot');
     if (!restoreExisting) {
@@ -233,8 +235,7 @@ class Game {
 
   private async startOnline(intent: import('./net/OnlineController').OnlineIntent): Promise<void> {
     if (!__ONLINE__) return;
-    const cfg = this.hud.readConfig();
-    this.clockInitial = typeof cfg.turnTimer === 'number' ? cfg.turnTimer : 300;
+    this.clockInitial = 0;
     this.playerClocks = [];
     this.clockHistory = [];
     this.hud.setReplayBarVisible(false);
@@ -529,8 +530,8 @@ class Game {
   private undo(): void {
     if (this.processing || !this.controller?.canUndo()) return;
     this.stopClockTimer();
+    const isVsAi = this.controller?.kind === 'ai';
     if (this.clockHistory.length > 0) {
-      const isVsAi = this.controller?.kind === 'ai';
       if (isVsAi && this.clockHistory.length >= 2) {
         this.clockHistory.pop();
         this.playerClocks = this.clockHistory.pop()!;
@@ -538,6 +539,11 @@ class Game {
         this.playerClocks = this.clockHistory.pop()!;
       }
     }
+    const stepsToPop = isVsAi && this.matchActions.length >= 2 ? 2 : 1;
+    for (let i = 0; i < stepsToPop && this.matchActions.length > 0; i++) {
+      this.matchActions.pop();
+    }
+    this.movesCount = this.matchActions.filter((a) => a.type === 'move').length;
     sounds.playWhoosh();
     this.controller.undo();
   }
@@ -582,7 +588,11 @@ class Game {
 
   // ------------------------------------------------------------------ Input
   private clearPreview(): void {
-    this.scene.showGhost(null);
+    if (this.currentHintAction?.type === 'wall') {
+      this.scene.showGhost(this.currentHintAction.wall, true, true);
+    } else {
+      this.scene.showGhost(null);
+    }
     this.scene.hoverMarker(null);
     this.scene.renderer.domElement.style.cursor = '';
   }
@@ -665,10 +675,11 @@ class Game {
     const desc = `${goalDesc.edge} (${goalDesc.detail}) · ${stepsText}`;
 
     this.scene.showDestination(p.goal, a.color);
-    this.hud.showDestination(seat, title, desc);
+    this.hud.showDestination(seat, seatIndex, title, desc);
   }
 
   private clearAnimalDestination(): void {
+    if (this.hud.isDestinationPinned) return;
     if (this.hoveredAnimalSeat === null) return;
     this.hoveredAnimalSeat = null;
     this.scene.showDestination(null);
@@ -786,6 +797,10 @@ class Game {
       if (winner === -1) winner = (timedOutTurn + 1) % this.state.players.length;
     }
 
+    this.state.winner = winner;
+    if (this.controller instanceof LocalController) {
+      LocalController.clearSaved();
+    }
     void this.finish(winner, timedOutTurn);
   }
 
