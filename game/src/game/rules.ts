@@ -264,3 +264,15 @@ export function allFittingWalls(s: GameState): Wall[] {
   }
   return out;
 }
+
+/** Human-friendly description of a player's goal destination. */
+export function formatGoalDescription(goal: Goal): { edge: string; detail: string } {
+  if (goal.axis === 'r') {
+    return goal.value === 0
+      ? { edge: 'North Edge', detail: 'Opposite side (Row 1)' }
+      : { edge: 'South Edge', detail: 'Opposite side (Row 9)' };
+  }
+  return goal.value === 8
+    ? { edge: 'East Edge', detail: 'Opposite side (Column 9)' }
+    : { edge: 'West Edge', detail: 'Opposite side (Column 1)' };
+}

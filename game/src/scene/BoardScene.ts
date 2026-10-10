@@ -10,7 +10,7 @@ import lawnUrl from '../../../textures/lawn_grass_texture.jpg?url';
 import hedgeUrl from '../../../textures/hedge_leaf_texture.jpg?url';
 
 import { ANIMALS, type AnimalId } from '../game/animals';
-import { type Cell, type GameState, type Wall, N } from '../game/rules';
+import { type Cell, type GameState, type Wall, type Goal, N } from '../game/rules';
 import { Tweener, ease } from './tween';
 import { sounds } from './sounds';
 
@@ -116,6 +116,12 @@ export class BoardScene {
   private activeSeat = -1;
   private particles: { points: THREE.Points; vel: Float32Array; born: number; life: number }[] = [];
   private seatCount: 2 | 4 = 2;
+  private destGroup = new THREE.Group();
+  private destPads: THREE.Mesh[] = [];
+  private destBar!: THREE.Mesh;
+  private destActive = false;
+  private destPadMat!: THREE.MeshBasicMaterial;
+  private destBarMat!: THREE.MeshBasicMaterial;
 
   private container: HTMLElement;
 
@@ -309,6 +315,7 @@ export class BoardScene {
     this.scene.add(root);
     this.createGhost();
     this.createMarkers();
+    this.createDestinationMarkers();
   }
 
   private createGhost(): void {
@@ -350,6 +357,38 @@ export class BoardScene {
       this.scene.add(g);
       this.markers.push(g);
     }
+  }
+
+  private createDestinationMarkers(): void {
+    this.destPadMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const padGeo = new THREE.PlaneGeometry(0.85, 0.85);
+    for (let i = 0; i < 9; i++) {
+      const pad = new THREE.Mesh(padGeo, this.destPadMat);
+      pad.rotation.x = -Math.PI / 2;
+      pad.renderOrder = 4;
+      this.destGroup.add(pad);
+      this.destPads.push(pad);
+    }
+
+    this.destBarMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.75,
+      depthWrite: false,
+    });
+    const barGeo = new THREE.BoxGeometry(PITCH * 9 - 0.1, 0.05, 0.08);
+    this.destBar = new THREE.Mesh(barGeo, this.destBarMat);
+    this.destBar.renderOrder = 4;
+    this.destGroup.add(this.destBar);
+
+    this.destGroup.visible = false;
+    this.scene.add(this.destGroup);
   }
 
   // ---------------------------------------------------------------------------
@@ -574,6 +613,54 @@ export class BoardScene {
     return { kind: 'wall', wall: { r: clampW(Math.round(fr - 0.5)), c: wc, o: 'v' } };
   }
 
+  /** Raycasts directly against animal figurine models to detect hovered pawn. */
+  pickPawn(clientX: number, clientY: number): number | null {
+    if (this.pawns.length === 0) return null;
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const hits = this.raycaster.intersectObjects(this.pawns.map((p) => p.group), true);
+    if (hits.length > 0) {
+      let obj: THREE.Object3D | null = hits[0].object;
+      while (obj) {
+        const idx = this.pawns.findIndex((p) => p.group === obj);
+        if (idx !== -1) return idx;
+        obj = obj.parent;
+      }
+    }
+    return null;
+  }
+
+  /** Highlights the 9 destination goal tiles and edge runner for a player's goal. */
+  showDestination(goal: Goal | null, colorHex?: string): void {
+    if (!goal) {
+      this.destActive = false;
+      this.destGroup.visible = false;
+      return;
+    }
+    this.destActive = true;
+    this.destGroup.visible = true;
+    const col = new THREE.Color(colorHex ?? '#ffe6a8');
+    this.destPadMat.color.copy(col);
+    this.destBarMat.color.copy(col);
+
+    for (let i = 0; i < 9; i++) {
+      const r = goal.axis === 'r' ? goal.value : i;
+      const c = goal.axis === 'c' ? goal.value : i;
+      this.destPads[i].position.copy(cellToWorld(r, c)).setY(TILE_TOP + 0.007);
+    }
+
+    if (goal.axis === 'r') {
+      this.destBar.rotation.y = 0;
+      const z = -HALF + goal.value * PITCH + (goal.value === 0 ? -PITCH / 2 + 0.04 : PITCH / 2 - 0.04);
+      this.destBar.position.set(0, TILE_TOP + 0.025, z);
+    } else {
+      this.destBar.rotation.y = Math.PI / 2;
+      const x = -HALF + goal.value * PITCH + (goal.value === 0 ? -PITCH / 2 + 0.04 : PITCH / 2 - 0.04);
+      this.destBar.position.set(x, TILE_TOP + 0.025, 0);
+    }
+  }
+
   /** Smoothly orbit the camera behind a seat. */
   async focusSeat(seat: number, duration = 1.0): Promise<void> {
     const az = (this.seatCount === 4 ? SEAT_AZ_4 : SEAT_AZ_2)[seat] ?? 0;
@@ -666,6 +753,12 @@ export class BoardScene {
 
     // Ghost hedge shimmer
     if (this.ghost?.visible) this.ghostMat.opacity = 0.45 + 0.12 * Math.sin(t * 6);
+
+    // Destination goal shimmer
+    if (this.destActive) {
+      this.destPadMat.opacity = 0.4 + 0.2 * Math.sin(t * 5);
+      this.destBarMat.opacity = 0.65 + 0.25 * Math.sin(t * 5);
+    }
 
     // Particles
     const dt = 1 / 60;

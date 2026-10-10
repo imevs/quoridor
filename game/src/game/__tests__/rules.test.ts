@@ -12,6 +12,7 @@ import {
   applyAction,
   isLegal,
   allFittingWalls,
+  formatGoalDescription,
   type Wall,
 } from '../rules';
 
@@ -510,6 +511,25 @@ describe('Quoridor Rules Engine', () => {
       // Overlapping wall
       state.h[0] = 1;
       expect(isLegal(state, { type: 'wall', wall: { r: 0, c: 0, o: 'h' } })).toBe(false);
+    });
+
+    it('formats goal descriptions accurately for all cardinal directions', () => {
+      expect(formatGoalDescription({ axis: 'r', value: 0 })).toEqual({
+        edge: 'North Edge',
+        detail: 'Opposite side (Row 1)',
+      });
+      expect(formatGoalDescription({ axis: 'r', value: 8 })).toEqual({
+        edge: 'South Edge',
+        detail: 'Opposite side (Row 9)',
+      });
+      expect(formatGoalDescription({ axis: 'c', value: 8 })).toEqual({
+        edge: 'East Edge',
+        detail: 'Opposite side (Column 9)',
+      });
+      expect(formatGoalDescription({ axis: 'c', value: 0 })).toEqual({
+        edge: 'West Edge',
+        detail: 'Opposite side (Column 1)',
+      });
     });
   });
 });

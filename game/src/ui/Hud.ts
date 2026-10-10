@@ -34,6 +34,10 @@ export class Hud {
   private hintEl = $<HTMLElement>('hint');
   private toastEl = $<HTMLElement>('toast');
   private toastTimer = 0;
+  private destPill = $<HTMLElement>('destination-pill');
+  private destAvatar = $<HTMLElement>('dest-avatar');
+  private destTitle = $<HTMLElement>('dest-title');
+  private destDesc = $<HTMLElement>('dest-desc');
   readonly menu = $<HTMLDialogElement>('menu-dialog');
   readonly menuCloseBtn = $<HTMLButtonElement>('btn-menu-close');
   readonly menuXBtn = $<HTMLButtonElement>('btn-menu-x');
@@ -196,7 +200,7 @@ export class Hud {
               : `P${i + 1}`;
         const steps = shortestPath(state, i);
         const pips = Array.from({ length: wallsMax }, (_, k) => `<span class="pip ${k >= p.walls ? 'used' : ''}"></span>`).join('');
-        return `<article class="player-card ${state.turn === i && state.winner === null ? 'active' : ''} ${seat.away ? 'away' : ''}" style="--pc:${a.color}">
+        return `<article class="player-card ${state.turn === i && state.winner === null ? 'active' : ''} ${seat.away ? 'away' : ''}" data-seat="${i}" data-animal="${seat.animal}" style="--pc:${a.color}">
           <div class="avatar" aria-hidden="true">${a.emoji}</div>
           <div class="player-head">${a.name}<span class="badge ${seat.local ? 'you' : ''}">${badge}</span>
             <span class="steps" title="Shortest path to goal">${steps} step${steps === 1 ? '' : 's'}</span></div>
@@ -218,6 +222,47 @@ export class Hud {
 
   setHint(text: string): void {
     this.hintEl.textContent = text;
+  }
+
+  bindPlayerHover(onHover: (seat: number | null) => void): void {
+    this.playersEl.addEventListener('pointerover', (e) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>('.player-card');
+      if (card && card.dataset.seat !== undefined) {
+        onHover(Number(card.dataset.seat));
+      }
+    });
+    this.playersEl.addEventListener('pointerout', (e) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>('.player-card');
+      const related = e.relatedTarget as Node | null;
+      if (card && (!related || !card.contains(related))) {
+        onHover(null);
+      }
+    });
+  }
+
+  showDestination(seat: Seat, title: string, desc: string): void {
+    const a = ANIMALS[seat.animal];
+    this.destPill.style.setProperty('--pc', a.color);
+    this.destAvatar.textContent = a.emoji;
+    this.destTitle.textContent = title;
+    this.destDesc.textContent = desc;
+    this.destPill.hidden = false;
+    this.hintEl.style.opacity = '0';
+    this.playersEl.querySelectorAll<HTMLElement>('.player-card').forEach((card) => {
+      if (card.dataset.animal === seat.animal) {
+        card.classList.add('dest-hover');
+      } else {
+        card.classList.remove('dest-hover');
+      }
+    });
+  }
+
+  hideDestination(): void {
+    this.destPill.hidden = true;
+    this.hintEl.style.opacity = '';
+    this.playersEl.querySelectorAll<HTMLElement>('.player-card').forEach((card) => {
+      card.classList.remove('dest-hover');
+    });
   }
 
   toast(msg: string): void {

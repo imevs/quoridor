@@ -6,7 +6,9 @@ import {
   type Action,
   type GameState,
   checkWall,
+  formatGoalDescription,
   legalMoves,
+  shortestPath,
 } from './game/rules';
 import type { GameController, Update } from './net/controller';
 import { LocalController } from './net/LocalController';
@@ -27,6 +29,7 @@ class Game {
   private cameraPreset: CameraPreset = 'seat';
   private movesCount = 0;
   private matchActions: Action[] = [];
+  private hoveredAnimalSeat: number | null = null;
 
   constructor() {
     this.scene = new BoardScene(document.getElementById('stage')!);
@@ -62,7 +65,18 @@ class Game {
       this.downAt = null;
       if (moved < 7) this.onClick(e);
     });
-    canvas.addEventListener('pointerleave', () => this.clearPreview());
+    canvas.addEventListener('pointerleave', () => {
+      this.clearPreview();
+      this.clearAnimalDestination();
+    });
+
+    this.hud.bindPlayerHover((seat) => {
+      if (seat !== null) {
+        this.showAnimalDestination(seat);
+      } else {
+        this.clearAnimalDestination();
+      }
+    });
 
     this.hud.menu.addEventListener('close', () => {
       if (this.hud.menu.returnValue === 'start') {
@@ -241,6 +255,7 @@ class Game {
         this.movesCount = 0;
         this.matchActions = [];
         this.clearPreview();
+        this.clearAnimalDestination();
         this.scene.setupPlayers(this.seats.map((s) => s.animal));
         this.scene.syncState(this.state);
         const focus = this.controller ? this.controller.viewSeat(this.state) : 0;
@@ -256,6 +271,7 @@ class Game {
       case 'sync': {
         this.state = u.state;
         this.clearPreview();
+        this.clearAnimalDestination();
         this.scene.syncState(this.state);
         this.refreshTurnUi();
         break;
@@ -504,11 +520,38 @@ class Game {
   }
 
   private onHover(e: PointerEvent): void {
-    if (!this.state || !this.isMyTurn() || this.processing || e.buttons !== 0) {
-      if (e.buttons === 0) this.clearPreview();
+    if (!this.state || e.buttons !== 0) {
+      if (e.buttons === 0) {
+        this.clearPreview();
+        this.clearAnimalDestination();
+      }
       return;
     }
+
+    // Check animal hover: figurine 3D mesh hit or pawn board cell
+    let hoveredSeat: number | null = this.scene.pickPawn(e.clientX, e.clientY);
     const pick = this.scene.pick(e.clientX, e.clientY);
+    if (hoveredSeat === null && pick?.kind === 'cell') {
+      const pIdx = this.state.players.findIndex((p) => p.r === pick.r && p.c === pick.c);
+      if (pIdx !== -1) {
+        hoveredSeat = pIdx;
+      }
+    }
+
+    if (hoveredSeat !== null) {
+      this.showAnimalDestination(hoveredSeat);
+    } else {
+      this.clearAnimalDestination();
+    }
+
+    if (!this.isMyTurn() || this.processing) {
+      this.clearPreview();
+      if (hoveredSeat !== null) {
+        this.scene.renderer.domElement.style.cursor = 'pointer';
+      }
+      return;
+    }
+
     const action = this.previewFor(pick);
     const canvas = this.scene.renderer.domElement;
     if (action?.type === 'move') {
@@ -522,7 +565,37 @@ class Game {
       canvas.style.cursor = check.ok ? 'pointer' : 'not-allowed';
     } else {
       this.clearPreview();
+      if (hoveredSeat !== null) {
+        canvas.style.cursor = 'pointer';
+      }
     }
+  }
+
+  private showAnimalDestination(seatIndex: number): void {
+    if (!this.state || seatIndex < 0 || seatIndex >= this.state.players.length) return;
+    if (this.hoveredAnimalSeat === seatIndex) return;
+    this.hoveredAnimalSeat = seatIndex;
+
+    const seat = this.seats[seatIndex];
+    if (!seat) return;
+    const p = this.state.players[seatIndex];
+    const a = ANIMALS[seat.animal];
+    const goalDesc = formatGoalDescription(p.goal);
+    const steps = shortestPath(this.state, seatIndex);
+    const stepsText = `${steps} step${steps === 1 ? '' : 's'} away`;
+
+    const title = `${a.name}'s Destination`;
+    const desc = `${goalDesc.edge} (${goalDesc.detail}) · ${stepsText}`;
+
+    this.scene.showDestination(p.goal, a.color);
+    this.hud.showDestination(seat, title, desc);
+  }
+
+  private clearAnimalDestination(): void {
+    if (this.hoveredAnimalSeat === null) return;
+    this.hoveredAnimalSeat = null;
+    this.scene.showDestination(null);
+    this.hud.hideDestination();
   }
 
   private onClick(e: PointerEvent): void {
