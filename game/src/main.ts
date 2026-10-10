@@ -1,5 +1,6 @@
 import './style.css';
-import { BoardScene, type CameraPreset } from './scene/BoardScene';
+import { BoardScene } from './scene/BoardScene';
+import { CameraController } from './scene/CameraController';
 import { BoardInteractionManager } from './scene/BoardInteraction';
 import { bindKeyboardShortcuts } from './ui/shortcuts';
 import { Hud, type GameConfig, type Seat } from './ui/Hud';
@@ -7,9 +8,7 @@ import { ANIMALS } from './game/animals';
 import {
   type Action,
   type GameState,
-  formatGoalDescription,
   legalMoves,
-  shortestPath,
 } from './game/rules';
 import type { GameController, Update } from './net/controller';
 import { LocalController } from './net/LocalController';
@@ -17,26 +16,30 @@ import { MatchHistoryManager, type HistoryRecord } from './game/history';
 import { ReplayController } from './net/ReplayController';
 import { formatActionDescription } from './game/replay';
 import { sounds } from './scene/sounds';
-import { ChessClock, resolveTimeoutWinner } from './game/clock';
 import { TacticalCoach } from './game/coach';
+import { ClockCoordinator } from './ui/ClockCoordinator';
+import { DestinationInspector } from './ui/DestinationInspector';
+import { HintCoordinator } from './ui/HintCoordinator';
+import { DialogCoordinator } from './ui/DialogCoordinator';
+import { formatWinDetails } from './game/winDetails';
 
 class Game {
   private scene: BoardScene;
-  private interaction!: BoardInteractionManager;
   private hud = new Hud();
+  private interaction!: BoardInteractionManager;
+  private destinations!: DestinationInspector;
+  private clock!: ClockCoordinator;
+  private hints!: HintCoordinator;
+  private dialogs!: DialogCoordinator;
+  private camera!: CameraController;
+
   private controller: GameController | null = null;
   private seats: Seat[] = [];
   private state!: GameState;
   private queue: Update[] = [];
   private processing = false;
-  private cameraPreset: CameraPreset = 'seat';
   private movesCount = 0;
   private matchActions: Action[] = [];
-  private hoveredAnimalSeat: number | null = null;
-  private currentHintAction: Action | null = null;
-  private clock = new ChessClock(300, 2);
-  private clockTimerId: number | null = null;
-  private clockLastTime = 0;
 
   constructor() {
     this.scene = new BoardScene(document.getElementById('stage')!);
@@ -57,12 +60,19 @@ class Game {
       const savedCfg = LocalController.getSavedConfig() ?? this.hud.readConfig();
       this.startLocal(savedCfg, true);
     } else {
-      this.hud.menu.showModal();
+      this.openMenu();
     }
   }
 
   // ------------------------------------------------------------------ Setup
   private bindUi(): void {
+    this.destinations = new DestinationInspector({
+      scene: this.scene,
+      hud: this.hud,
+      getState: () => this.state ?? null,
+      getSeats: () => this.seats,
+    });
+
     this.interaction = new BoardInteractionManager(
       this.scene.renderer.domElement,
       this.scene,
@@ -71,8 +81,8 @@ class Game {
         canAct: () => this.isMyTurn() && !this.processing,
         onAction: (action) => this.submitAction(action),
         onHoverPawn: (seat) => {
-          if (seat !== null) this.showAnimalDestination(seat);
-          else this.clearAnimalDestination();
+          if (seat !== null) this.destinations.show(seat);
+          else this.destinations.clear();
         },
         onToast: (msg) => this.hud.toast(msg),
       },
@@ -80,10 +90,50 @@ class Game {
 
     this.hud.bindPlayerHover((seat) => {
       if (seat !== null) {
-        this.showAnimalDestination(seat);
+        this.destinations.show(seat);
       } else {
-        this.clearAnimalDestination();
+        this.destinations.clear();
       }
+    });
+
+    this.clock = new ClockCoordinator(this.hud, {
+      getState: () => this.state ?? null,
+      getSeats: () => this.seats,
+      isPaused: () => this.controller instanceof LocalController && this.controller.paused,
+      onTimeout: (winner, timedOutSeat) => this.onClockTimeout(winner, timedOutSeat),
+    });
+
+    this.hints = new HintCoordinator({
+      hud: this.hud,
+      scene: this.scene,
+      interaction: this.interaction,
+      delegate: {
+        getState: () => this.state ?? null,
+        getSeats: () => this.seats,
+        canAct: () => this.isMyTurn() && !this.processing,
+        onSubmitAction: (action) => this.submitAction(action),
+      },
+    });
+
+    this.camera = new CameraController(
+      this.scene,
+      this.hud,
+      () => (this.controller ? this.controller.viewSeat(this.state) : 0),
+    );
+
+    this.dialogs = new DialogCoordinator({
+      hud: this.hud,
+      delegate: {
+        getState: () => this.state ?? null,
+        getSeats: () => this.seats,
+        getMatchActions: () => this.matchActions,
+        getController: () => this.controller,
+        startReplay: (record) => this.startReplay(record),
+        openMenu: () => this.openMenu(),
+        onRematch: () => {
+          if (this.controller?.canRematch()) this.controller.rematch();
+        },
+      },
     });
 
     this.hud.menu.addEventListener('close', () => {
@@ -97,96 +147,30 @@ class Game {
       }
     });
 
-    this.hud.win.addEventListener('close', () => {
-      if (this.hud.win.returnValue === 'again') {
-        if (this.controller?.canRematch()) {
-          this.controller.rematch();
-        }
-      } else if (this.hud.win.returnValue === 'menu') {
-        this.openMenu();
-      }
-    });
-
-    document.getElementById('btn-menu')!.addEventListener('click', () => this.openMenu());
-    document.getElementById('btn-rules')!.addEventListener('click', () => this.hud.rules.showModal());
-    this.hud.cameraBtn.addEventListener('click', () => this.cycleCameraPreset());
+    this.hud.cameraBtn.addEventListener('click', () => this.camera.cycle());
     this.hud.soundBtn.addEventListener('click', () => this.toggleSound());
-    this.hud.historyBtn.addEventListener('click', () => this.showHistory());
-    this.hud.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
-    this.hud.movesBtn.addEventListener('click', () => this.showMovesDialog());
-    this.hud.winMovesBtn.addEventListener('click', () => this.showMovesDialog());
     this.hud.stopBotsBtn.addEventListener('click', () => this.toggleBotMatch());
     this.hud.menuStopBtn.addEventListener('click', () => this.toggleBotMatch());
     this.hud.undoBtn.addEventListener('click', () => this.undo());
-    this.hud.hintBtn.addEventListener('click', () => this.requestHint());
-    this.hud.hintEl.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('#btn-apply-hint');
-      if (btn && this.currentHintAction) {
-        this.submitAction(this.currentHintAction);
-      }
-    });
-
-    this.hud.historyList.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.btn-replay-match');
-      if (!btn) return;
-      const id = btn.dataset.id;
-      const record = MatchHistoryManager.list().find((r) => r.id === id);
-      if (record && record.actions && record.actions.length > 0) {
-        this.hud.historyDialog.close();
-        this.startReplay(record);
-      }
-    });
-
-    this.hud.replayPlayBtn.addEventListener('click', () => {
-      if (this.controller instanceof ReplayController) this.controller.togglePlay();
-    });
-    this.hud.replayPrevBtn.addEventListener('click', () => {
-      if (this.controller instanceof ReplayController) this.controller.prev();
-    });
-    this.hud.replayNextBtn.addEventListener('click', () => {
-      if (this.controller instanceof ReplayController) this.controller.next();
-    });
-    this.hud.replayFirstBtn.addEventListener('click', () => {
-      if (this.controller instanceof ReplayController) this.controller.first();
-    });
-    this.hud.replayLastBtn.addEventListener('click', () => {
-      if (this.controller instanceof ReplayController) this.controller.last();
-    });
-    this.hud.replayExitBtn.addEventListener('click', () => {
-      this.controller?.dispose();
-      this.controller = null;
-      this.openMenu();
-    });
-    this.hud.replayMovesBtn.addEventListener('click', () => this.showMovesDialog());
 
     bindKeyboardShortcuts({
       isModalOpen: () => Boolean(document.querySelector('dialog[open]')),
       isReplay: () => this.controller instanceof ReplayController,
       canToggleBot: () => this.controller?.kind === 'bot_vs_bot',
       onUndo: () => this.undo(),
-      onHint: () => this.requestHint(),
-      onCamera: () => this.cycleCameraPreset(),
+      onHint: () => this.hints.requestHint(),
+      onCamera: () => this.camera.cycle(),
       onSound: () => this.toggleSound(),
-      onHistory: () => this.showHistory(),
-      onMoves: () => this.showMovesDialog(),
+      onHistory: () => this.dialogs.showHistory(),
+      onMoves: () => this.dialogs.showMovesDialog(),
       onMenu: () => this.openMenu(),
       onToggleBotMatch: () => this.toggleBotMatch(),
       replay: {
-        togglePlay: () => {
-          if (this.controller instanceof ReplayController) this.controller.togglePlay();
-        },
-        prev: () => {
-          if (this.controller instanceof ReplayController) this.controller.prev();
-        },
-        next: () => {
-          if (this.controller instanceof ReplayController) this.controller.next();
-        },
-        first: () => {
-          if (this.controller instanceof ReplayController) this.controller.first();
-        },
-        last: () => {
-          if (this.controller instanceof ReplayController) this.controller.last();
-        },
+        togglePlay: () => this.dialogs.toggleReplayPlay(),
+        prev: () => this.dialogs.replayPrev(),
+        next: () => this.dialogs.replayNext(),
+        first: () => this.dialogs.replayFirst(),
+        last: () => this.dialogs.replayLast(),
       },
     });
   }
@@ -196,7 +180,7 @@ class Game {
     if (this.controller?.kind === 'bot_vs_bot' && this.controller instanceof LocalController) {
       this.hud.updateBotMatchPaused(this.controller.paused);
     }
-    this.interaction?.clearPreview();
+    this.interaction.clearPreview();
     this.hud.menu.returnValue = '';
     if (!this.hud.menu.open) this.hud.menu.showModal();
   }
@@ -211,7 +195,7 @@ class Game {
     if (!restoreExisting) {
       LocalController.clearSaved();
       if (config.mode === 'bot_vs_bot') {
-        this.cameraPreset = 'iso';
+        this.camera.setPreset('iso');
       }
     }
     this.setController(new LocalController(config), restoreExisting);
@@ -227,7 +211,7 @@ class Game {
   }
 
   private setController(ctrl: GameController, restoreExisting = false): void {
-    this.stopClockTimer();
+    this.clock.stop();
     this.hud.hideTurnTimer();
     this.controller?.dispose();
     this.controller = ctrl;
@@ -270,12 +254,12 @@ class Game {
         this.movesCount = 0;
         this.matchActions = [];
         this.clock.reset(this.seats.length, this.clock.initialSeconds);
-        this.interaction?.clearPreview();
-        this.clearAnimalDestination();
+        this.interaction.clearPreview();
+        this.destinations.reset();
         this.scene.setupPlayers(this.seats.map((s) => s.animal));
         this.scene.syncState(this.state);
         const focus = this.controller ? this.controller.viewSeat(this.state) : 0;
-        void this.scene.setCameraPreset(this.cameraPreset, focus, 1.2);
+        void this.scene.setCameraPreset(this.camera.preset, focus, 1.2);
         this.refreshTurnUi();
         break;
       }
@@ -292,15 +276,15 @@ class Game {
         if (this.clock.remaining.length !== this.state.players.length) {
           this.clock.reset(this.state.players.length, this.clock.initialSeconds);
         }
-        this.interaction?.clearPreview();
-        this.clearAnimalDestination();
+        this.interaction.clearPreview();
+        this.destinations.reset();
         this.scene.syncState(this.state);
         this.refreshTurnUi();
         break;
       }
       case 'action': {
-        this.stopClockTimer();
-        this.interaction?.clearPreview();
+        this.clock.stop();
+        this.interaction.clearPreview();
         this.scene.showMoveMarkers([]);
         this.matchActions.push(u.action);
         this.clock.recordMove();
@@ -340,20 +324,19 @@ class Game {
     this.updateControls();
 
     if (s.winner !== null) {
-      this.stopClockTimer();
+      this.clock.stop();
       this.hud.hideTurnTimer();
       return;
     }
 
-    this.currentHintAction = null;
-    this.hud.hintEl.classList.remove('active-hint');
+    this.hints.clear();
 
     if (this.isMyTurn()) {
       const label = this.controller?.kind === 'local' ? `${a.name}'s turn` : 'Your turn';
       this.hud.setTurn(seat, label);
       this.hud.setHint(TacticalCoach.getStatusAdvice(s, s.turn, this.seats));
       this.scene.showMoveMarkers(legalMoves(s, s.turn));
-      if (this.controller?.kind === 'local' && this.cameraPreset === 'seat') {
+      if (this.controller?.kind === 'local' && this.camera.preset === 'seat') {
         void this.scene.focusSeat(s.turn, 0.9);
       }
     } else {
@@ -377,9 +360,9 @@ class Game {
     }
 
     if (this.clock.isEnabled) {
-      this.startClockTimer();
+      this.clock.start(s.turn);
     } else {
-      this.stopClockTimer();
+      this.clock.stop();
       this.hud.hideTurnTimer();
     }
   }
@@ -408,8 +391,17 @@ class Game {
     this.hud.hintBtn.disabled = !this.isMyTurn() || this.processing || this.state?.winner !== null;
   }
 
+  private onClockTimeout(winner: number, timedOutTurn: number): void {
+    if (!this.state || this.state.winner !== null) return;
+    this.state.winner = winner;
+    if (this.controller instanceof LocalController) {
+      LocalController.clearSaved();
+    }
+    void this.finish(winner, timedOutTurn);
+  }
+
   private async finish(winner: number, timedOutBy?: number): Promise<void> {
-    this.stopClockTimer();
+    this.clock.stop();
     this.hud.hideTurnTimer();
     this.hud.setBotMatchActive(false);
     const seat = this.seats[winner];
@@ -432,34 +424,25 @@ class Game {
 
     await this.scene.celebrate(winner);
 
-    const canRematch = this.controller ? this.controller.canRematch() : false;
-    let title = `${ANIMALS[seat.animal].name} wins`;
-    let sub = timedOutBy !== undefined
-      ? `Won on time (${ANIMALS[this.seats[timedOutBy].animal].name} ran out of time).`
-      : 'Goal line reached.';
-    if (kind === 'ai') {
-      title = seat.human ? 'You win' : `${ANIMALS[seat.animal].name} wins`;
-      if (timedOutBy === undefined) {
-        sub = seat.human ? 'Goal line reached.' : 'Opponent reached the goal line.';
-      }
-    } else if (kind === 'bot_vs_bot') {
-      title = `${ANIMALS[seat.animal].name} wins!`;
-      if (timedOutBy === undefined) {
-        sub = `Bot ${ANIMALS[seat.animal].name} reached the goal line.`;
-      }
-    } else if (kind === 'online') {
-      title = seat.local ? 'Victory!' : `${ANIMALS[seat.animal].name} wins`;
-    }
+    const timedOutSeat = timedOutBy !== undefined ? this.seats[timedOutBy] : undefined;
+    const { title, sub } = formatWinDetails({
+      mode: kind,
+      winnerAnimalName: ANIMALS[seat.animal].name,
+      isHuman: Boolean(seat.human),
+      isLocal: Boolean(seat.local),
+      timedOutAnimalName: timedOutSeat ? ANIMALS[timedOutSeat.animal].name : undefined,
+    });
 
+    const canRematch = this.controller ? this.controller.canRematch() : false;
     this.hud.showWin(seat, title, sub, canRematch);
   }
 
   private startReplay(record: HistoryRecord): void {
-    this.stopClockTimer();
+    this.clock.stop();
     this.hud.hideTurnTimer();
     LocalController.clearSaved();
     this.hud.setBotMatchActive(false);
-    this.cameraPreset = 'iso';
+    this.camera.setPreset('iso');
     this.hud.setReplayBarVisible(true);
     const ctrl = new ReplayController(record);
     ctrl.onStepChange = (current, total, action) => {
@@ -477,36 +460,9 @@ class Game {
     this.hud.toast(`Replay loaded (${record.actions?.length ?? 0} moves)`);
   }
 
-  private showMovesDialog(): void {
-    sounds.playTick();
-    if (this.controller instanceof ReplayController) {
-      const ctrl = this.controller;
-      this.hud.renderMovesList(ctrl.actions, this.seats, ctrl.currentStep, (step) => {
-        ctrl.jumpTo(step);
-        this.hud.movesDialog.close();
-      });
-    } else {
-      const onSelect = this.state.winner !== null && this.matchActions.length > 0
-        ? (step: number) => {
-            const lastRecord = MatchHistoryManager.list()[0];
-            if (lastRecord && lastRecord.actions && lastRecord.actions.length > 0) {
-              if (this.hud.win.open) this.hud.win.close();
-              this.hud.movesDialog.close();
-              this.startReplay(lastRecord);
-              if (this.controller instanceof ReplayController) {
-                this.controller.jumpTo(step);
-              }
-            }
-          }
-        : undefined;
-      this.hud.renderMovesList(this.matchActions, this.seats, this.matchActions.length, onSelect);
-    }
-    this.hud.movesDialog.showModal();
-  }
-
   private undo(): void {
     if (this.processing || !this.controller?.canUndo()) return;
-    this.stopClockTimer();
+    this.clock.stop();
     const isVsAi = this.controller?.kind === 'ai';
     const stepsToPop = isVsAi && this.matchActions.length >= 2 ? 2 : 1;
     this.clock.undo(stepsToPop);
@@ -525,168 +481,10 @@ class Game {
     this.hud.toast(enabled ? 'Sound On' : 'Sound Muted');
   }
 
-  private showHistory(): void {
-    sounds.playTick();
-    this.hud.renderHistory(MatchHistoryManager.list());
-    this.hud.historyDialog.showModal();
-  }
-
-  private clearHistory(): void {
-    MatchHistoryManager.clear();
-    sounds.playTick();
-    this.hud.renderHistory([]);
-    this.hud.toast('Match history cleared');
-  }
-
-  private cycleCameraPreset(): void {
-    const next: Record<CameraPreset, CameraPreset> = {
-      seat: 'top',
-      top: 'iso',
-      iso: 'seat',
-    };
-    this.cameraPreset = next[this.cameraPreset];
-    const seat = this.controller ? this.controller.viewSeat(this.state) : 0;
-    void this.scene.setCameraPreset(this.cameraPreset, seat, 0.7);
-
-    const labels: Record<CameraPreset, string> = {
-      seat: 'Player View',
-      top: 'Top-Down View',
-      iso: 'Isometric View',
-    };
-    this.hud.toast(`Camera: ${labels[this.cameraPreset]}`);
-  }
-
-  // ------------------------------------------------------------------ Destination Inspector
-  private showAnimalDestination(seatIndex: number): void {
-    if (!this.state || seatIndex < 0 || seatIndex >= this.state.players.length) return;
-    if (this.hoveredAnimalSeat === seatIndex) return;
-    this.hoveredAnimalSeat = seatIndex;
-
-    const seat = this.seats[seatIndex];
-    if (!seat) return;
-    const p = this.state.players[seatIndex];
-    const a = ANIMALS[seat.animal];
-    const goalDesc = formatGoalDescription(p.goal);
-    const steps = shortestPath(this.state, seatIndex);
-    const stepsText = `${steps} step${steps === 1 ? '' : 's'} away`;
-
-    const title = `${a.name}'s Destination`;
-    const desc = `${goalDesc.edge} (${goalDesc.detail}) · ${stepsText}`;
-
-    this.scene.showDestination(p.goal, a.color);
-    this.hud.showDestination(seat, seatIndex, title, desc);
-  }
-
-  private clearAnimalDestination(): void {
-    if (this.hud.isDestinationPinned) return;
-    if (this.hoveredAnimalSeat === null) return;
-    this.hoveredAnimalSeat = null;
-    this.scene.showDestination(null);
-    this.hud.hideDestination();
-  }
-
   private submitAction(action: Action): void {
-    this.currentHintAction = null;
-    this.hud.hintEl.classList.remove('active-hint');
-    this.interaction.setHintAction(null);
-    this.stopClockTimer();
+    this.hints.clear();
+    this.clock.stop();
     this.controller?.submit(action);
-  }
-
-  // ------------------------------------------------------------------ Decision Clock (Chess Clock)
-  private isModalOpen(): boolean {
-    return Boolean(document.querySelector('dialog[open]'));
-  }
-
-  private startClockTimer(): void {
-    this.stopClockTimer();
-    if (!this.clock.isEnabled || !this.state || this.state.winner !== null) {
-      this.hud.hideTurnTimer();
-      return;
-    }
-
-    const currentTurn = this.state.turn;
-    this.clock.startTurn(currentTurn);
-    this.clockLastTime = performance.now();
-    const currentRemaining = this.clock.getTime(currentTurn);
-    this.hud.updateTurnTimer(currentRemaining, this.clock.initialSeconds);
-    this.hud.updatePlayerClock(currentTurn, currentRemaining, this.clock.initialSeconds);
-
-    this.clockTimerId = window.setInterval(() => {
-      if (!this.state || this.state.winner !== null) {
-        this.stopClockTimer();
-        this.hud.hideTurnTimer();
-        return;
-      }
-
-      const now = performance.now();
-      const dt = (now - this.clockLastTime) / 1000;
-      this.clockLastTime = now;
-
-      if (this.isModalOpen()) return;
-      if (this.controller instanceof LocalController && this.controller.paused) return;
-
-      const tick = this.clock.tick(dt);
-      if (!tick) return;
-
-      this.hud.updateTurnTimer(tick.remaining, this.clock.initialSeconds);
-      this.hud.updatePlayerClock(tick.seat, tick.remaining, this.clock.initialSeconds);
-
-      if (tick.beepSecond !== undefined) {
-        sounds.playCountdown(tick.beepSecond <= 3);
-      }
-
-      if (tick.isExpired) {
-        this.stopClockTimer();
-        this.onClockExpired(tick.seat);
-      }
-    }, 100);
-  }
-
-  private stopClockTimer(): void {
-    if (this.clockTimerId !== null) {
-      window.clearInterval(this.clockTimerId);
-      this.clockTimerId = null;
-    }
-    this.clock.stopTurn();
-  }
-
-  private onClockExpired(timedOutTurn: number): void {
-    if (!this.state || this.state.winner !== null) return;
-    sounds.playCountdown(true);
-    const timedOutSeat = this.seats[timedOutTurn];
-    const timedOutAnimalName = timedOutSeat ? ANIMALS[timedOutSeat.animal].name : `Player ${timedOutTurn + 1}`;
-    this.hud.toast(`⏰ ${timedOutAnimalName} ran out of time!`);
-
-    const winner = resolveTimeoutWinner(this.state, timedOutTurn);
-    this.state.winner = winner;
-    if (this.controller instanceof LocalController) {
-      LocalController.clearSaved();
-    }
-    void this.finish(winner, timedOutTurn);
-  }
-
-  // ------------------------------------------------------------------ Tactical Hints & Guidance
-  private requestHint(): void {
-    if (!this.state || !this.isMyTurn() || this.processing || this.state.winner !== null) return;
-    const rec = TacticalCoach.recommend(this.state, this.seats);
-    this.currentHintAction = rec.action;
-    this.interaction.setHintAction(rec.action);
-
-    if (rec.action.type === 'move') {
-      this.scene.showMoveMarkers(legalMoves(this.state, this.state.turn), { r: rec.action.r, c: rec.action.c });
-      this.scene.showGhost(null);
-    } else {
-      this.scene.showGhost(rec.action.wall, true, true);
-    }
-
-    this.hud.hintEl.classList.add('active-hint');
-    this.hud.setHint(
-      `<span aria-hidden="true">💡</span> <span><strong>${rec.summary}</strong> — ${rec.detail}</span> <button id="btn-apply-hint" class="hint-action-btn" type="button">Play Move</button>`,
-      true,
-    );
-    sounds.playTick();
-    this.hud.toast(`💡 ${rec.summary}`);
   }
 }
 
