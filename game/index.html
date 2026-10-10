@@ -38,6 +38,13 @@
       <div id="turn-pill" class="turn-pill" aria-live="polite">
         <span id="turn-emoji" class="turn-emoji"></span>
         <span id="turn-text">—</span>
+        <span id="turn-timer" class="turn-timer" hidden>
+          <svg class="timer-ring" viewBox="0 0 28 28">
+            <circle class="timer-ring-bg" cx="14" cy="14" r="11" />
+            <circle class="timer-ring-bar" id="timer-ring-bar" cx="14" cy="14" r="11" />
+          </svg>
+          <span id="turn-timer-val" class="turn-timer-val">30</span>
+        </span>
       </div>
       <nav class="actions" aria-label="Game actions">
         <button id="btn-sound" class="icon-btn" type="button" title="Toggle sound (M)" aria-label="Toggle sound">
@@ -158,6 +165,17 @@
             <label><input type="radio" name="difficulty" value="easy" /><span>Easy</span></label>
             <label><input type="radio" name="difficulty" value="medium" checked /><span>Medium</span></label>
             <label><input type="radio" name="difficulty" value="hard" /><span>Hard</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="field" id="timer-field">
+          <legend>Chess Clock (Round Decision Timer)</legend>
+          <div class="segmented timer-segmented">
+            <label><input type="radio" name="turnTimer" value="0" /><span>Off</span></label>
+            <label><input type="radio" name="turnTimer" value="60" /><span>1m</span></label>
+            <label><input type="radio" name="turnTimer" value="180" /><span>3m</span></label>
+            <label><input type="radio" name="turnTimer" value="300" checked /><span>5m</span></label>
+            <label><input type="radio" name="turnTimer" value="600" /><span>10m</span></label>
           </div>
         </fieldset>
 

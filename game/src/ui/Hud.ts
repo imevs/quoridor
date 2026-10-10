@@ -20,9 +20,17 @@ export interface GameConfig {
   players: 2 | 4;
   difficulty: Difficulty;
   animal: AnimalId;
+  turnTimer?: number;
 }
 
-const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+export function formatClock(seconds: number): string {
+  const s = Math.max(0, Math.ceil(seconds));
+  const mins = Math.floor(s / 60);
+  const secs = s % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+const $ = <T extends Element>(id: string) => document.getElementById(id) as unknown as T;
 
 const STORAGE_KEY = 'quoridors.config';
 
@@ -31,6 +39,9 @@ export class Hud {
   private turnPill = $<HTMLElement>('turn-pill');
   private turnEmoji = $<HTMLElement>('turn-emoji');
   private turnText = $<HTMLElement>('turn-text');
+  private turnTimerEl = $<HTMLElement>('turn-timer');
+  private turnTimerVal = $<HTMLElement>('turn-timer-val');
+  private timerRingBar = $<SVGCircleElement>('timer-ring-bar');
   private hintEl = $<HTMLElement>('hint');
   private toastEl = $<HTMLElement>('toast');
   private toastTimer = 0;
@@ -154,6 +165,7 @@ export class Hud {
     const mode = this.formValue('mode');
     $<HTMLElement>('difficulty-field').hidden = mode === 'local';
     $<HTMLElement>('pawn-field').hidden = mode === 'bot_vs_bot';
+    $<HTMLElement>('timer-field').hidden = mode === 'bot_vs_bot';
     $<HTMLElement>('btn-start').textContent =
       mode === 'online' ? 'Create Online Game' : mode === 'bot_vs_bot' ? 'Watch Bots Play' : 'Start Game';
   }
@@ -165,11 +177,14 @@ export class Hud {
 
   readConfig(): GameConfig {
     const mode = this.formValue('mode');
+    const timerVal = this.formValue('turnTimer');
+    const turnTimer = timerVal !== '' ? Number(timerVal) : 300;
     const cfg: GameConfig = {
       mode: mode === 'local' ? 'local' : mode === 'bot_vs_bot' ? 'bot_vs_bot' : mode === 'online' && __ONLINE__ ? 'online' : 'ai',
       players: this.formValue('players') === '4' ? 4 : 2,
       difficulty: (this.formValue('difficulty') || 'medium') as Difficulty,
       animal: (this.formValue('animal') || 'fox') as AnimalId,
+      turnTimer: Number.isFinite(turnTimer) ? turnTimer : 300,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
     return cfg;
@@ -187,13 +202,14 @@ export class Hud {
       set('players', String(cfg.players));
       set('difficulty', cfg.difficulty);
       set('animal', cfg.animal);
+      set('turnTimer', String(cfg.turnTimer ?? 300));
     } catch {
       /* ignore corrupt storage */
     }
   }
 
   // ---------------------------------------------------------------- In-game
-  renderPlayers(state: GameState, seats: Seat[]): void {
+  renderPlayers(state: GameState, seats: Seat[], clocks: number[] = [], initialClock = 0): void {
     const wallsMax = seats.length === 2 ? 10 : 5;
     const localHumans = seats.filter((s) => s.human && s.local).length;
     this.playersEl.dataset.count = String(seats.length);
@@ -210,10 +226,15 @@ export class Hud {
               : `P${i + 1}`;
         const steps = shortestPath(state, i);
         const pips = Array.from({ length: wallsMax }, (_, k) => `<span class="pip ${k >= p.walls ? 'used' : ''}"></span>`).join('');
+        const clockVal = clocks[i];
+        const clockHtml = initialClock > 0 && clockVal !== undefined
+          ? `<span class="player-clock ${state.turn === i && state.winner === null ? 'active' : ''} ${clockVal <= 15 && clockVal > 0 ? 'urgent' : ''}" data-seat="${i}" title="Time remaining">${formatClock(clockVal)}</span>`
+          : '';
         return `<article class="player-card ${state.turn === i && state.winner === null ? 'active' : ''} ${seat.away ? 'away' : ''}" data-seat="${i}" data-animal="${seat.animal}" style="--pc:${a.color}">
           <div class="avatar" aria-hidden="true">${a.emoji}</div>
           <div class="player-head">${a.name}<span class="badge ${seat.local ? 'you' : ''}">${badge}</span>
-            <span class="steps" title="Shortest path to goal">${steps} step${steps === 1 ? '' : 's'}</span></div>
+            <span class="steps" title="Shortest path to goal">${steps} step${steps === 1 ? '' : 's'}</span>
+            ${clockHtml}</div>
           <div class="pips" title="${p.walls} hedges left" aria-label="${p.walls} hedges left">${pips}</div>
         </article>`;
       })
@@ -228,6 +249,43 @@ export class Hud {
     this.turnPill.classList.remove('pop');
     void this.turnPill.offsetWidth; // restart animation
     this.turnPill.classList.add('pop');
+  }
+
+  updatePlayerClock(seat: number, remaining: number, initialClock: number): void {
+    if (initialClock <= 0) return;
+    const el = this.playersEl.querySelector<HTMLElement>(`.player-clock[data-seat="${seat}"]`);
+    if (el) {
+      el.textContent = formatClock(remaining);
+      if (remaining <= 15 && remaining > 0) {
+        el.classList.add('urgent');
+      } else {
+        el.classList.remove('urgent');
+      }
+    }
+  }
+
+  updateTurnTimer(secondsRemaining: number, maxSeconds: number): void {
+    if (maxSeconds <= 0) {
+      this.turnTimerEl.hidden = true;
+      return;
+    }
+    this.turnTimerEl.hidden = false;
+    this.turnTimerVal.textContent = formatClock(secondsRemaining);
+    const fraction = Math.max(0, Math.min(1, secondsRemaining / maxSeconds));
+    const circumference = 69.115;
+    const offset = circumference * (1 - fraction);
+    this.timerRingBar.style.strokeDashoffset = String(offset);
+
+    if (secondsRemaining <= 15.1 && secondsRemaining > 0) {
+      this.turnTimerEl.classList.add('urgent');
+    } else {
+      this.turnTimerEl.classList.remove('urgent');
+    }
+  }
+
+  hideTurnTimer(): void {
+    this.turnTimerEl.hidden = true;
+    this.turnTimerEl.classList.remove('urgent');
   }
 
   setHint(text: string): void {

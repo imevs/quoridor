@@ -212,6 +212,110 @@ button {
   background: color-mix(in srgb, var(--pc) 35%, white);
 }
 
+.turn-timer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 8px 0 4px;
+  margin-left: 4px;
+  border-radius: 99px;
+  background: rgb(0 0 0 / 0.08);
+  border: 1px solid rgb(0 0 0 / 0.06);
+  flex-shrink: 0;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.timer-ring {
+  width: 18px;
+  height: 18px;
+  transform: rotate(-90deg);
+  flex-shrink: 0;
+}
+
+.timer-ring-bg {
+  fill: none;
+  stroke: rgb(0 0 0 / 0.12);
+  stroke-width: 2.5;
+}
+
+.timer-ring-bar {
+  fill: none;
+  stroke: color-mix(in srgb, var(--pc) 85%, black);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 69.115;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.12s linear, stroke 0.3s;
+}
+
+.turn-timer-val {
+  position: relative;
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  line-height: 1;
+  letter-spacing: -0.2px;
+}
+
+.turn-timer.urgent {
+  background: #ffe3e3;
+  border-color: #ffa8a8;
+  animation: timer-pulse 0.7s ease-in-out infinite;
+}
+
+.turn-timer.urgent .timer-ring-bar {
+  stroke: #e03131;
+}
+
+.turn-timer.urgent .turn-timer-val {
+  color: #c92a2a;
+}
+
+.player-clock {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.08);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgb(0 0 0 / 0.06);
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+  margin-left: 4px;
+  flex-shrink: 0;
+  transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+
+.player-card.active .player-clock {
+  background: color-mix(in srgb, var(--pc) 24%, white);
+  border-color: color-mix(in srgb, var(--pc) 50%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--pc) 25%, transparent);
+}
+
+.player-clock.urgent {
+  background: #ffe3e3;
+  color: #c92a2a;
+  border-color: #ffa8a8;
+  animation: timer-pulse 0.75s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
 @keyframes pop {
   0% {
     scale: 0.85;
@@ -1658,6 +1762,38 @@ dialog.panel form,
     padding: 4px 10px 4px 4px;
   }
 
+  .turn-timer {
+    height: 22px;
+    padding: 0 6px 0 3px;
+    gap: 3px;
+  }
+
+  .timer-ring {
+    width: 15px;
+    height: 15px;
+  }
+
+  .turn-timer-val {
+    font-size: 10px;
+  }
+
+  .player-clock {
+    font-size: 11px;
+    padding: 1px 5px;
+  }
+
+  .timer-segmented {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+  }
+
+  .timer-segmented .btn-check span,
+  .timer-segmented label span {
+    padding: 6px 2px;
+    font-size: 11.5px;
+  }
+
   .topbar {
     padding: 5px 8px;
   }
@@ -1841,6 +1977,17 @@ dialog.panel form,
 
   .steps {
     font-size: 10px;
+  }
+
+  .player-clock {
+    font-size: 11px;
+    padding: 1px 4px;
+    border-radius: 6px;
+  }
+
+  .players[data-count="4"] .player-clock {
+    font-size: 9.5px;
+    padding: 1px 3px;
   }
 
   .pips {

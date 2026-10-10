@@ -168,6 +168,31 @@ class SoundSystem {
     osc.stop(t + 0.04);
   }
 
+  /** Audible tick when decision timer is counting down */
+  playCountdown(urgent = false): void {
+    if (!this.enabled) return;
+    const ctx = this.initCtx();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    const freq = urgent ? 920 : 660;
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(urgent ? 460 : 330, t + 0.04);
+
+    gain.gain.setValueAtTime(urgent ? 0.12 : 0.06, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 0.05);
+  }
+
   /** Gentle whoosh when undo or camera angle transitions */
   playWhoosh(): void {
     if (!this.enabled) return;

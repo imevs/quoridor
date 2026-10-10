@@ -30,6 +30,12 @@ class Game {
   private movesCount = 0;
   private matchActions: Action[] = [];
   private hoveredAnimalSeat: number | null = null;
+  private clockInitial = 300;
+  private playerClocks: number[] = [];
+  private clockTimerId: number | null = null;
+  private clockLastTime = 0;
+  private lastBeepSecond = -1;
+  private clockHistory: number[][] = [];
 
   constructor() {
     this.scene = new BoardScene(document.getElementById('stage')!);
@@ -195,9 +201,12 @@ class Game {
   }
 
   private startLocal(config: GameConfig, restoreExisting = false): void {
+    this.clockInitial = typeof config.turnTimer === 'number' ? config.turnTimer : 300;
     this.hud.setReplayBarVisible(false);
     this.hud.setBotMatchActive(config.mode === 'bot_vs_bot');
     if (!restoreExisting) {
+      this.playerClocks = [];
+      this.clockHistory = [];
       LocalController.clearSaved();
       if (config.mode === 'bot_vs_bot') {
         this.cameraPreset = 'iso';
@@ -208,6 +217,10 @@ class Game {
 
   private async startOnline(intent: import('./net/OnlineController').OnlineIntent): Promise<void> {
     if (!__ONLINE__) return;
+    const cfg = this.hud.readConfig();
+    this.clockInitial = typeof cfg.turnTimer === 'number' ? cfg.turnTimer : 300;
+    this.playerClocks = [];
+    this.clockHistory = [];
     this.hud.setReplayBarVisible(false);
     this.hud.setBotMatchActive(false);
     const { OnlineController } = await import('./net/OnlineController');
@@ -215,6 +228,8 @@ class Game {
   }
 
   private setController(ctrl: GameController, restoreExisting = false): void {
+    this.stopClockTimer();
+    this.hud.hideTurnTimer();
     this.controller?.dispose();
     this.controller = ctrl;
     this.queue = [];
@@ -255,6 +270,8 @@ class Game {
         this.state = u.state;
         this.movesCount = 0;
         this.matchActions = [];
+        this.clockHistory = [];
+        this.playerClocks = this.seats.map(() => this.clockInitial);
         this.clearPreview();
         this.clearAnimalDestination();
         this.scene.setupPlayers(this.seats.map((s) => s.animal));
@@ -266,11 +283,17 @@ class Game {
       }
       case 'seats': {
         this.seats = u.seats;
+        if (this.playerClocks.length !== this.seats.length) {
+          this.playerClocks = this.seats.map(() => this.clockInitial);
+        }
         this.refreshTurnUi();
         break;
       }
       case 'sync': {
         this.state = u.state;
+        if (this.playerClocks.length !== this.state.players.length) {
+          this.playerClocks = this.state.players.map(() => this.clockInitial);
+        }
         this.clearPreview();
         this.clearAnimalDestination();
         this.scene.syncState(this.state);
@@ -278,9 +301,11 @@ class Game {
         break;
       }
       case 'action': {
+        this.stopClockTimer();
         this.clearPreview();
         this.scene.showMoveMarkers([]);
         this.matchActions.push(u.action);
+        this.clockHistory.push([...this.playerClocks]);
         if (u.action.type === 'move') {
           this.movesCount++;
           await this.scene.animateMove(u.seat, u.action);
@@ -312,11 +337,19 @@ class Game {
     const seat = this.currentSeat;
     const a = ANIMALS[seat.animal];
 
-    this.hud.renderPlayers(s, this.seats);
+    if (this.playerClocks.length !== this.seats.length) {
+      this.playerClocks = this.seats.map(() => this.clockInitial);
+    }
+
+    this.hud.renderPlayers(s, this.seats, this.playerClocks, this.clockInitial);
     this.scene.setActiveSeat(s.turn);
     this.updateControls();
 
-    if (s.winner !== null) return;
+    if (s.winner !== null) {
+      this.stopClockTimer();
+      this.hud.hideTurnTimer();
+      return;
+    }
 
     if (this.isMyTurn()) {
       const label = this.controller?.kind === 'local' ? `${a.name}'s turn` : 'Your turn';
@@ -349,6 +382,13 @@ class Game {
       this.scene.showMoveMarkers([]);
       this.scene.showGhost(null);
     }
+
+    if (this.clockInitial > 0) {
+      this.startClockTimer();
+    } else {
+      this.stopClockTimer();
+      this.hud.hideTurnTimer();
+    }
   }
 
   private toggleBotMatch(): void {
@@ -374,10 +414,12 @@ class Game {
     this.hud.undoBtn.disabled = !this.controller?.canUndo() || this.processing;
   }
 
-  private async finish(winner: number): Promise<void> {
+  private async finish(winner: number, timedOutBy?: number): Promise<void> {
+    this.stopClockTimer();
+    this.hud.hideTurnTimer();
     this.hud.setBotMatchActive(false);
     const seat = this.seats[winner];
-    this.hud.renderPlayers(this.state, this.seats);
+    this.hud.renderPlayers(this.state, this.seats, this.playerClocks, this.clockInitial);
     this.hud.setTurn(seat, `${ANIMALS[seat.animal].name} wins!`);
     this.hud.setHint('');
 
@@ -398,13 +440,19 @@ class Game {
 
     const canRematch = this.controller ? this.controller.canRematch() : false;
     let title = `${ANIMALS[seat.animal].name} wins`;
-    let sub = 'Goal line reached.';
+    let sub = timedOutBy !== undefined
+      ? `Won on time (${ANIMALS[this.seats[timedOutBy].animal].name} ran out of time).`
+      : 'Goal line reached.';
     if (kind === 'ai') {
       title = seat.human ? 'You win' : `${ANIMALS[seat.animal].name} wins`;
-      sub = seat.human ? 'Goal line reached.' : 'Opponent reached the goal line.';
+      if (timedOutBy === undefined) {
+        sub = seat.human ? 'Goal line reached.' : 'Opponent reached the goal line.';
+      }
     } else if (kind === 'bot_vs_bot') {
       title = `${ANIMALS[seat.animal].name} wins!`;
-      sub = `Bot ${ANIMALS[seat.animal].name} reached the goal line.`;
+      if (timedOutBy === undefined) {
+        sub = `Bot ${ANIMALS[seat.animal].name} reached the goal line.`;
+      }
     } else if (kind === 'online') {
       title = seat.local ? 'Victory!' : `${ANIMALS[seat.animal].name} wins`;
     }
@@ -413,6 +461,8 @@ class Game {
   }
 
   private startReplay(record: HistoryRecord): void {
+    this.stopClockTimer();
+    this.hud.hideTurnTimer();
     LocalController.clearSaved();
     this.hud.setBotMatchActive(false);
     this.cameraPreset = 'iso';
@@ -462,6 +512,16 @@ class Game {
 
   private undo(): void {
     if (this.processing || !this.controller?.canUndo()) return;
+    this.stopClockTimer();
+    if (this.clockHistory.length > 0) {
+      const isVsAi = this.controller?.kind === 'ai';
+      if (isVsAi && this.clockHistory.length >= 2) {
+        this.clockHistory.pop();
+        this.playerClocks = this.clockHistory.pop()!;
+      } else {
+        this.playerClocks = this.clockHistory.pop()!;
+      }
+    }
     sounds.playWhoosh();
     this.controller.undo();
   }
@@ -608,7 +668,107 @@ class Game {
       const check = checkWall(this.state, action.wall);
       if (!check.ok) return this.hud.toast(check.reason);
     }
+    this.stopClockTimer();
     this.controller?.submit(action);
+  }
+
+  // ------------------------------------------------------------------ Decision Clock (Chess Clock)
+  private isModalOpen(): boolean {
+    return Boolean(document.querySelector('dialog[open]'));
+  }
+
+  private startClockTimer(): void {
+    this.stopClockTimer();
+    if (this.clockInitial <= 0 || !this.state || this.state.winner !== null) {
+      this.hud.hideTurnTimer();
+      return;
+    }
+
+    const currentTurn = this.state.turn;
+    if (this.playerClocks[currentTurn] === undefined) {
+      this.playerClocks[currentTurn] = this.clockInitial;
+    }
+
+    this.clockLastTime = performance.now();
+    this.lastBeepSecond = -1;
+    const currentRemaining = this.playerClocks[currentTurn];
+    this.hud.updateTurnTimer(currentRemaining, this.clockInitial);
+    this.hud.updatePlayerClock(currentTurn, currentRemaining, this.clockInitial);
+
+    this.clockTimerId = window.setInterval(() => {
+      if (!this.state || this.state.winner !== null) {
+        this.stopClockTimer();
+        this.hud.hideTurnTimer();
+        return;
+      }
+
+      const now = performance.now();
+      const dt = (now - this.clockLastTime) / 1000;
+      this.clockLastTime = now;
+
+      if (this.isModalOpen()) {
+        return;
+      }
+
+      if (this.controller instanceof LocalController && this.controller.paused) {
+        return;
+      }
+
+      const turn = this.state.turn;
+      if (this.playerClocks[turn] === undefined) {
+        this.playerClocks[turn] = this.clockInitial;
+      }
+
+      this.playerClocks[turn] = Math.max(0, this.playerClocks[turn] - dt);
+      const remaining = this.playerClocks[turn];
+
+      this.hud.updateTurnTimer(remaining, this.clockInitial);
+      this.hud.updatePlayerClock(turn, remaining, this.clockInitial);
+
+      const wholeSec = Math.ceil(remaining);
+      if (wholeSec <= 10 && wholeSec > 0 && wholeSec !== this.lastBeepSecond) {
+        this.lastBeepSecond = wholeSec;
+        sounds.playCountdown(wholeSec <= 3);
+      }
+
+      if (remaining <= 0) {
+        this.stopClockTimer();
+        this.onClockExpired(turn);
+      }
+    }, 100);
+  }
+
+  private stopClockTimer(): void {
+    if (this.clockTimerId !== null) {
+      window.clearInterval(this.clockTimerId);
+      this.clockTimerId = null;
+    }
+  }
+
+  private onClockExpired(timedOutTurn: number): void {
+    if (!this.state || this.state.winner !== null) return;
+    sounds.playCountdown(true);
+    const timedOutSeat = this.seats[timedOutTurn];
+    const timedOutAnimalName = timedOutSeat ? ANIMALS[timedOutSeat.animal].name : `Player ${timedOutTurn + 1}`;
+    this.hud.toast(`⏰ ${timedOutAnimalName} ran out of time!`);
+
+    let winner = -1;
+    if (this.state.players.length === 2) {
+      winner = 1 - timedOutTurn;
+    } else {
+      let bestDist = Infinity;
+      for (let i = 0; i < this.state.players.length; i++) {
+        if (i === timedOutTurn) continue;
+        const d = shortestPath(this.state, i);
+        if (d < bestDist) {
+          bestDist = d;
+          winner = i;
+        }
+      }
+      if (winner === -1) winner = (timedOutTurn + 1) % this.state.players.length;
+    }
+
+    void this.finish(winner, timedOutTurn);
   }
 }
 
