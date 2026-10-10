@@ -38,6 +38,7 @@ export class Hud {
   private destAvatar = $<HTMLElement>('dest-avatar');
   private destTitle = $<HTMLElement>('dest-title');
   private destDesc = $<HTMLElement>('dest-desc');
+  private tappedSeat: number | null = null;
   readonly menu = $<HTMLDialogElement>('menu-dialog');
   readonly menuCloseBtn = $<HTMLButtonElement>('btn-menu-close');
   readonly menuXBtn = $<HTMLButtonElement>('btn-menu-x');
@@ -117,6 +118,14 @@ export class Hud {
     this.winXBtn.addEventListener('click', () => {
       this.win.close();
     });
+    $<HTMLButtonElement>('btn-menu-rules')?.addEventListener('click', () => {
+      this.menu.close();
+      this.rules.showModal();
+    });
+    $<HTMLButtonElement>('btn-menu-history')?.addEventListener('click', () => {
+      this.menu.close();
+      this.historyBtn.click();
+    });
     this.restoreConfig();
     this.syncMenuFields();
   }
@@ -187,6 +196,7 @@ export class Hud {
   renderPlayers(state: GameState, seats: Seat[]): void {
     const wallsMax = seats.length === 2 ? 10 : 5;
     const localHumans = seats.filter((s) => s.human && s.local).length;
+    this.playersEl.dataset.count = String(seats.length);
     this.playersEl.innerHTML = state.players
       .map((p, i) => {
         const seat = seats[i];
@@ -232,10 +242,33 @@ export class Hud {
       }
     });
     this.playersEl.addEventListener('pointerout', (e) => {
+      if (this.tappedSeat !== null) return;
       const card = (e.target as HTMLElement).closest<HTMLElement>('.player-card');
       const related = e.relatedTarget as Node | null;
       if (card && (!related || !card.contains(related))) {
         onHover(null);
+      }
+    });
+    this.playersEl.addEventListener('click', (e) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>('.player-card');
+      if (card && card.dataset.seat !== undefined) {
+        const seat = Number(card.dataset.seat);
+        if (this.tappedSeat === seat) {
+          this.tappedSeat = null;
+          onHover(null);
+        } else {
+          this.tappedSeat = seat;
+          onHover(seat);
+        }
+      }
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (this.tappedSeat !== null) {
+        const target = e.target as HTMLElement;
+        if (!target.closest('#players') && !target.closest('#destination-pill')) {
+          this.tappedSeat = null;
+          onHover(null);
+        }
       }
     });
   }
@@ -258,6 +291,7 @@ export class Hud {
   }
 
   hideDestination(): void {
+    this.tappedSeat = null;
     this.destPill.hidden = true;
     this.hintEl.style.opacity = '';
     this.playersEl.querySelectorAll<HTMLElement>('.player-card').forEach((card) => {

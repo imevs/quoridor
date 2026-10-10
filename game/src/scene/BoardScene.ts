@@ -143,8 +143,8 @@ export class BoardScene {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
     this.controls.enablePan = false;
-    this.controls.minDistance = 10;
-    this.controls.maxDistance = 38;
+    this.controls.minDistance = 8;
+    this.controls.maxDistance = Math.max(50, this.idealDistance() * 1.45);
     this.controls.minPolarAngle = 0.15;
     this.controls.maxPolarAngle = 1.22;
     this.controls.target.set(0, 0, 0.3);
@@ -707,10 +707,12 @@ export class BoardScene {
     const aspect = this.camera.aspect;
     const vFov = THREE.MathUtils.degToRad(this.camera.fov);
     const boardSpan = 13.4;
-    const distV = boardSpan / 2 / Math.tan(vFov / 2) * 1.05;
+    const distV = boardSpan / 2 / Math.tan(vFov / 2);
     const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
-    const distH = boardSpan / 2 / Math.tan(hFov / 2) * 1.1;
-    return Math.max(distV * 0.95, distH, 16);
+    const distH = boardSpan / 2 / Math.tan(hFov / 2);
+    // Zoom in snugly to eliminate dead space while keeping the full board in view
+    const scale = aspect >= 1.0 ? 0.88 : 0.94;
+    return Math.max(distV * scale, distH * scale, 15);
   }
 
   private fitCamera(): void {
@@ -725,6 +727,8 @@ export class BoardScene {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
+    this.controls.maxDistance = Math.max(50, this.idealDistance() * 1.45);
+    this.fitCamera();
   }
 
   // ---------------------------------------------------------------------------

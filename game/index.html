@@ -136,7 +136,7 @@
 
         <fieldset class="field">
           <legend>Mode</legend>
-          <div class="segmented">
+          <div class="segmented mode-segmented">
             <label><input type="radio" name="mode" value="ai" checked /><span>vs Computer</span></label>
             <label><input type="radio" name="mode" value="local" /><span>Pass &amp; Play</span></label>
             <label><input type="radio" name="mode" value="bot_vs_bot" /><span>Bots Only</span></label>
@@ -165,6 +165,11 @@
           <legend>Pawn</legend>
           <div id="animal-picker" class="animal-picker"></div>
         </fieldset>
+
+        <div class="menu-secondary-actions">
+          <button id="btn-menu-rules" class="ghost-btn small" type="button">📖 How to Play</button>
+          <button id="btn-menu-history" class="ghost-btn small" type="button">📜 Match History</button>
+        </div>
 
         <div class="menu-actions">
           <button id="btn-menu-close" class="ghost-btn" type="button">Close</button>

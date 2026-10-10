@@ -63,7 +63,8 @@ class Game {
       if (!this.downAt) return;
       const moved = Math.hypot(e.clientX - this.downAt.x, e.clientY - this.downAt.y);
       this.downAt = null;
-      if (moved < 7) this.onClick(e);
+      const threshold = e.pointerType === 'touch' ? 14 : 7;
+      if (moved < threshold) this.onClick(e);
     });
     canvas.addEventListener('pointerleave', () => {
       this.clearPreview();
