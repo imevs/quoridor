@@ -1,0 +1,214 @@
+/* ---------------------------------------------------------------- Match History, Moves List & Replay Bar */
+.panel-content {
+  padding: 26px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.65);
+  border: 1px solid rgb(29 51 25 / 0.08);
+}
+
+.history-item .avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  border-radius: 10px;
+}
+
+.history-item-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.history-item-main b {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-item-main small {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.history-item-meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.history-empty {
+  text-align: center;
+  padding: 30px 10px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.history-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.history-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* ---------------------------------------------------------------- Replay Bar */
+.replay-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 12px 34px rgb(20 40 18 / 0.16);
+  border: 1px solid rgb(29 51 25 / 0.12);
+  max-width: 95vw;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.replay-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+}
+
+.replay-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--moss);
+}
+
+.replay-move-desc {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 190px;
+}
+
+.replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.replay-play-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.replay-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.replay-step {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  min-width: 52px;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------- Move History List */
+.moves-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.move-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  background: rgb(255 255 255 / 0.65);
+  border: 1px solid rgb(29 51 25 / 0.08);
+  font-size: 13px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.move-item:hover {
+  background: rgb(255 255 255 / 0.95);
+  transform: translateX(2px);
+  border-color: var(--moss);
+}
+
+.move-item.active {
+  background: rgb(58 111 67 / 0.14);
+  border-color: var(--moss);
+  font-weight: 700;
+}
+
+.move-num {
+  font-weight: 700;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  min-width: 28px;
+}
+
+.move-desc {
+  flex: 1;
+  margin-left: 8px;
+  color: var(--ink);
+}
+
+.move-notation {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--moss);
+  background: rgb(29 51 25 / 0.06);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
