@@ -150,6 +150,7 @@ export class BoardScene {
     this.controls.target.set(0, 0, 0.3);
 
     this.setupLighting();
+    this.updateCameraProjection();
     this.fitCamera();
 
     window.addEventListener('resize', () => this.onResize());
@@ -717,9 +718,24 @@ export class BoardScene {
     const distV = boardSpan / 2 / Math.tan(vFov / 2);
     const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
     const distH = boardSpan / 2 / Math.tan(hFov / 2);
-    // Zoom in snugly to eliminate dead space while keeping the full board in view
-    const scale = aspect >= 1.0 ? 0.88 : 0.94;
+    // On desktop, scale 1.05 provides clean clearance above the bottom player cards row.
+    // On mobile portrait, scale 0.94 fits the narrow screen snugly.
+    const scale = aspect >= 1.0 ? 1.05 : 0.94;
     return Math.max(distV * scale, distH * scale, 15);
+  }
+
+  private updateCameraProjection(): void {
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+    this.camera.aspect = w / h;
+    if (w > 760 && h > 450) {
+      // Offset view slightly upward on desktop (~30px) so board has generous clearance above bottom player cards
+      const offsetY = Math.round(Math.min(32, h * 0.04));
+      this.camera.setViewOffset(w, h, 0, offsetY, w, h);
+    } else {
+      this.camera.clearViewOffset();
+    }
+    this.camera.updateProjectionMatrix();
   }
 
   private fitCamera(): void {
@@ -731,8 +747,7 @@ export class BoardScene {
   private onResize(): void {
     const w = this.container.clientWidth;
     const h = this.container.clientHeight;
-    this.camera.aspect = w / h;
-    this.camera.updateProjectionMatrix();
+    this.updateCameraProjection();
     this.renderer.setSize(w, h);
     this.controls.maxDistance = Math.max(50, this.idealDistance() * 1.45);
     this.fitCamera();
