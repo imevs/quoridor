@@ -1,14 +1,12 @@
 import './style.css';
-import { BoardScene, type CameraPreset, type Pick } from './scene/BoardScene';
+import { BoardScene, type CameraPreset } from './scene/BoardScene';
+import { BoardInteractionManager } from './scene/BoardInteraction';
+import { bindKeyboardShortcuts } from './ui/shortcuts';
 import { Hud, type GameConfig, type Seat } from './ui/Hud';
 import { ANIMALS } from './game/animals';
-import { chooseAction } from './game/ai';
 import {
   type Action,
   type GameState,
-  applyAction,
-  checkWall,
-  cloneState,
   formatGoalDescription,
   legalMoves,
   shortestPath,
@@ -20,16 +18,17 @@ import { ReplayController } from './net/ReplayController';
 import { formatActionDescription } from './game/replay';
 import { sounds } from './scene/sounds';
 import { ChessClock, resolveTimeoutWinner } from './game/clock';
+import { TacticalCoach } from './game/coach';
 
 class Game {
   private scene: BoardScene;
+  private interaction!: BoardInteractionManager;
   private hud = new Hud();
   private controller: GameController | null = null;
   private seats: Seat[] = [];
   private state!: GameState;
   private queue: Update[] = [];
   private processing = false;
-  private downAt: { x: number; y: number } | null = null;
   private cameraPreset: CameraPreset = 'seat';
   private movesCount = 0;
   private matchActions: Action[] = [];
@@ -64,20 +63,20 @@ class Game {
 
   // ------------------------------------------------------------------ Setup
   private bindUi(): void {
-    const canvas = this.scene.renderer.domElement;
-    canvas.addEventListener('pointermove', (e) => this.onHover(e));
-    canvas.addEventListener('pointerdown', (e) => (this.downAt = { x: e.clientX, y: e.clientY }));
-    canvas.addEventListener('pointerup', (e) => {
-      if (!this.downAt) return;
-      const moved = Math.hypot(e.clientX - this.downAt.x, e.clientY - this.downAt.y);
-      this.downAt = null;
-      const threshold = e.pointerType === 'touch' ? 14 : 7;
-      if (moved < threshold) this.onClick(e);
-    });
-    canvas.addEventListener('pointerleave', () => {
-      this.clearPreview();
-      this.clearAnimalDestination();
-    });
+    this.interaction = new BoardInteractionManager(
+      this.scene.renderer.domElement,
+      this.scene,
+      {
+        getState: () => this.state ?? null,
+        canAct: () => this.isMyTurn() && !this.processing,
+        onAction: (action) => this.submitAction(action),
+        onHoverPawn: (seat) => {
+          if (seat !== null) this.showAnimalDestination(seat);
+          else this.clearAnimalDestination();
+        },
+        onToast: (msg) => this.hud.toast(msg),
+      },
+    );
 
     this.hud.bindPlayerHover((seat) => {
       if (seat !== null) {
@@ -123,11 +122,7 @@ class Game {
     this.hud.hintEl.addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('#btn-apply-hint');
       if (btn && this.currentHintAction) {
-        const act = this.currentHintAction;
-        this.currentHintAction = null;
-        this.hud.hintEl.classList.remove('active-hint');
-        this.stopClockTimer();
-        this.controller?.submit(act);
+        this.submitAction(this.currentHintAction);
       }
     });
 
@@ -164,43 +159,35 @@ class Game {
     });
     this.hud.replayMovesBtn.addEventListener('click', () => this.showMovesDialog());
 
-    window.addEventListener('keydown', (e) => {
-      if (document.querySelector('dialog[open]')) return;
-      if (this.controller instanceof ReplayController) {
-        if (e.key === ' ' || e.code === 'Space') {
-          e.preventDefault();
-          this.controller.togglePlay();
-        } else if (e.key === 'ArrowLeft' || e.key === '[') {
-          e.preventDefault();
-          this.controller.prev();
-        } else if (e.key === 'ArrowRight' || e.key === ']') {
-          e.preventDefault();
-          this.controller.next();
-        } else if (e.key === 'Home') {
-          e.preventDefault();
-          this.controller.first();
-        } else if (e.key === 'End') {
-          e.preventDefault();
-          this.controller.last();
-        } else if (e.key === 'l' || e.key === 'L') {
-          this.showMovesDialog();
-        } else if (e.key === 'c' || e.key === 'C') {
-          this.cycleCameraPreset();
-        } else if (e.key === 'm' || e.key === 'M') {
-          this.toggleSound();
-        } else if (e.key === 'Escape') {
-          this.openMenu();
-        }
-        return;
-      }
-      if (e.key === 'z' || e.key === 'Z') this.undo();
-      else if (e.key === 'i' || e.key === 'I' || e.key === '?') this.requestHint();
-      else if (e.key === 'c' || e.key === 'C') this.cycleCameraPreset();
-      else if (e.key === 'm' || e.key === 'M') this.toggleSound();
-      else if (e.key === 'h' || e.key === 'H') this.showHistory();
-      else if (e.key === 'l' || e.key === 'L') this.showMovesDialog();
-      else if ((e.key === 's' || e.key === 'S') && this.controller?.kind === 'bot_vs_bot') this.toggleBotMatch();
-      else if (e.key === 'Escape') this.openMenu();
+    bindKeyboardShortcuts({
+      isModalOpen: () => Boolean(document.querySelector('dialog[open]')),
+      isReplay: () => this.controller instanceof ReplayController,
+      canToggleBot: () => this.controller?.kind === 'bot_vs_bot',
+      onUndo: () => this.undo(),
+      onHint: () => this.requestHint(),
+      onCamera: () => this.cycleCameraPreset(),
+      onSound: () => this.toggleSound(),
+      onHistory: () => this.showHistory(),
+      onMoves: () => this.showMovesDialog(),
+      onMenu: () => this.openMenu(),
+      onToggleBotMatch: () => this.toggleBotMatch(),
+      replay: {
+        togglePlay: () => {
+          if (this.controller instanceof ReplayController) this.controller.togglePlay();
+        },
+        prev: () => {
+          if (this.controller instanceof ReplayController) this.controller.prev();
+        },
+        next: () => {
+          if (this.controller instanceof ReplayController) this.controller.next();
+        },
+        first: () => {
+          if (this.controller instanceof ReplayController) this.controller.first();
+        },
+        last: () => {
+          if (this.controller instanceof ReplayController) this.controller.last();
+        },
+      },
     });
   }
 
@@ -209,7 +196,7 @@ class Game {
     if (this.controller?.kind === 'bot_vs_bot' && this.controller instanceof LocalController) {
       this.hud.updateBotMatchPaused(this.controller.paused);
     }
-    this.clearPreview();
+    this.interaction?.clearPreview();
     this.hud.menu.returnValue = '';
     if (!this.hud.menu.open) this.hud.menu.showModal();
   }
@@ -283,7 +270,7 @@ class Game {
         this.movesCount = 0;
         this.matchActions = [];
         this.clock.reset(this.seats.length, this.clock.initialSeconds);
-        this.clearPreview();
+        this.interaction?.clearPreview();
         this.clearAnimalDestination();
         this.scene.setupPlayers(this.seats.map((s) => s.animal));
         this.scene.syncState(this.state);
@@ -305,7 +292,7 @@ class Game {
         if (this.clock.remaining.length !== this.state.players.length) {
           this.clock.reset(this.state.players.length, this.clock.initialSeconds);
         }
-        this.clearPreview();
+        this.interaction?.clearPreview();
         this.clearAnimalDestination();
         this.scene.syncState(this.state);
         this.refreshTurnUi();
@@ -313,7 +300,7 @@ class Game {
       }
       case 'action': {
         this.stopClockTimer();
-        this.clearPreview();
+        this.interaction?.clearPreview();
         this.scene.showMoveMarkers([]);
         this.matchActions.push(u.action);
         this.clock.recordMove();
@@ -364,7 +351,7 @@ class Game {
     if (this.isMyTurn()) {
       const label = this.controller?.kind === 'local' ? `${a.name}'s turn` : 'Your turn';
       this.hud.setTurn(seat, label);
-      this.hud.setHint(this.getTacticalAdvice(s, s.turn));
+      this.hud.setHint(TacticalCoach.getStatusAdvice(s, s.turn, this.seats));
       this.scene.showMoveMarkers(legalMoves(s, s.turn));
       if (this.controller?.kind === 'local' && this.cameraPreset === 'seat') {
         void this.scene.focusSeat(s.turn, 0.9);
@@ -569,78 +556,7 @@ class Game {
     this.hud.toast(`Camera: ${labels[this.cameraPreset]}`);
   }
 
-  // ------------------------------------------------------------------ Input
-  private clearPreview(): void {
-    if (this.currentHintAction?.type === 'wall') {
-      this.scene.showGhost(this.currentHintAction.wall, true, true);
-    } else {
-      this.scene.showGhost(null);
-    }
-    this.scene.hoverMarker(null);
-    this.scene.renderer.domElement.style.cursor = '';
-  }
-
-  private previewFor(pick: Pick): Action | null {
-    if (!pick || !this.state) return null;
-    if (pick.kind === 'cell') {
-      const legal = legalMoves(this.state, this.state.turn).some((m) => m.r === pick.r && m.c === pick.c);
-      return legal ? { type: 'move', r: pick.r, c: pick.c } : null;
-    }
-    return { type: 'wall', wall: pick.wall };
-  }
-
-  private onHover(e: PointerEvent): void {
-    if (!this.state || e.buttons !== 0) {
-      if (e.buttons === 0) {
-        this.clearPreview();
-        this.clearAnimalDestination();
-      }
-      return;
-    }
-
-    // Check animal hover: figurine 3D mesh hit or pawn board cell
-    let hoveredSeat: number | null = this.scene.pickPawn(e.clientX, e.clientY);
-    const pick = this.scene.pick(e.clientX, e.clientY);
-    if (hoveredSeat === null && pick?.kind === 'cell') {
-      const pIdx = this.state.players.findIndex((p) => p.r === pick.r && p.c === pick.c);
-      if (pIdx !== -1) {
-        hoveredSeat = pIdx;
-      }
-    }
-
-    if (hoveredSeat !== null) {
-      this.showAnimalDestination(hoveredSeat);
-    } else {
-      this.clearAnimalDestination();
-    }
-
-    if (!this.isMyTurn() || this.processing) {
-      this.clearPreview();
-      if (hoveredSeat !== null) {
-        this.scene.renderer.domElement.style.cursor = 'pointer';
-      }
-      return;
-    }
-
-    const action = this.previewFor(pick);
-    const canvas = this.scene.renderer.domElement;
-    if (action?.type === 'move') {
-      this.scene.showGhost(null);
-      this.scene.hoverMarker(action);
-      canvas.style.cursor = 'pointer';
-    } else if (action?.type === 'wall' && this.state.players[this.state.turn].walls > 0) {
-      const check = checkWall(this.state, action.wall);
-      this.scene.hoverMarker(null);
-      this.scene.showGhost(action.wall, check.ok);
-      canvas.style.cursor = check.ok ? 'pointer' : 'not-allowed';
-    } else {
-      this.clearPreview();
-      if (hoveredSeat !== null) {
-        canvas.style.cursor = 'pointer';
-      }
-    }
-  }
-
+  // ------------------------------------------------------------------ Destination Inspector
   private showAnimalDestination(seatIndex: number): void {
     if (!this.state || seatIndex < 0 || seatIndex >= this.state.players.length) return;
     if (this.hoveredAnimalSeat === seatIndex) return;
@@ -669,17 +585,10 @@ class Game {
     this.hud.hideDestination();
   }
 
-  private onClick(e: PointerEvent): void {
-    if (!this.state || !this.isMyTurn() || this.processing) return;
-    const action = this.previewFor(this.scene.pick(e.clientX, e.clientY));
-    if (!action) return;
-    if (action.type === 'wall') {
-      if (this.state.players[this.state.turn].walls <= 0) return this.hud.toast('No hedges left');
-      const check = checkWall(this.state, action.wall);
-      if (!check.ok) return this.hud.toast(check.reason);
-    }
+  private submitAction(action: Action): void {
     this.currentHintAction = null;
     this.hud.hintEl.classList.remove('active-hint');
+    this.interaction.setHintAction(null);
     this.stopClockTimer();
     this.controller?.submit(action);
   }
@@ -760,121 +669,24 @@ class Game {
   // ------------------------------------------------------------------ Tactical Hints & Guidance
   private requestHint(): void {
     if (!this.state || !this.isMyTurn() || this.processing || this.state.winner !== null) return;
-    const action = chooseAction(this.state, 'hard');
-    this.currentHintAction = action;
+    const rec = TacticalCoach.recommend(this.state, this.seats);
+    this.currentHintAction = rec.action;
+    this.interaction.setHintAction(rec.action);
 
-    if (action.type === 'move') {
-      this.scene.showMoveMarkers(legalMoves(this.state, this.state.turn), { r: action.r, c: action.c });
+    if (rec.action.type === 'move') {
+      this.scene.showMoveMarkers(legalMoves(this.state, this.state.turn), { r: rec.action.r, c: rec.action.c });
       this.scene.showGhost(null);
     } else {
-      this.scene.showGhost(action.wall, true, true);
+      this.scene.showGhost(rec.action.wall, true, true);
     }
 
-    const exp = this.explainHint(this.state, action);
     this.hud.hintEl.classList.add('active-hint');
     this.hud.setHint(
-      `<span aria-hidden="true">💡</span> <span><strong>${exp.summary}</strong> — ${exp.detail}</span> <button id="btn-apply-hint" class="hint-action-btn" type="button">Play Move</button>`,
+      `<span aria-hidden="true">💡</span> <span><strong>${rec.summary}</strong> — ${rec.detail}</span> <button id="btn-apply-hint" class="hint-action-btn" type="button">Play Move</button>`,
       true,
     );
     sounds.playTick();
-    this.hud.toast(`💡 ${exp.summary}`);
-  }
-
-  private explainHint(s: GameState, action: Action): { summary: string; detail: string } {
-    const me = s.turn;
-    const myPlayer = s.players[me];
-    const myDist = shortestPath(s, me);
-
-    if (action.type === 'move') {
-      const isJump = Math.abs(action.r - myPlayer.r) + Math.abs(action.c - myPlayer.c) > 1;
-      const sNext = cloneState(s);
-      applyAction(sNext, action);
-      const newDist = shortestPath(sNext, me);
-      const saved = myDist - newDist;
-
-      if (newDist === 0) {
-        return {
-          summary: `Winning move to row ${action.r + 1}, col ${action.c + 1}!`,
-          detail: 'Reaches goal line for victory',
-        };
-      }
-      if (isJump) {
-        return {
-          summary: `Jump over opponent to row ${action.r + 1}, col ${action.c + 1}`,
-          detail: `Gains ${saved} steps tempo (${newDist} left)`,
-        };
-      }
-      return {
-        summary: `Advance to row ${action.r + 1}, col ${action.c + 1}`,
-        detail: `Best path forward (${newDist} steps to win)`,
-      };
-    }
-
-    const sNext = cloneState(s);
-    applyAction(sNext, action);
-
-    let bestDelay = 0;
-    let targetAnimal = '';
-    for (let i = 0; i < s.players.length; i++) {
-      if (i === me) continue;
-      const before = shortestPath(s, i);
-      const after = shortestPath(sNext, i);
-      const delay = after - before;
-      if (delay > bestDelay) {
-        bestDelay = delay;
-        targetAnimal = ANIMALS[this.seats[i].animal]?.name ?? `Player ${i + 1}`;
-      }
-    }
-
-    const orient = action.wall.o === 'h' ? 'Horizontal' : 'Vertical';
-    const pos = `row ${action.wall.r + 1}, col ${action.wall.c + 1}`;
-
-    if (bestDelay > 0) {
-      return {
-        summary: `Place ${orient.toLowerCase()} hedge at ${pos}`,
-        detail: `Adds +${bestDelay} steps to ${targetAnimal}'s path!`,
-      };
-    }
-
-    return {
-      summary: `Place ${orient.toLowerCase()} hedge at ${pos}`,
-      detail: 'Channels opponent into a longer route',
-    };
-  }
-
-  private getTacticalAdvice(s: GameState, me: number): string {
-    const myDist = shortestPath(s, me);
-    let minOppDist = Infinity;
-    let leaderSeat = -1;
-
-    for (let i = 0; i < s.players.length; i++) {
-      if (i === me) continue;
-      const d = shortestPath(s, i);
-      if (d < minOppDist) {
-        minOppDist = d;
-        leaderSeat = i;
-      }
-    }
-
-    const leaderName = leaderSeat !== -1 ? ANIMALS[this.seats[leaderSeat].animal]?.name : 'Opponent';
-    const hasWalls = s.players[me].walls > 0;
-    const lead = minOppDist - myDist;
-
-    if (minOppDist <= 2 && hasWalls) {
-      return `⚠️ Urgent: ${leaderName} is only ${minOppDist} step${minOppDist === 1 ? '' : 's'} away! Place a hedge (press 💡 for hint)`;
-    }
-    if (lead >= 2) {
-      return `Ahead by ${lead} steps (${myDist} vs ${minOppDist}) · Keep advancing towards your goal!`;
-    }
-    if (lead <= -2 && hasWalls) {
-      return `Trailing by ${-lead} steps (${myDist} vs ${minOppDist}) · Block ${leaderName}'s path (press 💡 for hint)`;
-    }
-    if (lead === 0 && hasWalls) {
-      return `Tied race (${myDist} steps each) · Advance or press 💡 for tactical hint`;
-    }
-    return hasWalls
-      ? `${myDist} steps to goal (${leaderName}: ${minOppDist}) · Click tile to move or groove for wall`
-      : `No hedges left (${myDist} steps to goal) · Advance towards your goal line`;
+    this.hud.toast(`💡 ${rec.summary}`);
   }
 }
 
