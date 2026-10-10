@@ -42,7 +42,7 @@ export class Hud {
   private turnTimerEl = $<HTMLElement>('turn-timer');
   private turnTimerVal = $<HTMLElement>('turn-timer-val');
   private timerRingBar = $<SVGCircleElement>('timer-ring-bar');
-  private hintEl = $<HTMLElement>('hint');
+  readonly hintEl = $<HTMLElement>('hint');
   private toastEl = $<HTMLElement>('toast');
   private toastTimer = 0;
   private destPill = $<HTMLElement>('destination-pill');
@@ -81,6 +81,7 @@ export class Hud {
   readonly replayExitBtn = $<HTMLButtonElement>('btn-replay-exit');
   readonly replayMovesBtn = $<HTMLButtonElement>('btn-replay-moves');
 
+  readonly hintBtn = $<HTMLButtonElement>('btn-hint');
   readonly undoBtn = $<HTMLButtonElement>('btn-undo');
   readonly soundBtn = $<HTMLButtonElement>('btn-sound');
   readonly soundOnIcon = $<HTMLElement>('icon-sound-on');
@@ -288,8 +289,12 @@ export class Hud {
     this.turnTimerEl.classList.remove('urgent');
   }
 
-  setHint(text: string): void {
-    this.hintEl.textContent = text;
+  setHint(content: string, isHtml = false): void {
+    if (isHtml) {
+      this.hintEl.innerHTML = content;
+    } else {
+      this.hintEl.textContent = content;
+    }
   }
 
   bindPlayerHover(onHover: (seat: number | null) => void): void {

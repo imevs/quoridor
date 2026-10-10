@@ -551,18 +551,84 @@ button {
   bottom: max(16px, env(safe-area-inset-bottom));
   left: 50%;
   translate: -50% 0;
-  padding: 10px 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
   border-radius: 99px;
   font-size: 13.5px;
   font-weight: 500;
   color: var(--ink-soft);
   z-index: 9;
   white-space: nowrap;
-  transition: opacity 0.3s;
+  transition: opacity 0.3s, border-color 0.3s, background 0.3s;
+}
+
+.hint.active-hint {
+  border-color: rgba(245, 159, 0, 0.45);
+  background: color-mix(in srgb, #fff9db 40%, var(--glass));
+  box-shadow: 0 0 16px rgba(245, 159, 0, 0.15), var(--shadow);
+  color: var(--ink);
+}
+
+.hint-action-btn {
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: #f59f00;
+  color: #1a1200;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.hint-action-btn:hover {
+  background: #fab005;
+  transform: scale(1.05);
+}
+
+.strategy-tips {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--honey) 12%, rgb(0 0 0 / 0.03));
+  border: 1px solid color-mix(in srgb, var(--honey) 25%, transparent);
+  text-align: left;
+}
+
+.strategy-tips h3 {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tips-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.tips-list strong {
+  color: var(--ink);
+}
+
+#btn-hint:hover {
+  color: #f59f00;
+  border-color: rgba(245, 159, 0, 0.4);
 }
 
 .hint:empty {
   opacity: 0;
+  pointer-events: none;
 }
 
 .toast {

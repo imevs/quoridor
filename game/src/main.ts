@@ -2,10 +2,13 @@ import './style.css';
 import { BoardScene, type CameraPreset, type Pick } from './scene/BoardScene';
 import { Hud, type GameConfig, type Seat } from './ui/Hud';
 import { ANIMALS } from './game/animals';
+import { chooseAction } from './game/ai';
 import {
   type Action,
   type GameState,
+  applyAction,
   checkWall,
+  cloneState,
   formatGoalDescription,
   legalMoves,
   shortestPath,
@@ -30,6 +33,7 @@ class Game {
   private movesCount = 0;
   private matchActions: Action[] = [];
   private hoveredAnimalSeat: number | null = null;
+  private currentHintAction: Action | null = null;
   private clockInitial = 300;
   private playerClocks: number[] = [];
   private clockTimerId: number | null = null;
@@ -117,6 +121,17 @@ class Game {
     this.hud.stopBotsBtn.addEventListener('click', () => this.toggleBotMatch());
     this.hud.menuStopBtn.addEventListener('click', () => this.toggleBotMatch());
     this.hud.undoBtn.addEventListener('click', () => this.undo());
+    this.hud.hintBtn.addEventListener('click', () => this.requestHint());
+    this.hud.hintEl.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('#btn-apply-hint');
+      if (btn && this.currentHintAction) {
+        const act = this.currentHintAction;
+        this.currentHintAction = null;
+        this.hud.hintEl.classList.remove('active-hint');
+        this.stopClockTimer();
+        this.controller?.submit(act);
+      }
+    });
 
     this.hud.historyList.addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.btn-replay-match');
@@ -181,6 +196,7 @@ class Game {
         return;
       }
       if (e.key === 'z' || e.key === 'Z') this.undo();
+      else if (e.key === 'i' || e.key === 'I' || e.key === '?') this.requestHint();
       else if (e.key === 'c' || e.key === 'C') this.cycleCameraPreset();
       else if (e.key === 'm' || e.key === 'M') this.toggleSound();
       else if (e.key === 'h' || e.key === 'H') this.showHistory();
@@ -351,14 +367,13 @@ class Game {
       return;
     }
 
+    this.currentHintAction = null;
+    this.hud.hintEl.classList.remove('active-hint');
+
     if (this.isMyTurn()) {
       const label = this.controller?.kind === 'local' ? `${a.name}'s turn` : 'Your turn';
       this.hud.setTurn(seat, label);
-      this.hud.setHint(
-        s.players[s.turn].walls > 0
-          ? 'Click a tile to move, or hover a groove to place a wall'
-          : 'No walls remaining — click a tile to move',
-      );
+      this.hud.setHint(this.getTacticalAdvice(s, s.turn));
       this.scene.showMoveMarkers(legalMoves(s, s.turn));
       if (this.controller?.kind === 'local' && this.cameraPreset === 'seat') {
         void this.scene.focusSeat(s.turn, 0.9);
@@ -412,6 +427,7 @@ class Game {
 
   private updateControls(): void {
     this.hud.undoBtn.disabled = !this.controller?.canUndo() || this.processing;
+    this.hud.hintBtn.disabled = !this.isMyTurn() || this.processing || this.state?.winner !== null;
   }
 
   private async finish(winner: number, timedOutBy?: number): Promise<void> {
@@ -668,6 +684,8 @@ class Game {
       const check = checkWall(this.state, action.wall);
       if (!check.ok) return this.hud.toast(check.reason);
     }
+    this.currentHintAction = null;
+    this.hud.hintEl.classList.remove('active-hint');
     this.stopClockTimer();
     this.controller?.submit(action);
   }
@@ -769,6 +787,126 @@ class Game {
     }
 
     void this.finish(winner, timedOutTurn);
+  }
+
+  // ------------------------------------------------------------------ Tactical Hints & Guidance
+  private requestHint(): void {
+    if (!this.state || !this.isMyTurn() || this.processing || this.state.winner !== null) return;
+    const action = chooseAction(this.state, 'hard');
+    this.currentHintAction = action;
+
+    if (action.type === 'move') {
+      this.scene.showMoveMarkers(legalMoves(this.state, this.state.turn), { r: action.r, c: action.c });
+      this.scene.showGhost(null);
+    } else {
+      this.scene.showGhost(action.wall, true, true);
+    }
+
+    const exp = this.explainHint(this.state, action);
+    this.hud.hintEl.classList.add('active-hint');
+    this.hud.setHint(
+      `<span aria-hidden="true">💡</span> <span><strong>${exp.summary}</strong> — ${exp.detail}</span> <button id="btn-apply-hint" class="hint-action-btn" type="button">Play Move</button>`,
+      true,
+    );
+    sounds.playTick();
+    this.hud.toast(`💡 ${exp.summary}`);
+  }
+
+  private explainHint(s: GameState, action: Action): { summary: string; detail: string } {
+    const me = s.turn;
+    const myPlayer = s.players[me];
+    const myDist = shortestPath(s, me);
+
+    if (action.type === 'move') {
+      const isJump = Math.abs(action.r - myPlayer.r) + Math.abs(action.c - myPlayer.c) > 1;
+      const sNext = cloneState(s);
+      applyAction(sNext, action);
+      const newDist = shortestPath(sNext, me);
+      const saved = myDist - newDist;
+
+      if (newDist === 0) {
+        return {
+          summary: `Winning move to row ${action.r + 1}, col ${action.c + 1}!`,
+          detail: 'Reaches goal line for victory',
+        };
+      }
+      if (isJump) {
+        return {
+          summary: `Jump over opponent to row ${action.r + 1}, col ${action.c + 1}`,
+          detail: `Gains ${saved} steps tempo (${newDist} left)`,
+        };
+      }
+      return {
+        summary: `Advance to row ${action.r + 1}, col ${action.c + 1}`,
+        detail: `Best path forward (${newDist} steps to win)`,
+      };
+    }
+
+    const sNext = cloneState(s);
+    applyAction(sNext, action);
+
+    let bestDelay = 0;
+    let targetAnimal = '';
+    for (let i = 0; i < s.players.length; i++) {
+      if (i === me) continue;
+      const before = shortestPath(s, i);
+      const after = shortestPath(sNext, i);
+      const delay = after - before;
+      if (delay > bestDelay) {
+        bestDelay = delay;
+        targetAnimal = ANIMALS[this.seats[i].animal]?.name ?? `Player ${i + 1}`;
+      }
+    }
+
+    const orient = action.wall.o === 'h' ? 'Horizontal' : 'Vertical';
+    const pos = `row ${action.wall.r + 1}, col ${action.wall.c + 1}`;
+
+    if (bestDelay > 0) {
+      return {
+        summary: `Place ${orient.toLowerCase()} hedge at ${pos}`,
+        detail: `Adds +${bestDelay} steps to ${targetAnimal}'s path!`,
+      };
+    }
+
+    return {
+      summary: `Place ${orient.toLowerCase()} hedge at ${pos}`,
+      detail: 'Channels opponent into a longer route',
+    };
+  }
+
+  private getTacticalAdvice(s: GameState, me: number): string {
+    const myDist = shortestPath(s, me);
+    let minOppDist = Infinity;
+    let leaderSeat = -1;
+
+    for (let i = 0; i < s.players.length; i++) {
+      if (i === me) continue;
+      const d = shortestPath(s, i);
+      if (d < minOppDist) {
+        minOppDist = d;
+        leaderSeat = i;
+      }
+    }
+
+    const leaderName = leaderSeat !== -1 ? ANIMALS[this.seats[leaderSeat].animal]?.name : 'Opponent';
+    const hasWalls = s.players[me].walls > 0;
+    const lead = minOppDist - myDist;
+
+    if (minOppDist <= 2 && hasWalls) {
+      return `⚠️ Urgent: ${leaderName} is only ${minOppDist} step${minOppDist === 1 ? '' : 's'} away! Place a hedge (press 💡 for hint)`;
+    }
+    if (lead >= 2) {
+      return `Ahead by ${lead} steps (${myDist} vs ${minOppDist}) · Keep advancing towards your goal!`;
+    }
+    if (lead <= -2 && hasWalls) {
+      return `Trailing by ${-lead} steps (${myDist} vs ${minOppDist}) · Block ${leaderName}'s path (press 💡 for hint)`;
+    }
+    if (lead === 0 && hasWalls) {
+      return `Tied race (${myDist} steps each) · Advance or press 💡 for tactical hint`;
+    }
+    return hasWalls
+      ? `${myDist} steps to goal (${leaderName}: ${minOppDist}) · Click tile to move or groove for wall`
+      : `No hedges left (${myDist} steps to goal) · Advance towards your goal line`;
   }
 }
 

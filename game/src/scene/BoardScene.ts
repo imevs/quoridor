@@ -557,7 +557,7 @@ export class BoardScene {
   // ---------------------------------------------------------------------------
   // Interaction helpers
   // ---------------------------------------------------------------------------
-  showMoveMarkers(cells: Cell[]): void {
+  showMoveMarkers(cells: Cell[], hintCell: Cell | null = null): void {
     this.markerCells = cells;
     this.hoveredMarker = -1;
     this.markers.forEach((m, i) => {
@@ -565,7 +565,9 @@ export class BoardScene {
       m.visible = !!cell;
       if (cell) {
         m.position.copy(cellToWorld(cell.r, cell.c)).setY(TILE_TOP + 0.008);
-        m.children.forEach((ch) => ((ch as THREE.Mesh).material as THREE.MeshBasicMaterial).color.copy(this.markerColor));
+        const isHint = !!hintCell && cell.r === hintCell.r && cell.c === hintCell.c;
+        const color = isHint ? new THREE.Color(0xffd43b) : this.markerColor;
+        m.children.forEach((ch) => ((ch as THREE.Mesh).material as THREE.MeshBasicMaterial).color.copy(color));
       }
     });
   }
@@ -574,7 +576,7 @@ export class BoardScene {
     this.hoveredMarker = cell ? this.markerCells.findIndex((m) => m.r === cell.r && m.c === cell.c) : -1;
   }
 
-  showGhost(w: Wall | null, valid = true): void {
+  showGhost(w: Wall | null, valid = true, isHint = false): void {
     if (!w) {
       this.ghost.visible = false;
       return;
@@ -582,8 +584,13 @@ export class BoardScene {
     this.ghost.visible = true;
     this.ghost.position.copy(wallToWorld(w));
     this.ghost.rotation.y = w.o === 'v' ? Math.PI / 2 : 0;
-    this.ghostMat.color.set(valid ? 0x9cff8a : 0xff6b6b);
-    this.ghostMat.emissive.set(valid ? 0x2f8a2a : 0x8a2020);
+    if (isHint) {
+      this.ghostMat.color.set(0xffd43b);
+      this.ghostMat.emissive.set(0xb58900);
+    } else {
+      this.ghostMat.color.set(valid ? 0x9cff8a : 0xff6b6b);
+      this.ghostMat.emissive.set(valid ? 0x2f8a2a : 0x8a2020);
+    }
   }
 
   /** Converts a pointer position to a cell (tile centre zone) or a wall slot (grooves). */
