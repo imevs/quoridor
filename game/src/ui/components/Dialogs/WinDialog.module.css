@@ -1,0 +1,80 @@
+.winCenter {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.winEmoji {
+  font-size: 84px;
+  animation: celebrate 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite alternate;
+}
+
+@keyframes celebrate {
+  from {
+    transform: translateY(0) rotate(-8deg);
+  }
+  to {
+    transform: translateY(-12px) rotate(8deg);
+  }
+}
+
+.winActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.winActions button {
+  flex: 1 1 calc(50% - 10px);
+  min-width: 130px;
+  padding: 12px 16px;
+  font-size: 16px;
+}
+
+/* Portrait Responsive */
+@media (max-width: 760px) {
+  .winEmoji {
+    font-size: 64px;
+  }
+
+  .winActions button {
+    min-width: 0;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .winActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .winActions button {
+    width: 100%;
+  }
+}
+
+/* Landscape Responsive */
+@media (max-height: 550px) and (orientation: landscape) {
+  .winEmoji {
+    font-size: 44px;
+  }
+
+  .winActions {
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .winActions button {
+    padding: 7px 10px;
+    font-size: 12.5px;
+    min-width: 0;
+  }
+}
