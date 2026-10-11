@@ -22,6 +22,7 @@ import { DestinationInspector } from './ui/DestinationInspector';
 import { HintCoordinator } from './ui/HintCoordinator';
 import { DialogCoordinator } from './ui/DialogCoordinator';
 import { formatWinDetails } from './game/winDetails';
+import { hudStore } from './ui/hudStore';
 
 class Game {
   private scene: BoardScene;
@@ -146,6 +147,23 @@ class Game {
         }
       }
     });
+
+    hudStore.callbacks.onStartGame = (cfg) => {
+      if (cfg.mode === 'online' && __ONLINE__) {
+        void this.startOnline({ create: { players: cfg.players, animal: cfg.animal } });
+      } else {
+        this.startLocal(cfg);
+      }
+    };
+    hudStore.callbacks.onOpenMenu = () => this.openMenu();
+    hudStore.callbacks.onCloseMenu = () => {
+      if (this.hud.menu.open) this.hud.menu.close();
+    };
+    hudStore.callbacks.onCycleCamera = () => this.camera.cycle();
+    hudStore.callbacks.onToggleSound = () => this.toggleSound();
+    hudStore.callbacks.onToggleBotMatch = () => this.toggleBotMatch();
+    hudStore.callbacks.onUndo = () => this.undo();
+    hudStore.callbacks.onRequestHint = () => this.hints.requestHint();
 
     this.hud.cameraBtn.addEventListener('click', () => this.camera.cycle());
     this.hud.soundBtn.addEventListener('click', () => this.toggleSound());

@@ -61,6 +61,17 @@ body {
   touch-action: none;
 }
 
+#hud-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#hud-root > * {
+  pointer-events: auto;
+}
+
 button {
   font: inherit;
   color: inherit;
@@ -73,4 +84,89 @@ button {
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow);
+}
+
+.primary-btn,
+.ghost-btn {
+  padding: 14px 22px;
+  border-radius: 16px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  border: 0;
+  transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+  cursor: pointer;
+}
+
+.primary-btn {
+  color: white;
+  background: linear-gradient(140deg, #6dbb45, var(--leaf-deep));
+  box-shadow: 0 10px 24px -10px var(--leaf-deep), inset 0 -3px 0 rgb(0 0 0 / 0.15);
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+.primary-btn:active {
+  transform: translateY(1px);
+}
+
+.ghost-btn {
+  background: rgb(29 51 25 / 0.08);
+  color: var(--ink);
+}
+
+.ghost-btn:hover {
+  background: rgb(29 51 25 / 0.14);
+}
+
+.ghost-btn.alert {
+  color: #c92a2a;
+  background: color-mix(in srgb, #dc3545 12%, white);
+  border: 1px solid rgb(220 53 69 / 0.25);
+}
+
+.ghost-btn.alert:hover {
+  background: color-mix(in srgb, #dc3545 20%, white);
+}
+
+.ghost-btn.small,
+.primary-btn.small {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 1.5px 6px;
+  border-radius: 99px;
+  background: rgb(29 51 25 / 0.08);
+  color: var(--ink-soft);
+}
+
+.badge.you {
+  background: color-mix(in srgb, var(--pc, #f2a93b) 30%, white);
+  color: var(--ink);
+}
+
+kbd {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: white;
+  border: 1px solid rgb(0 0 0 / 0.12);
+  box-shadow: 0 2px 0 rgb(0 0 0 / 0.1);
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--honey) 80%, white);
+  outline-offset: 2px;
 }

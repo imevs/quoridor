@@ -4,6 +4,7 @@ import type { GameController } from '../net/controller';
 import { ReplayController } from '../net/ReplayController';
 import { MatchHistoryManager, type HistoryRecord } from '../game/history';
 import { sounds } from '../scene/sounds';
+import { hudStore } from './hudStore';
 
 export interface DialogCoordinatorDelegate {
   getState: () => GameState | null;
@@ -43,6 +44,11 @@ export class DialogCoordinator {
     this.hud.movesBtn.addEventListener('click', () => this.showMovesDialog());
     this.hud.winMovesBtn.addEventListener('click', () => this.showMovesDialog());
     this.hud.replayMovesBtn.addEventListener('click', () => this.showMovesDialog());
+
+    hudStore.callbacks.onStartReplay = (record) => this.delegate.startReplay(record);
+    hudStore.callbacks.onClearHistory = () => this.clearHistory();
+    hudStore.callbacks.onRematch = () => this.delegate.onRematch();
+    hudStore.callbacks.onMenuFromWin = () => this.delegate.openMenu();
 
     this.hud.win.addEventListener('close', () => {
       if (this.hud.win.returnValue === 'again') {

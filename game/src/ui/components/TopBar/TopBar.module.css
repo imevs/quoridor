@@ -1,0 +1,474 @@
+.topbar {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  left: 50%;
+  translate: -50% 0;
+  width: min(1100px, calc(100vw - 28px));
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 18px;
+  border-radius: var(--radius);
+  z-index: 10;
+  background: var(--glass);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brandTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  margin: 0;
+  background: linear-gradient(120deg, var(--leaf-deep), var(--leaf) 55%, var(--honey-deep));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.netStatus {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: rgb(29 51 25 / 0.08);
+  color: var(--ink-soft);
+  align-self: center;
+}
+
+.netStatus[data-tone="ok"] {
+  background: color-mix(in srgb, var(--leaf) 25%, white);
+  color: var(--leaf-deep);
+}
+
+.netStatus[data-tone="warn"] {
+  background: color-mix(in srgb, var(--honey) 28%, white);
+  color: var(--honey-deep);
+}
+
+.turnPill {
+  --pc: var(--honey);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px 8px 8px;
+  border-radius: 99px;
+  background: var(--glass-strong);
+  border: 2px solid color-mix(in srgb, var(--pc) 70%, white);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--pc) 22%, transparent), 0 6px 20px -8px var(--pc);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  white-space: nowrap;
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+
+.turnPill.pop {
+  animation: pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.turnEmoji {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 20px;
+  background: color-mix(in srgb, var(--pc) 35%, white);
+}
+
+.turnText {
+  display: inline-block;
+}
+
+.turnTimer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 8px 0 4px;
+  margin-left: 4px;
+  border-radius: 99px;
+  background: rgb(0 0 0 / 0.08);
+  border: 1px solid rgb(0 0 0 / 0.06);
+  flex-shrink: 0;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.timerRing {
+  width: 18px;
+  height: 18px;
+  transform: rotate(-90deg);
+  flex-shrink: 0;
+}
+
+.timerRingBg {
+  fill: none;
+  stroke: rgb(0 0 0 / 0.12);
+  stroke-width: 2.5;
+}
+
+.timerRingBar {
+  fill: none;
+  stroke: color-mix(in srgb, var(--pc) 85%, black);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 69.115;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.12s linear, stroke 0.3s;
+}
+
+.turnTimerVal {
+  position: relative;
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  line-height: 1;
+  letter-spacing: -0.2px;
+}
+
+.turnTimer.urgent {
+  background: #ffe3e3;
+  border-color: #ffa8a8;
+  animation: timerPulse 0.7s ease-in-out infinite;
+}
+
+.turnTimer.urgent .timerRingBar {
+  stroke: #e03131;
+}
+
+.turnTimer.urgent .turnTimerVal {
+  color: #c92a2a;
+}
+
+@keyframes timerPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes pop {
+  0% {
+    scale: 0.85;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.iconBtn {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgb(255 255 255 / 0.9);
+  background: rgb(255 255 255 / 0.7);
+  transition: transform 0.15s ease, background 0.2s, box-shadow 0.2s;
+  color: inherit;
+}
+
+.iconBtn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.iconBtn:hover {
+  transform: translateY(-2px);
+  background: white;
+  box-shadow: 0 6px 16px -6px rgb(30 60 25 / 0.35);
+}
+
+.iconBtn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.iconBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.iconBtn.accent {
+  background: linear-gradient(140deg, var(--honey), var(--honey-deep));
+  color: white;
+  border-color: transparent;
+}
+
+.stopBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgb(220 53 69 / 0.35);
+  background: color-mix(in srgb, #dc3545 14%, white);
+  color: #c92a2a;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px -4px rgb(220 53 69 / 0.25);
+  transition: transform 0.15s, background 0.15s, box-shadow 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.stopBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.stopBtn:hover {
+  background: color-mix(in srgb, #dc3545 22%, white);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -4px rgb(220 53 69 / 0.35);
+}
+
+.stopBtn:active {
+  transform: translateY(1px);
+}
+
+.stopBtn.paused {
+  border-color: rgb(40 167 69 / 0.35);
+  background: color-mix(in srgb, var(--leaf) 18%, white);
+  color: var(--leaf-deep);
+  box-shadow: 0 4px 12px -4px rgb(40 167 69 / 0.25);
+}
+
+.stopBtn.paused:hover {
+  background: color-mix(in srgb, var(--leaf) 28%, white);
+  box-shadow: 0 6px 16px -4px rgb(40 167 69 / 0.35);
+}
+
+/* Portrait Responsive */
+@media (max-width: 760px) {
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    top: max(8px, env(safe-area-inset-top));
+    width: min(calc(100vw - 16px), 1100px);
+    padding: 6px max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left));
+    gap: 8px;
+  }
+
+  .brandTitle {
+    display: none;
+  }
+
+  .brand {
+    display: none;
+    gap: 6px;
+  }
+
+  .brand.hasNetStatus {
+    display: flex;
+  }
+
+  .turnPill {
+    margin-right: auto;
+    padding: 5px 12px 5px 6px;
+    font-size: 14px;
+    gap: 6px;
+    border-width: 1.5px;
+  }
+
+  .turnEmoji {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  .actions {
+    gap: 5px;
+  }
+
+  .iconBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+
+  .iconBtn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .desktopOnly {
+    display: none !important;
+  }
+
+  .stopBtn {
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 11px;
+    font-size: 12px;
+  }
+
+  .stopBtnText {
+    display: none;
+  }
+
+  .stopBtn svg {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .turnPill {
+    font-size: 13px;
+    padding: 4px 10px 4px 4px;
+  }
+
+  .turnTimer {
+    height: 22px;
+    padding: 0 6px 0 3px;
+    gap: 3px;
+  }
+
+  .timerRing {
+    width: 15px;
+    height: 15px;
+  }
+
+  .turnTimerVal {
+    font-size: 10px;
+  }
+
+  .topbar {
+    padding: 5px 8px;
+  }
+
+  .actions {
+    gap: 4px;
+  }
+
+  .iconBtn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+}
+
+/* Landscape Responsive */
+@media (max-height: 550px) and (orientation: landscape) {
+  .topbar {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    top: 0;
+    left: 0;
+    translate: none;
+    display: block;
+    z-index: 10;
+  }
+
+  .brand {
+    position: fixed;
+    top: max(6px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    pointer-events: auto;
+    z-index: 11;
+  }
+
+  .brandTitle {
+    display: none;
+  }
+
+  .turnPill {
+    position: fixed;
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    translate: none;
+    width: clamp(155px, 20vw, 190px);
+    box-sizing: border-box;
+    padding: 4px 10px 4px 4px;
+    gap: 6px;
+    font-size: 13px;
+    border-width: 1.5px;
+    pointer-events: auto;
+    z-index: 11;
+    justify-content: flex-start;
+  }
+
+  .turnEmoji {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+
+  .actions {
+    position: fixed;
+    right: max(8px, env(safe-area-inset-right));
+    top: 50%;
+    translate: 0 -50%;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 12;
+  }
+
+  .iconBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+
+  .iconBtn svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .desktopOnly {
+    display: none !important;
+  }
+
+  .stopBtn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 11px;
+  }
+
+  .stopBtnText {
+    display: none;
+  }
+}

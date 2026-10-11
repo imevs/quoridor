@@ -1,0 +1,184 @@
+.replayBar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 12px 34px rgb(20 40 18 / 0.16);
+  border: 1px solid rgb(29 51 25 / 0.12);
+  max-width: 95vw;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.replayInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+}
+
+.replayTitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--leaf-deep);
+}
+
+.replayMoveDesc {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 190px;
+}
+
+.replayControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.replayPlayBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.replayMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.replayStep {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  min-width: 52px;
+  text-align: center;
+}
+
+/* Portrait Responsive */
+@media (max-width: 760px) {
+  .replayBar {
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: calc(100vw - 16px);
+    max-width: 390px;
+    border-radius: 20px;
+    padding: 10px 12px;
+    gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "info meta"
+      "controls controls";
+  }
+
+  .replayInfo {
+    grid-area: info;
+    min-width: 0;
+  }
+
+  .replayTitle {
+    font-size: 10px;
+  }
+
+  .replayMoveDesc {
+    font-size: 12px;
+    max-width: 170px;
+  }
+
+  .replayMeta {
+    grid-area: meta;
+    gap: 6px;
+  }
+
+  .replayStep {
+    font-size: 11px;
+    min-width: 44px;
+  }
+
+  .replayControls {
+    grid-area: controls;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .replayPlayBtn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Landscape Responsive */
+@media (max-height: 550px) and (orientation: landscape) {
+  .replayBar {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: 50%;
+    translate: -50% 0;
+    width: auto;
+    max-width: calc(100vw - 250px);
+    padding: 6px 14px;
+    gap: 10px;
+    border-radius: 99px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .replayInfo {
+    min-width: 0;
+    max-width: 140px;
+  }
+
+  .replayTitle {
+    font-size: 9px;
+  }
+
+  .replayMoveDesc {
+    font-size: 11.5px;
+    max-width: 130px;
+  }
+
+  .replayControls {
+    gap: 4px;
+    margin-top: 0;
+  }
+
+  .replayPlayBtn {
+    width: 30px;
+    height: 30px;
+    font-size: 10px;
+  }
+
+  .replayMeta {
+    gap: 5px;
+  }
+
+  .replayStep {
+    font-size: 10.5px;
+    min-width: 36px;
+  }
+
+  .replayMeta button {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}

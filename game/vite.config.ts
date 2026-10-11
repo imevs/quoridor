@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import preact from '@preact/preset-vite';
 
 // The game imports the Blender-generated assets (quoridor_board.glb + textures/)
 // directly from the parent project folder, so the Python build script stays the
@@ -6,6 +7,7 @@ import { defineConfig } from 'vite';
 export default defineConfig(({ mode }) => {
   const isOffline = mode === 'offline';
   return {
+    plugins: [preact()],
     define: {
       __ONLINE__: !isOffline,
     },

@@ -1,25 +1,7 @@
 /* ==========================================================================
-   Quoridors 3D — Master Stylesheet
-   Modularized into dedicated concern-specific stylesheets:
-   - tokens: Design tokens, CSS custom properties, and base element resets
-   - loader: Loading screen and sway animation
-   - topbar: Top navigation bar, brand, turn timer ring, and header actions
-   - players: Player status cards, avatars, wall pips, and chess clock badges
-   - notifications: Tactical hints, toast messages, destination pill, banners
-   - dialogs: Modal dialogs, form controls, animal selectors, win screen, lobby
-   - history: Match history list, moves list, and replay playback controls
-   - responsive-portrait: Adaptive layouts for portrait tablets and smartphones
-   - responsive-landscape: Dual-flank docked layouts for mobile landscape mode
-   - reduced-motion: Accessible animation suppressions
+   Quoridors 3D — Global Stylesheet
+   Component-specific styles are encapsulated in CSS Modules (*.module.css).
    ========================================================================== */
 
 @import './styles/tokens.css';
-@import './styles/loader.css';
-@import './styles/topbar.css';
-@import './styles/players.css';
-@import './styles/notifications.css';
-@import './styles/dialogs.css';
-@import './styles/history.css';
-@import './styles/responsive-portrait.css';
-@import './styles/responsive-landscape.css';
 @import './styles/reduced-motion.css';

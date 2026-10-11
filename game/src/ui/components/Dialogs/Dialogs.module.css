@@ -1,0 +1,607 @@
+.panel {
+  width: min(520px, calc(100vw - 28px));
+  max-height: calc(100dvh - 28px);
+  overflow: auto;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 28px;
+  background: rgb(255 253 246 / 0.86);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: 0 30px 80px -20px rgb(20 50 15 / 0.5);
+  color: var(--ink);
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  pointer-events: auto !important;
+}
+
+.panel[open] {
+  animation: dialogIn 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.panel::backdrop {
+  background: rgb(30 55 25 / 0.28);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.form {
+  padding: 26px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.panelHero {
+  text-align: center;
+}
+
+.heroEmoji {
+  font-size: 40px;
+  letter-spacing: 4px;
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
+  margin: 6px 0 4px;
+  color: var(--leaf-deep);
+}
+
+.heroDesc {
+  margin: 0 auto;
+  max-width: 38ch;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.field {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.fieldLegend {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+
+.segmented {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 16px;
+  background: rgb(29 51 25 / 0.07);
+}
+
+.modeSegmented {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.timerSegmented {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.segmented label {
+  flex: 1;
+  cursor: pointer;
+}
+
+.segmented input,
+.animalPicker input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented span {
+  display: block;
+  text-align: center;
+  padding: 10px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+  color: var(--ink-soft);
+}
+
+.segmented span:hover {
+  color: var(--ink);
+}
+
+.segmented input:checked + span {
+  background: white;
+  color: var(--ink);
+  box-shadow: 0 4px 14px -6px rgb(30 60 25 / 0.4);
+}
+
+.animalPicker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.pickerSpan {
+  --pc: var(--honey);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px 8px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  background: rgb(255 255 255 / 0.7);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s, box-shadow 0.2s;
+}
+
+.pickerEmoji {
+  font-size: 28px;
+  line-height: 1.1;
+  font-style: normal;
+}
+
+.pickerSpan:hover {
+  transform: translateY(-3px);
+}
+
+.animalPicker input:checked + .pickerSpan {
+  border-color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 18%, white);
+  box-shadow: 0 8px 20px -10px var(--pc);
+}
+
+.dialogClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0;
+  background: rgb(29 51 25 / 0.08);
+  color: var(--ink-soft);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.dialogClose:hover {
+  background: rgb(29 51 25 / 0.16);
+  color: var(--ink);
+  transform: scale(1.08);
+}
+
+.menuSecondaryActions {
+  display: flex;
+  gap: 10px;
+}
+
+.menuSecondaryActions button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: 14.5px;
+}
+
+.menuActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.menuActions button {
+  flex: 1;
+}
+
+.rules {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.strategyTips {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--honey) 12%, rgb(0 0 0 / 0.03));
+  border: 1px solid color-mix(in srgb, var(--honey) 25%, transparent);
+  text-align: left;
+}
+
+.strategyTips h3 {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tipsList {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.tipsList strong {
+  color: var(--ink);
+}
+
+.keys {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Win Dialog */
+.winCenter {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.winEmoji {
+  font-size: 84px;
+  animation: celebrate 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite alternate;
+}
+
+@keyframes celebrate {
+  from {
+    transform: translateY(0) rotate(-8deg);
+  }
+  to {
+    transform: translateY(-12px) rotate(8deg);
+  }
+}
+
+.winActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.winActions button {
+  flex: 1 1 calc(50% - 10px);
+  min-width: 130px;
+  padding: 12px 16px;
+  font-size: 16px;
+}
+
+/* Lobby */
+.lobbyContent {
+  padding: 26px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+}
+
+.inviteBox {
+  display: flex;
+  flex-direction: column;
+}
+
+.inviteRow {
+  display: flex;
+  gap: 8px;
+}
+
+.inviteInput {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgb(29 51 25 / 0.15);
+  background: white;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: var(--ink);
+  outline: none;
+}
+
+.inviteInput:focus {
+  border-color: var(--leaf);
+}
+
+.lobbySeats {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lobbySeat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.65);
+  border: 1px solid rgb(29 51 25 / 0.08);
+}
+
+.lobbyAvatar {
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--pc, #f2a93b) 35%, white);
+}
+
+.lobbySeatMain {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.lobbySeatMain b {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lobbySeatMain small {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.lobbySelect {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgb(29 51 25 / 0.15);
+  background: white;
+  font-size: 12.5px;
+  color: var(--ink);
+  outline: none;
+}
+
+.lobbyActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* Portrait Responsive */
+@media (max-width: 760px) {
+  .panel {
+    width: min(520px, calc(100vw - 20px));
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);
+    border-radius: 24px;
+  }
+
+  .form,
+  .lobbyContent {
+    padding: 20px 16px 18px;
+    gap: 14px;
+  }
+
+  .heroTitle {
+    font-size: 24px;
+    margin: 4px 0;
+  }
+
+  .heroDesc {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .dialogClose {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    top: 12px;
+    right: 12px;
+  }
+
+  .segmented {
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .segmented span {
+    padding: 8px 6px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .animalPicker {
+    gap: 4px;
+  }
+
+  .pickerSpan {
+    padding: 6px 2px 5px;
+    border-radius: 12px;
+    font-size: 10.5px;
+    gap: 2px;
+  }
+
+  .pickerEmoji {
+    font-size: 22px;
+  }
+
+  .winEmoji {
+    font-size: 64px;
+  }
+
+  .winActions button {
+    min-width: 0;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .winActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .winActions button {
+    width: 100%;
+  }
+
+  .timerSegmented {
+    gap: 3px;
+  }
+
+  .timerSegmented label span {
+    padding: 6px 2px;
+    font-size: 11.5px;
+  }
+}
+
+/* Landscape Responsive */
+@media (max-height: 550px) and (orientation: landscape) {
+  .panel {
+    max-height: calc(100dvh - 14px);
+    width: min(480px, calc(100vw - 40px));
+    border-radius: 20px;
+  }
+
+  .form,
+  .lobbyContent {
+    padding: 12px 18px;
+    gap: 8px;
+  }
+
+  .heroTitle {
+    font-size: 19px;
+    margin: 0;
+  }
+
+  .heroDesc {
+    font-size: 11.5px;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .fieldLegend {
+    font-size: 10.5px;
+    margin-bottom: 2px;
+  }
+
+  .segmented {
+    padding: 3px;
+    gap: 4px;
+  }
+
+  .segmented span {
+    padding: 5px 6px;
+    font-size: 12px;
+  }
+
+  .pickerSpan {
+    padding: 3px 2px;
+    font-size: 9.5px;
+    gap: 1px;
+    border-radius: 8px;
+  }
+
+  .pickerEmoji {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .menuSecondaryActions {
+    gap: 6px;
+  }
+
+  .menuSecondaryActions button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .menuActions {
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .menuActions button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .dialogClose {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    top: 8px;
+    right: 8px;
+  }
+
+  .winEmoji {
+    font-size: 44px;
+  }
+
+  .winActions {
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .winActions button {
+    padding: 7px 10px;
+    font-size: 12.5px;
+    min-width: 0;
+  }
+}
