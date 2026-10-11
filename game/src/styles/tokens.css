@@ -68,10 +68,6 @@ body {
   z-index: 10;
 }
 
-#hud-root > * {
-  pointer-events: auto;
-}
-
 button {
   font: inherit;
   color: inherit;

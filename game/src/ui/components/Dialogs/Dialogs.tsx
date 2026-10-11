@@ -173,8 +173,9 @@ export function MenuDialog() {
             {[
               { val: 'ai', label: 'vs Computer' },
               { val: 'local', label: 'Pass & Play' },
+              { val: 'p2p', label: 'P2P Online' },
+              ...(__ONLINE__ ? [{ val: 'online', label: 'Server Online' }] : []),
               { val: 'bot_vs_bot', label: 'Bots Only' },
-              ...(__ONLINE__ ? [{ val: 'online', label: 'Online' }] : []),
             ].map(({ val, label }) => (
               <label key={val}>
                 <input
@@ -735,9 +736,20 @@ export function LobbyDialog() {
   const ready = v.seats.every((s) => s.kind !== 'open');
 
   let statusText = 'Invite players or assign the computer to open seats.';
-  if (mySeat === null) statusText = 'This game is full — you will watch as a spectator.';
-  else if (!isHost) statusText = 'Waiting for the host to start the game…';
-  else if (ready) statusText = 'Everyone is here. Ready when you are!';
+  if (mySeat === null) {
+    statusText = v.seats.some((s) => s.kind === 'open')
+      ? 'Connecting to session…'
+      : 'This game is full — you will watch as a spectator.';
+  } else if (!isHost) {
+    statusText = 'Waiting for the host to start the game…';
+  } else if (ready) {
+    statusText = 'Everyone is here. Ready when you are!';
+  }
+
+  const handleUserLeave = () => {
+    close();
+    cb.onLobbyLeave?.();
+  };
 
   return (
     <Modal
@@ -746,7 +758,6 @@ export function LobbyDialog() {
       onOpen={() => (hudStore.lobbyOpen.value = true)}
       onClose={() => {
         hudStore.lobbyOpen.value = false;
-        cb.onLobbyLeave?.();
       }}
     >
       <div class={styles.lobbyContent}>
@@ -755,10 +766,7 @@ export function LobbyDialog() {
           class={styles.dialogClose}
           type="button"
           aria-label="Close dialog"
-          onClick={() => {
-            close();
-            cb.onLobbyLeave?.();
-          }}
+          onClick={handleUserLeave}
         >
           ✕
         </button>
@@ -872,10 +880,7 @@ export function LobbyDialog() {
             id="btn-leave"
             class="ghost-btn"
             type="button"
-            onClick={() => {
-              close();
-              cb.onLobbyLeave?.();
-            }}
+            onClick={handleUserLeave}
           >
             Leave
           </button>
@@ -885,7 +890,11 @@ export function LobbyDialog() {
               class="primary-btn"
               type="button"
               disabled={!ready}
-              onClick={() => cb.onLobbyStart?.()}
+              onClick={() => {
+                console.log('[LobbyDialog] Host clicked Start Game button');
+                close();
+                cb.onLobbyStart?.();
+              }}
             >
               Start Game
             </button>

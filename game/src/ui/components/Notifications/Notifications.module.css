@@ -19,6 +19,7 @@
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow);
+  pointer-events: auto;
 }
 
 .hint.activeHint {
@@ -87,6 +88,7 @@
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 20px color-mix(in srgb, var(--pc, var(--leaf)) 40%, transparent);
   color: #fff;
   z-index: 25;
+  pointer-events: auto;
   animation: destPop 0.22s cubic-bezier(0.18, 0.89, 0.32, 1.28);
   white-space: nowrap;
 }
@@ -148,6 +150,7 @@
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow);
+  pointer-events: auto;
   animation: bannerIn 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 

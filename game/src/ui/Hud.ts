@@ -15,7 +15,7 @@ export interface Seat {
   away?: boolean;
 }
 
-export type GameMode = 'ai' | 'local' | 'online' | 'bot_vs_bot';
+export type GameMode = 'ai' | 'local' | 'online' | 'p2p' | 'bot_vs_bot';
 
 export interface GameConfig {
   mode: GameMode;

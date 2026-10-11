@@ -8,7 +8,7 @@ export type Update =
   | { type: 'sync'; state: GameState }
   | { type: 'seats'; seats: Seat[] };
 
-export type ControllerKind = 'ai' | 'local' | 'online' | 'bot_vs_bot' | 'replay';
+export type ControllerKind = 'ai' | 'local' | 'online' | 'p2p' | 'bot_vs_bot' | 'replay';
 
 /**
  * Source of truth for a game as seen by the presenter. The local controller

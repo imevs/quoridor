@@ -29,6 +29,14 @@ export class Lobby {
 
   close(): void {
     hudStore.lobbyOpen.value = false;
+    const el = document.getElementById('lobby-dialog') as HTMLDialogElement | null;
+    if (el && el.open) {
+      try {
+        el.close();
+      } catch {
+        /* ignore */
+      }
+    }
   }
 
   dispose(): void {

@@ -81,8 +81,11 @@ Execute web commands inside the `game/` subdirectory:
 | **Type Check** | `npx tsc --noEmit` | Strict mode; no unused locals allowed |
 | **Unit Tests** | `npm test` | Vitest test runner |
 | **Test Coverage** | `npm test -- --coverage` | Requires >95% coverage across `src/game/` |
+| **E2E Tests** | `npm run test:e2e` | Automated P2P headless Chrome E2E test suite |
 | **Production Build** | `npm run build` | Runs `tsc && vite build` |
 | **Preview Build** | `npm run preview` | Validates production bundle locally |
+
+See [`P2P_ARCHITECTURE.md`](file:///Users/vm/WebstormProjects/quoridors/P2P_ARCHITECTURE.md) for P2P networking design and state machine invariants.
 
 ---
 

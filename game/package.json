@@ -10,7 +10,8 @@
     "build:offline": "tsc && vite build --mode offline",
     "preview": "vite preview",
     "preview:offline": "vite preview --outDir dist-offline",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "node e2e/p2p.e2e.mjs"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.6",
@@ -22,7 +23,11 @@
   },
   "dependencies": {
     "@preact/signals": "^2.11.3",
+    "@trystero-p2p/mqtt": "^0.26.0",
+    "@trystero-p2p/nostr": "^0.26.0",
+    "@trystero-p2p/torrent": "^0.26.0",
     "preact": "^11.0.1",
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "trystero": "^0.26.0"
   }
 }

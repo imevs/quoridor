@@ -10,6 +10,7 @@
   gap: 12px;
   z-index: 10;
   max-width: calc(100vw - 28px);
+  pointer-events: none;
 }
 
 .playerCard {
@@ -22,6 +23,7 @@
   padding: 8px 12px 8px 8px;
   border-radius: 16px;
   background: var(--glass);
+  pointer-events: auto;
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border: 1px solid var(--glass-border);

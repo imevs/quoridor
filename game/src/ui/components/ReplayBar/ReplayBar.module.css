@@ -15,6 +15,7 @@
   box-shadow: 0 12px 34px rgb(20 40 18 / 0.16);
   border: 1px solid rgb(29 51 25 / 0.12);
   max-width: 95vw;
+  pointer-events: auto;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 

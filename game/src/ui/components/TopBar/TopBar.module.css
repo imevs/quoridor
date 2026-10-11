@@ -16,6 +16,7 @@
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow);
+  pointer-events: auto;
 }
 
 .brand {

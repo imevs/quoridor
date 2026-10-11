@@ -85,6 +85,17 @@ To run with coverage reporting:
 npm test -- --coverage
 ```
 
+### Automated P2P E2E Tests
+
+To run the automated multi-tab headless Chrome E2E test suite (verifying P2P pairing, canvas hit-testing, and host reload recovery):
+
+```bash
+cd game
+npm run test:e2e
+```
+
+For full networking specifications and E2E test lifecycle, see [`P2P_ARCHITECTURE.md`](file:///Users/vm/WebstormProjects/quoridors/P2P_ARCHITECTURE.md).
+
 ### Production Build
 
 ```bash

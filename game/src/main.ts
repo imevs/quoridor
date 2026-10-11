@@ -52,10 +52,13 @@ class Game {
     this.hud.updateSoundUi(sounds.isEnabled);
     this.hud.hideLoader();
 
-    // Check if entering via an invite link (?game=...)
+    // Check if entering via an invite link (?p2p=... or ?game=...)
     const params = new URLSearchParams(window.location.search);
+    const p2pId = params.get('p2p') ?? (params.get('mode') === 'p2p' ? params.get('game') : null);
     const joinId = params.get('game');
-    if (__ONLINE__ && joinId) {
+    if (p2pId) {
+      void this.startP2P({ join: p2pId });
+    } else if (__ONLINE__ && joinId) {
       void this.startOnline({ join: joinId });
     } else if (LocalController.hasSavedGame()) {
       const savedCfg = LocalController.getSavedConfig() ?? this.hud.readConfig();
@@ -137,19 +140,11 @@ class Game {
       },
     });
 
-    this.hud.menu.addEventListener('close', () => {
-      if (this.hud.menu.returnValue === 'start') {
-        const cfg = this.hud.readConfig();
-        if (cfg.mode === 'online' && __ONLINE__) {
-          void this.startOnline({ create: { players: cfg.players, animal: cfg.animal } });
-        } else {
-          this.startLocal(cfg);
-        }
-      }
-    });
 
     hudStore.callbacks.onStartGame = (cfg) => {
-      if (cfg.mode === 'online' && __ONLINE__) {
+      if (cfg.mode === 'p2p') {
+        void this.startP2P({ create: { players: cfg.players, animal: cfg.animal } });
+      } else if (cfg.mode === 'online' && __ONLINE__) {
         void this.startOnline({ create: { players: cfg.players, animal: cfg.animal } });
       } else {
         this.startLocal(cfg);
@@ -219,6 +214,16 @@ class Game {
     this.setController(new LocalController(config), restoreExisting);
   }
 
+  private async startP2P(intent: import('./net/P2PController').P2PIntent): Promise<void> {
+    this.clock.reset(2, 0);
+    this.hud.setReplayBarVisible(false);
+    this.hud.setBotMatchActive(false);
+    this.controller?.dispose();
+    this.controller = null;
+    const { P2PController } = await import('./net/P2PController');
+    this.setController(new P2PController(this.hud, intent));
+  }
+
   private async startOnline(intent: import('./net/OnlineController').OnlineIntent): Promise<void> {
     if (!__ONLINE__) return;
     this.clock.reset(2, 0);
@@ -254,14 +259,16 @@ class Game {
     if (this.processing) return;
     this.processing = true;
 
-    while (this.queue.length > 0) {
-      const u = this.queue.shift()!;
-      await this.applyUpdate(u);
+    try {
+      while (this.queue.length > 0) {
+        const u = this.queue.shift()!;
+        await this.applyUpdate(u);
+      }
+    } finally {
+      this.processing = false;
+      this.refreshTurnUi();
+      this.controller?.idle();
     }
-
-    this.processing = false;
-    this.refreshTurnUi();
-    this.controller?.idle();
   }
 
   private async applyUpdate(u: Update): Promise<void> {
