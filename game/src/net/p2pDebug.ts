@@ -199,12 +199,19 @@ export async function resolveTurnConfig(): Promise<TurnServerConfig[]> {
   }
 
   const envUrls = import.meta.env.VITE_TURN_URLS?.trim();
-  if (envUrls) {
-    const username = import.meta.env.VITE_TURN_USERNAME?.trim();
-    const credential = import.meta.env.VITE_TURN_CREDENTIAL?.trim();
+  const username = import.meta.env.VITE_TURN_USERNAME?.trim();
+  const credential = import.meta.env.VITE_TURN_CREDENTIAL?.trim();
+  if (envUrls || (username && credential)) {
+    const defaultMeteredUrls = [
+      'turn:global.relay.metered.ca:80',
+      'turn:global.relay.metered.ca:80?transport=tcp',
+      'turn:global.relay.metered.ca:443',
+      'turns:global.relay.metered.ca:443?transport=tcp',
+    ];
+    const urls = envUrls ? envUrls.split(',').map((u) => u.trim()).filter(Boolean) : defaultMeteredUrls;
     if (!username || !credential) dbg.warn('ICE', 'VITE_TURN_URLS is set but VITE_TURN_USERNAME / VITE_TURN_CREDENTIAL is missing');
-    dbg.log('ICE', 'Using static TURN servers from VITE_TURN_URLS');
-    return [{ urls: envUrls.split(',').map((u) => u.trim()).filter(Boolean), username, credential }];
+    dbg.log('ICE', 'Using static TURN servers:', { urls, username: username ?? 'none' });
+    return [{ urls, username, credential }];
   }
 
   dbg.warn('ICE', 'No TURN server configured (see game/.env.example); falling back to the public openrelay.metered.ca, ' +
