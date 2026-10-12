@@ -40,7 +40,11 @@ graph TD
    - Provides sub-millisecond, zero-network pairing during local pass-and-play testing, split-screen games, and automated test runners.
 2. **Decentralized WebRTC Mesh** (`@trystero-p2p/nostr`):
    - Uses redundant Nostr relay endpoints (`wss://nos.lol`, `wss://nostr.mom`, `wss://relay.primal.net`, `wss://purplerelay.com`) for peer discovery and SDP offer/answer exchange.
-   - Uses public STUN/TURN fallbacks (`openrelay.metered.ca`, Google STUN) to traverse NATs and restrictive firewalls without any proprietary game backend.
+   - STUN: Trystero's defaults (Google, Cloudflare). TURN: resolved by `resolveTurnConfig()` in [`p2pDebug.ts`](file:///Users/vm/WebstormProjects/quoridors/game/src/net/p2pDebug.ts):
+     1. `localStorage['quoridors.p2p.turn']` — JSON array of `RTCIceServer`, for field testing.
+     2. Build-time env `VITE_TURN_URLS` (comma-separated), `VITE_TURN_USERNAME`, `VITE_TURN_CREDENTIAL`.
+     3. Fallback: the public `openrelay.metered.ca` relay, which is rate-limited and often down.
+   - Without a working TURN server, only same-LAN or "easy NAT" pairs connect. Peers on mobile carriers, symmetric NATs, or client-isolated Wi-Fi need TURN.
 
 ### 1.3 State Synchronization & Snapshot Reconciliation
 - The host periodically or reactively broadcasts immutable `SessionView` snapshots (`{ phase, version, seats, state, event, undo }`).
@@ -48,6 +52,23 @@ graph TD
   - If incoming `v.version === this.version`: Only seat states (connection indicators) are reconciled; no board re-render occurs.
   - If `v.version === this.version + 1` with an action event: Incremental animations (`animateMove` or `animateWall`) play smoothly.
   - If `this.version < 0` (initial connection or hard refresh): Full board reset (`onUpdate({ type: 'reset' })`) syncs the 3D meshes to the snapshot.
+
+### 1.4 Troubleshooting Cross-Device Connections
+
+Two browsers on one machine pair through `BroadcastChannel` and loopback, so they hide most network problems. To debug two devices:
+
+1. Open the game with `?p2pdebug=1` on both devices. This shows an on-screen log with **Copy** / **Download** buttons. The setting persists; `?p2pdebug=0` turns it off. On desktop you can also run `quoridorsP2P.dump()` in the console.
+2. Read the log top to bottom:
+
+| Log line | Meaning |
+| :--- | :--- |
+| `[Env] Insecure context ...` | Page opened over `http://<LAN-IP>`. `crypto.subtle` is missing, so signaling can't start. Serve over HTTPS. |
+| `[Probe STUN] FAILED` | UDP to STUN is blocked. Only TURN over TCP/TLS can work. |
+| `[Probe TURN] FAILED` + `Errors: 401 ...` | TURN credentials rejected or server unreachable. Configure your own TURN. |
+| `Status: openRelays: 0` | No Nostr relay reachable (firewall, ad blocker). Peers can't discover each other. |
+| No `[RTC pc*]` lines after 20s | Signaling problem: different game id, or no shared open relay. |
+| `iceConnectionState: failed` + hint | Peers found each other but no ICE path worked. Usually NAT traversal; fix TURN. |
+| `Selected pair: ... via TURN relay` / `direct` | Connected. Shows which path was used. |
 
 ---
 

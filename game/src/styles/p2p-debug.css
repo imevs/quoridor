@@ -1,0 +1,52 @@
+/* On-screen P2P log overlay, enabled with ?p2pdebug=1 (see net/p2pDebug.ts). */
+.p2p-debug {
+  position: fixed;
+  inset: auto 8px 8px 8px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  max-height: 40vh;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 10px;
+  background: rgb(10 14 12 / 0.88);
+  backdrop-filter: blur(6px);
+  color: #cfe8d4;
+  font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  pointer-events: auto;
+}
+
+.p2p-debug__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.p2p-debug__bar strong {
+  margin-right: auto;
+}
+
+.p2p-debug__bar button {
+  padding: 3px 8px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.08);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.p2p-debug__log {
+  flex: 1;
+  margin: 0;
+  padding: 6px 8px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: text;
+}
+
+.p2p-debug--collapsed .p2p-debug__log {
+  display: none;
+}

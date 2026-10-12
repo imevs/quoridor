@@ -21,3 +21,7 @@ coverage/
 server/data/
 *.db
 
+
+# Local env (TURN credentials)
+.env.local
+.env.*.local

@@ -1,4 +1,4 @@
-import { joinRoom, selfId, type Room, type MessageAction } from '@trystero-p2p/nostr';
+import { joinRoom, selfId, getRelaySockets, type Room, type MessageAction } from '@trystero-p2p/nostr';
 import { ANIMALS, type AnimalId } from '../game/animals';
 import type { Action, GameState } from '../game/rules';
 import { fromWire } from '../game/serialize';
@@ -7,6 +7,7 @@ import { Session, type SessionDeps, type SessionData, HOST_SEAT } from '../game/
 import type { Hud, Seat } from '../ui/Hud';
 import { Lobby } from '../ui/Lobby';
 import type { GameController, Update } from './controller';
+import { dbg, instrumentedPeerConnection, logEnvironment, maybeInstallOverlay, probeIceServers, resolveTurnConfig } from './p2pDebug';
 
 export type P2PIntent = { create: { players: 2 | 4; animal: AnimalId } } | { join: string };
 
@@ -84,6 +85,8 @@ export class P2PController implements GameController {
   private timerId = 0;
   private joinTimerId = 0;
   private hostPeerId: string | null = null;
+  private statusTimerId = 0;
+  private startedAt = Date.now();
   private abort = new AbortController();
   private savedHostSession: SessionData | null = null;
 
@@ -114,7 +117,8 @@ export class P2PController implements GameController {
       ? (saved ? saved.id : generateP2PGameId())
       : (intent as { join: string }).join.trim().toLowerCase();
 
-    console.log(`[P2P] Controller loaded (v1.0.8, role: ${this.isHost ? 'host' : 'guest'}, gameId: ${this.gameId}, restored: ${Boolean(this.savedHostSession)})`);
+    maybeInstallOverlay();
+    dbg.log('Controller', `Loaded (v1.0.9, role: ${this.isHost ? 'host' : 'guest'}, gameId: ${this.gameId}, restored: ${Boolean(this.savedHostSession)}, selfId: ${selfId})`);
 
     this.lobby = new Lobby({
       onSeat: (seat, kind, difficulty) => this.sendOrHandle({ type: 'seat', seat, kind, difficulty }),
@@ -296,9 +300,25 @@ export class P2PController implements GameController {
     }
 
     // 2. WebRTC Room for remote cross-device matchmaking
+    void this.joinWebRtc();
+  }
+
+  private async joinWebRtc(): Promise<void> {
+    const role = this.isHost ? 'Host' : 'Guest';
+    const envError = logEnvironment();
+    if (envError) {
+      this.hud.toast(envError);
+      if (!this.isHost) this.hud.setNet(`P2P unavailable · ${this.gameId}`, 'warn');
+      return;
+    }
+
+    const turnConfig = await resolveTurnConfig();
+    if (this.disposed) return;
+
     try {
       const roomId = `quoridor_${this.gameId}`;
-      console.log(`[P2P] Joining WebRTC room "${roomId}" as ${this.isHost ? 'host' : 'guest'} (selfId: ${selfId})`);
+      dbg.log(role, `Joining WebRTC room "${roomId}" (selfId: ${selfId}, nostr relays: ${NOSTR_RELAY_URLS.join(', ')})`);
+      void probeIceServers(turnConfig);
 
       this.room = joinRoom(
         {
@@ -307,26 +327,16 @@ export class P2PController implements GameController {
             urls: NOSTR_RELAY_URLS,
             redundancy: 4,
           },
-          turnConfig: [
-            {
-              urls: [
-                'stun:openrelay.metered.ca:80',
-                'turn:openrelay.metered.ca:80',
-                'turn:openrelay.metered.ca:443',
-                'turn:openrelay.metered.ca:443?transport=tcp',
-                'turns:openrelay.metered.ca:443',
-                'turns:openrelay.metered.ca:443?transport=tcp',
-              ],
-              username: 'openrelayproject',
-              credential: 'openrelayproject',
-            },
-          ],
+          turnConfig,
+          rtcPolyfill: instrumentedPeerConnection(),
         },
         roomId,
         {
-          onJoinError: (err) => console.error(`[P2P ${this.isHost ? 'Host' : 'Guest'}] onJoinError:`, typeof err === 'object' ? JSON.stringify(err) : err),
+          onJoinError: (err) => dbg.error(role, 'onJoinError:', err),
         },
       );
+
+      this.startStatusMonitor(role);
 
       this.clientAction = this.room.makeAction<ClientMsgEnvelope>('client');
       this.serverAction = this.room.makeAction<ServerMsgEnvelope>('server');
@@ -342,7 +352,7 @@ export class P2PController implements GameController {
         };
 
         this.room.onPeerJoin = (peerId) => {
-          console.log(`[P2P Host] WebRTC Peer connected: ${peerId}`);
+          dbg.log('Host', `WebRTC peer connected: ${peerId} (+${((Date.now() - this.startedAt) / 1000).toFixed(1)}s since start)`);
           if (!this.session) return;
 
           let seat = this.peerSeats.get(peerId);
@@ -383,7 +393,7 @@ export class P2PController implements GameController {
         };
 
         this.room.onPeerLeave = (peerId) => {
-          console.log(`[P2P Host] WebRTC Peer disconnected: ${peerId}`);
+          dbg.log('Host', `WebRTC peer disconnected: ${peerId} (seat: ${this.peerSeats.get(peerId) ?? 'none'})`);
           const seat = this.peerSeats.get(peerId);
           if (seat !== undefined && seat !== null && this.session) {
             this.session.disconnect(seat);
@@ -406,7 +416,7 @@ export class P2PController implements GameController {
         };
 
         this.room.onPeerJoin = (peerId) => {
-          console.log(`[P2P Guest] WebRTC Peer connected: ${peerId}`);
+          dbg.log('Guest', `WebRTC peer connected: ${peerId} (+${((Date.now() - this.startedAt) / 1000).toFixed(1)}s since start)`);
           this.hostPeerId = peerId;
           const token = sessionStorage.getItem(TOKEN_KEY(this.gameId)) ?? undefined;
           const joinMsg: ClientMsg = { type: 'join', gameId: this.gameId, token };
@@ -425,12 +435,47 @@ export class P2PController implements GameController {
         };
 
         this.room.onPeerLeave = (peerId) => {
-          console.log(`[P2P Guest] WebRTC Peer left: ${peerId}`);
+          dbg.warn('Guest', `WebRTC peer left: ${peerId}${peerId === this.hostPeerId ? ' (host)' : ''}`);
         };
       }
     } catch (err) {
-      console.error('[P2P] Failed to join WebRTC room', err);
+      dbg.error(role, 'Failed to join WebRTC room:', err);
     }
+  }
+
+  /** Periodically logs nostr relay socket states and peer count; every 5s until connected, then every 30s. */
+  private startStatusMonitor(role: string): void {
+    const socketState = ['connecting', 'open', 'closing', 'closed'];
+    let ticks = 0;
+    let warnedNoPeer = false;
+    this.statusTimerId = window.setInterval(() => {
+      if (this.disposed || !this.room) return;
+      ticks++;
+      const peers = Object.keys(this.room.getPeers());
+      const connected = peers.length > 0 && (this.isHost || this.seat !== null);
+      if (connected && ticks % 6 !== 0) return;
+
+      const relays: Record<string, string> = {};
+      try {
+        const sockets = (getRelaySockets() ?? {}) as Record<string, WebSocket | undefined>;
+        for (const [url, ws] of Object.entries(sockets)) relays[url] = ws ? socketState[ws.readyState] ?? String(ws.readyState) : 'none';
+      } catch (err) {
+        relays.error = String(err);
+      }
+      const openRelays = Object.values(relays).filter((s) => s === 'open').length;
+      dbg.log(role, 'Status:', { peers, seat: this.seat, hostPeerId: this.hostPeerId, openRelays, relays, online: navigator.onLine });
+
+      if (openRelays === 0) {
+        dbg.error(role, 'No nostr relay is connected — signaling cannot happen. Check network/firewall/content blockers for wss:// relays.');
+      }
+      if (!warnedNoPeer && peers.length === 0 && Date.now() - this.startedAt > 20000) {
+        warnedNoPeer = true;
+        dbg.warn(role, this.isHost
+          ? 'No guest connected after 20s. If the guest log shows offers/answers but connectionState "failed", the problem is NAT traversal (TURN).'
+          : 'No host connected after 20s. Check the host tab is open with the same game id, both share at least one open relay, ' +
+            'and look for "RTC pc*" lines: none = signaling problem; "failed" = NAT traversal (TURN) problem.');
+      }
+    }, 5000);
   }
 
   // ------------------------------------------------------------------ Host Logic
@@ -758,6 +803,8 @@ export class P2PController implements GameController {
     this.disposed = true;
     window.clearInterval(this.timerId);
     window.clearInterval(this.joinTimerId);
+    window.clearInterval(this.statusTimerId);
+    dbg.log('Controller', 'Disposed');
     this.abort.abort();
     this.lobby.dispose();
     this.bc?.close();
