@@ -307,7 +307,6 @@ export class P2PController implements GameController {
             urls: NOSTR_RELAY_URLS,
             redundancy: 4,
           },
-          _test_only_mdnsHostFallbackToLoopback: true,
           turnConfig: [
             {
               urls: [
@@ -315,19 +314,13 @@ export class P2PController implements GameController {
                 'turn:openrelay.metered.ca:80',
                 'turn:openrelay.metered.ca:443',
                 'turn:openrelay.metered.ca:443?transport=tcp',
+                'turns:openrelay.metered.ca:443',
+                'turns:openrelay.metered.ca:443?transport=tcp',
               ],
-              username: 'openrelay',
-              credential: 'openrelay',
+              username: 'openrelayproject',
+              credential: 'openrelayproject',
             },
           ],
-          rtcConfig: {
-            iceServers: [
-              { urls: 'stun:stun.l.google.com:19302' },
-              { urls: 'stun:stun1.l.google.com:19302' },
-              { urls: 'stun:stun2.l.google.com:19302' },
-              { urls: 'stun:stun.cloudflare.com:3478' },
-            ],
-          },
         },
         roomId,
         {
