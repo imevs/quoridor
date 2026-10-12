@@ -1,0 +1,36 @@
+.inviteBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inviteRow {
+  display: flex;
+  gap: 8px;
+}
+
+.inviteInput {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgb(29 51 25 / 0.15);
+  background: white;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: var(--ink);
+  outline: none;
+}
+
+.inviteInput:focus {
+  border-color: var(--leaf);
+}
+
+.qrWrapper {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}

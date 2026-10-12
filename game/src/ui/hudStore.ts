@@ -151,6 +151,7 @@ export class HudStore {
   });
   readonly lobbyOpen = signal(false);
   readonly lobbyData = signal<{ view: SessionView; mySeat: number | null; link: string } | null>(null);
+  readonly inviteOpen = signal(false);
 
   // Callbacks
   callbacks: HudCallbacks = {};

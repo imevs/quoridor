@@ -1,13 +1,16 @@
+import { useState } from 'preact/hooks';
 import baseStyles from './DialogBase.module.css';
 import styles from './LobbyDialog.module.css';
 import { hudStore } from '../../hudStore';
 import { ANIMALS } from '../../../game/animals';
 import type { Difficulty } from '../../../game/ai';
 import { Modal, DialogCloseButton, DialogHeader } from './Modal';
+import { QRCodeCard } from '../QRCode';
 
 const LEVEL: Record<Difficulty, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 
 export function LobbyDialog() {
+  const [showQr, setShowQr] = useState(false);
   const open = hudStore.lobbyOpen.value;
   const data = hudStore.lobbyData.value;
   const cb = hudStore.callbacks;
@@ -73,6 +76,20 @@ export function LobbyDialog() {
             >
               Copy
             </button>
+            <button
+              id="btn-qr"
+              class={`ghost-btn small ${showQr ? styles.activeBtn : ''}`}
+              type="button"
+              aria-expanded={showQr}
+              aria-controls="lobby-qr-container"
+              title={showQr ? 'Hide QR Code' : 'Show QR Code for phone scan'}
+              onClick={() => setShowQr((prev) => !prev)}
+            >
+              <svg viewBox="0 0 24 24" class={styles.btnIcon} aria-hidden="true">
+                <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zm-5 5h2v3h-2v-3zm3 0h2v1h-2v-1zm2 2h3v2h-3v-2zm0-4h2v2h-2v-2zm-2 0h2v2h-2v-2zm-3-3h2v2h-2v-2z" fill="currentColor" />
+              </svg>
+              <span>{showQr ? 'Hide QR' : 'QR Code'}</span>
+            </button>
             {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
               <button
                 id="btn-share"
@@ -90,6 +107,11 @@ export function LobbyDialog() {
               </button>
             )}
           </div>
+          {showQr && (
+            <div id="lobby-qr-container" class={styles.qrContainer}>
+              <QRCodeCard link={link} />
+            </div>
+          )}
         </div>
 
         <div class={baseStyles.field}>

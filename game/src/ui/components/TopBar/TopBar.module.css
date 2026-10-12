@@ -4,11 +4,12 @@
   left: 50%;
   translate: -50% 0;
   width: min(1100px, calc(100vw - 28px));
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  max-width: calc(100vw - 28px);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px 10px 18px;
+  padding: 10px 14px 10px 18px;
   border-radius: var(--radius);
   z-index: 10;
   background: var(--glass);
@@ -17,12 +18,14 @@
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow);
   pointer-events: auto;
+  box-sizing: border-box;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .brandTitle {
@@ -34,6 +37,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  white-space: nowrap;
 }
 
 .netStatus {
@@ -46,6 +50,7 @@
   background: rgb(29 51 25 / 0.08);
   color: var(--ink-soft);
   align-self: center;
+  white-space: nowrap;
 }
 
 .netStatus[data-tone="ok"] {
@@ -73,6 +78,9 @@
   font-size: 17px;
   white-space: nowrap;
   transition: border-color 0.4s, box-shadow 0.4s;
+  min-width: 0;
+  flex: 0 1 auto;
+  margin-inline: auto;
 }
 
 .turnPill.pop {
@@ -87,10 +95,15 @@
   border-radius: 50%;
   font-size: 20px;
   background: color-mix(in srgb, var(--pc) 35%, white);
+  flex-shrink: 0;
 }
 
 .turnText {
-  display: inline-block;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .turnTimer {
@@ -176,8 +189,10 @@
 
 .actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .iconBtn {
@@ -190,6 +205,7 @@
   background: rgb(255 255 255 / 0.7);
   transition: transform 0.15s ease, background 0.2s, box-shadow 0.2s;
   color: inherit;
+  flex-shrink: 0;
 }
 
 .iconBtn svg {
@@ -240,6 +256,7 @@
   cursor: pointer;
   box-shadow: 0 4px 12px -4px rgb(220 53 69 / 0.25);
   transition: transform 0.15s, background 0.15s, box-shadow 0.15s, border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
 }
 
 .stopBtn svg {
@@ -269,16 +286,66 @@
   box-shadow: 0 6px 16px -4px rgb(40 167 69 / 0.35);
 }
 
-/* Portrait Responsive */
+/* Tablet & Medium Screens / Portrait */
+@media (max-width: 1024px) {
+  .topbar {
+    width: min(calc(100vw - 24px), 1100px);
+    max-width: calc(100vw - 24px);
+    padding: 8px 12px 8px 16px;
+    gap: 10px;
+  }
+
+  .brandTitle {
+    font-size: 20px;
+  }
+
+  .turnPill {
+    font-size: 15px;
+    padding: 6px 14px 6px 6px;
+    gap: 8px;
+  }
+
+  .turnEmoji {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+
+  .actions {
+    gap: 6px;
+  }
+
+  .iconBtn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .iconBtn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 860px) and (orientation: portrait), (max-width: 840px) {
+  .desktopOnly {
+    display: none !important;
+  }
+}
+
+/* Mobile Portrait Responsive */
 @media (max-width: 760px) {
   .topbar {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     top: max(8px, env(safe-area-inset-top));
     width: min(calc(100vw - 16px), 1100px);
+    max-width: calc(100vw - 16px);
     padding: 6px max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left));
     gap: 8px;
+    row-gap: 4px;
   }
 
   .brandTitle {
@@ -292,35 +359,81 @@
 
   .brand.hasNetStatus {
     display: flex;
+    order: -1;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 1px;
+    padding-bottom: 2px;
+  }
+
+  .netStatus {
+    font-size: 10px;
+    padding: 2px 7px;
+    letter-spacing: 0.5px;
   }
 
   .turnPill {
+    margin-inline: 0;
     margin-right: auto;
-    padding: 5px 12px 5px 6px;
-    font-size: 14px;
+    padding: 5px 8px 5px 5px;
+    font-size: 13.5px;
     gap: 6px;
     border-width: 1.5px;
+    min-width: 0;
+    flex: 1 1 0;
   }
 
   .turnEmoji {
-    width: 28px;
-    height: 28px;
-    font-size: 16px;
+    width: 27px;
+    height: 27px;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .turnText {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1 1 auto;
+  }
+
+  .turnTimer {
+    height: 22px;
+    padding: 0 6px 0 3px;
+    gap: 3px;
+    margin-left: 2px;
+    flex-shrink: 0;
+  }
+
+  .timerRing {
+    width: 15px;
+    height: 15px;
+  }
+
+  .turnTimerVal {
+    font-size: 10.5px;
   }
 
   .actions {
-    gap: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    flex: 0 0 auto;
   }
 
   .iconBtn {
-    width: 36px;
-    height: 36px;
-    border-radius: 11px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    flex-shrink: 0;
   }
 
   .iconBtn svg {
-    width: 18px;
-    height: 18px;
+    width: 17px;
+    height: 17px;
   }
 
   .desktopOnly {
@@ -328,10 +441,12 @@
   }
 
   .stopBtn {
-    height: 36px;
-    padding: 0 10px;
-    border-radius: 11px;
-    font-size: 12px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 10px;
+    flex-shrink: 0;
   }
 
   .stopBtnText {
@@ -345,38 +460,97 @@
 }
 
 @media (max-width: 480px) {
+  .topbar {
+    padding: 5px max(6px, env(safe-area-inset-right)) 5px max(6px, env(safe-area-inset-left));
+    gap: 6px;
+  }
+
   .turnPill {
     font-size: 13px;
-    padding: 4px 10px 4px 4px;
+    padding: 4px 8px 4px 4px;
+    gap: 5px;
+  }
+
+  .turnEmoji {
+    width: 25px;
+    height: 25px;
+    font-size: 14px;
   }
 
   .turnTimer {
-    height: 22px;
-    padding: 0 6px 0 3px;
-    gap: 3px;
+    height: 21px;
+    padding: 0 5px 0 2px;
+    gap: 2.5px;
   }
 
   .timerRing {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
   }
 
   .turnTimerVal {
     font-size: 10px;
   }
 
-  .topbar {
-    padding: 5px 8px;
-  }
-
   .actions {
-    gap: 4px;
+    gap: 3px;
   }
 
   .iconBtn {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+
+  .iconBtn svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .stopBtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+}
+
+@media (max-width: 360px) {
+  .topbar {
+    padding: 4px max(5px, env(safe-area-inset-right)) 4px max(5px, env(safe-area-inset-left));
+    gap: 4px;
+  }
+
+  .turnPill {
+    font-size: 12px;
+    padding: 3px 6px 3px 3px;
+    gap: 4px;
+  }
+
+  .turnEmoji {
+    width: 22px;
+    height: 22px;
+    font-size: 13px;
+  }
+
+  .actions {
+    gap: 2px;
+  }
+
+  .iconBtn {
+    width: 29px;
+    height: 29px;
+    border-radius: 8px;
+  }
+
+  .iconBtn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .stopBtn {
+    width: 29px;
+    height: 29px;
+    border-radius: 8px;
   }
 }
 
@@ -473,3 +647,4 @@
     display: none;
   }
 }
+

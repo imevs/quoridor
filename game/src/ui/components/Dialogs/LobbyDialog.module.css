@@ -24,6 +24,25 @@
   border-color: var(--leaf);
 }
 
+.btnIcon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.activeBtn {
+  background: color-mix(in srgb, var(--leaf) 22%, white);
+  color: var(--leaf-deep);
+  border: 1px solid rgb(79 154 53 / 0.35);
+  font-weight: 600;
+}
+
+.qrContainer {
+  margin-top: 10px;
+  width: 100%;
+}
+
 .lobbySeats {
   list-style: none;
   padding: 0;

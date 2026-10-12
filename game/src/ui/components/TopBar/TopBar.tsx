@@ -214,6 +214,23 @@ export function TopBar() {
           </button>
         )}
 
+        {net.visible && hudStore.lobbyData.value?.link && (
+          <button
+            id="btn-invite"
+            class={styles.iconBtn}
+            type="button"
+            title="Invite & QR Code"
+            aria-label="Invite link and QR code"
+            onClick={() => {
+              hudStore.inviteOpen.value = true;
+            }}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" style={{ stroke: 'none', fill: 'currentColor' }}>
+              <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zm-5 5h2v3h-2v-3zm3 0h2v1h-2v-1zm2 2h3v2h-3v-2zm0-4h2v2h-2v-2zm-2 0h2v2h-2v-2zm-3-3h2v2h-2v-2z" />
+            </svg>
+          </button>
+        )}
+
         <button
           id="btn-menu"
           class={`${styles.iconBtn} ${styles.accent}`}

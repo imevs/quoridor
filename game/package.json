@@ -28,6 +28,7 @@
     "@trystero-p2p/torrent": "^0.26.0",
     "preact": "^11.0.1",
     "three": "^0.186.1",
-    "trystero": "^0.26.0"
+    "trystero": "^0.26.0",
+    "uqr": "^0.1.3"
   }
 }
