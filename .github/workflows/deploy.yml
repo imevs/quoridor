@@ -42,6 +42,11 @@ jobs:
 
       - name: Build web application
         working-directory: game
+        env:
+          VITE_TURN_CREDENTIALS_URL: ${{ secrets.VITE_TURN_CREDENTIALS_URL || vars.VITE_TURN_CREDENTIALS_URL }}
+          VITE_TURN_URLS: ${{ secrets.VITE_TURN_URLS || vars.VITE_TURN_URLS }}
+          VITE_TURN_USERNAME: ${{ secrets.VITE_TURN_USERNAME || vars.VITE_TURN_USERNAME }}
+          VITE_TURN_CREDENTIAL: ${{ secrets.VITE_TURN_CREDENTIAL || vars.VITE_TURN_CREDENTIAL }}
         run: npm run build:offline
 
       - name: Add .nojekyll
