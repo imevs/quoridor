@@ -89,6 +89,7 @@ export class P2PController implements GameController {
   private startedAt = Date.now();
   private abort = new AbortController();
   private savedHostSession: SessionData | null = null;
+  private autoStartTimerId = 0;
 
   constructor(hud: Hud, intent: P2PIntent) {
     this.hud = hud;
@@ -122,7 +123,13 @@ export class P2PController implements GameController {
 
     this.lobby = new Lobby({
       onSeat: (seat, kind, difficulty) => this.sendOrHandle({ type: 'seat', seat, kind, difficulty }),
-      onStart: () => this.sendOrHandle({ type: 'start' }),
+      onStart: () => {
+        if (this.autoStartTimerId) {
+          window.clearTimeout(this.autoStartTimerId);
+          this.autoStartTimerId = 0;
+        }
+        this.sendOrHandle({ type: 'start' });
+      },
       onLeave: () => this.handleLeave(),
       onCopy: (link) => {
         void navigator.clipboard?.writeText(link).then(
@@ -394,6 +401,10 @@ export class P2PController implements GameController {
 
         this.room.onPeerLeave = (peerId) => {
           dbg.log('Host', `WebRTC peer disconnected: ${peerId} (seat: ${this.peerSeats.get(peerId) ?? 'none'})`);
+          if (this.autoStartTimerId) {
+            window.clearTimeout(this.autoStartTimerId);
+            this.autoStartTimerId = 0;
+          }
           const seat = this.peerSeats.get(peerId);
           if (seat !== undefined && seat !== null && this.session) {
             this.session.disconnect(seat);
@@ -607,6 +618,35 @@ export class P2PController implements GameController {
     this.broadcastSnapshot();
   }
 
+  private maybeAutoStart(): void {
+    if (!this.isHost || !this.session || this.disposed) return;
+    if (this.session.phase !== 'lobby') return;
+
+    const view = this.session.view();
+    const hasOpenSeat = view.seats.some((s) => s.kind === 'open');
+    if (hasOpenSeat) return;
+
+    const allHumansConnected = view.seats.every((s) => s.kind !== 'human' || s.connected);
+    if (!allHumansConnected) return;
+
+    if (this.autoStartTimerId) {
+      window.clearTimeout(this.autoStartTimerId);
+    }
+
+    console.log('[P2P Host] All players connected! Scheduling automatic game start...');
+    this.autoStartTimerId = window.setTimeout(() => {
+      this.autoStartTimerId = 0;
+      if (!this.session || this.session.phase !== 'lobby' || this.disposed) return;
+      const currentView = this.session.view();
+      const stillReady = !currentView.seats.some((s) => s.kind === 'open') &&
+        currentView.seats.every((s) => s.kind !== 'human' || s.connected);
+      if (stillReady) {
+        console.log('[P2P Host] All players connected! Automatically starting game with host.');
+        this.sendOrHandle({ type: 'start' });
+      }
+    }, 400);
+  }
+
   private flushNotices(): void {
     if (!this.session) return;
     const notices = this.session.drainNotices();
@@ -634,6 +674,7 @@ export class P2PController implements GameController {
         .then(() => console.log(`[P2P Host] Broadcast snapshot v${view.version} sent`))
         .catch((e) => console.warn(`[P2P Host] Broadcast snapshot v${view.version} failed:`, e));
     }
+    this.maybeAutoStart();
   }
 
   // ------------------------------------------------------------------ Guest Logic
@@ -801,6 +842,10 @@ export class P2PController implements GameController {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    if (this.autoStartTimerId) {
+      window.clearTimeout(this.autoStartTimerId);
+      this.autoStartTimerId = 0;
+    }
     window.clearInterval(this.timerId);
     window.clearInterval(this.joinTimerId);
     window.clearInterval(this.statusTimerId);

@@ -42,13 +42,20 @@ export class OnlineController implements GameController {
   private seatsKey = '';
   private awaiting = false;
   private abort = new AbortController();
+  private autoStartTimerId = 0;
 
   constructor(hud: Hud, intent: OnlineIntent) {
     this.hud = hud;
     this.intent = intent;
     this.lobby = new Lobby({
       onSeat: (seat, kind, difficulty) => this.send({ type: 'seat', seat, kind, difficulty }),
-      onStart: () => this.send({ type: 'start' }),
+      onStart: () => {
+        if (this.autoStartTimerId) {
+          window.clearTimeout(this.autoStartTimerId);
+          this.autoStartTimerId = 0;
+        }
+        this.send({ type: 'start' });
+      },
       onLeave: () => this.onExit(),
       onCopy: (link) => {
         void navigator.clipboard?.writeText(link).then(
@@ -149,6 +156,7 @@ export class OnlineController implements GameController {
 
     if (v.phase === 'lobby' || !v.state) {
       this.lobby.render(v, this.seat, this.inviteLink());
+      this.maybeAutoStart(v);
       return;
     }
     this.lobby.close();
@@ -171,6 +179,34 @@ export class OnlineController implements GameController {
       this.onUpdate({ type: 'sync', state });
     }
     this.version = v.version;
+  }
+
+  private maybeAutoStart(v: SessionView): void {
+    const isHost = this.seat === v.hostSeat;
+    if (!isHost || v.phase !== 'lobby') return;
+
+    const hasOpenSeat = v.seats.some((s) => s.kind === 'open');
+    if (hasOpenSeat) return;
+
+    const allHumansConnected = v.seats.every((s) => s.kind !== 'human' || s.connected);
+    if (!allHumansConnected) return;
+
+    if (this.autoStartTimerId) {
+      window.clearTimeout(this.autoStartTimerId);
+    }
+
+    console.log('[Online Host] All players connected! Scheduling automatic game start...');
+    this.autoStartTimerId = window.setTimeout(() => {
+      this.autoStartTimerId = 0;
+      if (this.view?.phase !== 'lobby') return;
+      const currentView = this.view;
+      const stillReady = !currentView.seats.some((s) => s.kind === 'open') &&
+        currentView.seats.every((s) => s.kind !== 'human' || s.connected);
+      if (stillReady) {
+        console.log('[Online Host] All players connected! Automatically starting game with host.');
+        this.send({ type: 'start' });
+      }
+    }, 400);
   }
 
   private renderUndo(v: SessionView): void {
@@ -234,6 +270,10 @@ export class OnlineController implements GameController {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    if (this.autoStartTimerId) {
+      window.clearTimeout(this.autoStartTimerId);
+      this.autoStartTimerId = 0;
+    }
     window.clearTimeout(this.retryTimer);
     this.abort.abort();
     this.lobby.dispose();

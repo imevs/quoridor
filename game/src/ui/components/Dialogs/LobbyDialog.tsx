@@ -30,10 +30,10 @@ export function LobbyDialog() {
     statusText = v.seats.some((s) => s.kind === 'open')
       ? 'Connecting to session…'
       : 'This game is full — you will watch as a spectator.';
+  } else if (ready) {
+    statusText = 'Everyone is here! Starting game…';
   } else if (!isHost) {
     statusText = 'Waiting for the host to start the game…';
-  } else if (ready) {
-    statusText = 'Everyone is here. Ready when you are!';
   }
 
   const handleUserLeave = () => {
