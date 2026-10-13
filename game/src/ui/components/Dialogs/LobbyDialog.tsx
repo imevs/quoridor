@@ -10,7 +10,7 @@ import { QRCodeCard } from '../QRCode';
 const LEVEL: Record<Difficulty, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 
 export function LobbyDialog() {
-  const [showQr, setShowQr] = useState(false);
+  const [showQr, setShowQr] = useState(true);
   const open = hudStore.lobbyOpen.value;
   const data = hudStore.lobbyData.value;
   const cb = hudStore.callbacks;

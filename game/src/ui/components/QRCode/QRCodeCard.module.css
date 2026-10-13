@@ -30,8 +30,9 @@
   background: white;
   border: 1px solid rgb(29 51 25 / 0.12);
   box-shadow: 0 4px 16px -4px rgb(20 50 15 / 0.18);
-  width: 170px;
-  height: 170px;
+  width: clamp(140px, 46vw, 170px);
+  height: clamp(140px, 46vw, 170px);
+  aspect-ratio: 1;
   box-sizing: border-box;
 }
 

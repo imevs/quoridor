@@ -10,6 +10,7 @@
 
 .inviteInput {
   flex: 1;
+  min-width: 0;
   padding: 10px 14px;
   border-radius: 12px;
   border: 1px solid rgb(29 51 25 / 0.15);
@@ -41,6 +42,26 @@
 .qrContainer {
   margin-top: 10px;
   width: 100%;
+}
+
+@media (max-width: 520px) {
+  .inviteRow {
+    flex-wrap: wrap;
+  }
+
+  .inviteInput {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .inviteRow button {
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+  }
 }
 
 .lobbySeats {
