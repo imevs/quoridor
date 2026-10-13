@@ -1,3 +1,4 @@
+import { useEffect } from 'preact/hooks';
 import baseStyles from './DialogBase.module.css';
 import historyStyles from '../HistoryPanels/HistoryPanels.module.css';
 import { hudStore } from '../../hudStore';
@@ -10,6 +11,12 @@ export function HistoryDialog() {
   const open = hudStore.historyOpen.value;
   const records = hudStore.historyRecords.value;
   const cb = hudStore.callbacks;
+
+  useEffect(() => {
+    if (open) {
+      hudStore.historyRecords.value = MatchHistoryManager.list();
+    }
+  }, [open]);
 
   const close = () => {
     hudStore.historyOpen.value = false;

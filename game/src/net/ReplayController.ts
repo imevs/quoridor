@@ -50,13 +50,13 @@ export class ReplayController implements GameController {
   start(): void {
     this.step = 0;
     this.isPlaying = false;
-    window.clearTimeout(this.timer);
+    clearTimeout(this.timer);
     this.onUpdate({ type: 'reset', state: cloneState(this.states[0]), seats: this.seats });
     this.notifyStep();
   }
 
   jumpTo(targetStep: number): void {
-    window.clearTimeout(this.timer);
+    clearTimeout(this.timer);
     const clamped = Math.max(0, Math.min(this.actions.length, targetStep));
     this.step = clamped;
     this.onUpdate({ type: 'sync', state: cloneState(this.states[this.step]) });
@@ -103,7 +103,7 @@ export class ReplayController implements GameController {
 
   pause(): void {
     this.isPlaying = false;
-    window.clearTimeout(this.timer);
+    clearTimeout(this.timer);
     this.notifyStep();
   }
 
@@ -154,15 +154,15 @@ export class ReplayController implements GameController {
       this.pause();
       return;
     }
-    this.timer = window.setTimeout(() => {
+    this.timer = setTimeout(() => {
       if (this.isPlaying) {
         this.next();
       }
-    }, 650);
+    }, 650) as unknown as number;
   }
 
   dispose(): void {
     this.isPlaying = false;
-    window.clearTimeout(this.timer);
+    clearTimeout(this.timer);
   }
 }

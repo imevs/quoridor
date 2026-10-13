@@ -50,7 +50,8 @@ export function WinDialog() {
             type="button"
             onClick={() => {
               close();
-              document.getElementById('btn-moves')?.click();
+              if (cb.onShowMoves) cb.onShowMoves();
+              else hudStore.movesOpen.value = true;
             }}
           >
             List of steps

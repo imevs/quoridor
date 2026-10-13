@@ -193,7 +193,8 @@ export function MenuDialog() {
             type="button"
             onClick={() => {
               close();
-              document.getElementById('btn-history')?.click();
+              if (cb.onShowHistory) cb.onShowHistory();
+              else hudStore.historyOpen.value = true;
             }}
           >
             📜 Match History

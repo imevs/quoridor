@@ -14,6 +14,7 @@ export interface LocalSavedGame {
   seats: Seat[];
   state: WireState;
   history: WireState[];
+  actions?: Action[];
 }
 
 /** Offline play: vs computer or pass & play, with the rules engine in-process and localStorage persistence. */
@@ -26,6 +27,7 @@ export class LocalController implements GameController {
   private seats: Seat[] = [];
   private state!: GameState;
   private history: GameState[] = [];
+  private actions: Action[] = [];
   private timer = 0;
   private worker: Worker | null = null;
   private reqId = 0;
@@ -79,7 +81,7 @@ export class LocalController implements GameController {
 
   start(restoreExisting = false): void {
     this.paused = false;
-    window.clearTimeout(this.timer);
+    clearTimeout(this.timer);
 
     if (restoreExisting) {
       try {
@@ -91,7 +93,13 @@ export class LocalController implements GameController {
             this.seats = parsed.seats;
             this.state = fromWire(parsed.state);
             this.history = (parsed.history || []).map(fromWire);
-            this.onUpdate({ type: 'reset', state: cloneState(this.state), seats: this.seats });
+            this.actions = parsed.actions ?? [];
+            this.onUpdate({
+              type: 'reset',
+              state: cloneState(this.state),
+              seats: this.seats,
+              actions: [...this.actions],
+            });
             return;
           }
         }
@@ -108,8 +116,9 @@ export class LocalController implements GameController {
     });
     this.state = createGame(players);
     this.history = [];
+    this.actions = [];
     this.persist();
-    this.onUpdate({ type: 'reset', state: cloneState(this.state), seats: this.seats });
+    this.onUpdate({ type: 'reset', state: cloneState(this.state), seats: this.seats, actions: [] });
   }
 
   private persist(): void {
@@ -123,6 +132,7 @@ export class LocalController implements GameController {
         seats: this.seats,
         state: toWire(this.state),
         history: this.history.map(toWire),
+        actions: this.actions,
       };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
     } catch {
@@ -134,6 +144,7 @@ export class LocalController implements GameController {
     if (!isLegal(this.state, action)) return;
     const seat = this.state.turn;
     this.history.push(cloneState(this.state));
+    this.actions.push(action);
     applyAction(this.state, action);
     this.persist();
     this.onUpdate({ type: 'action', seat, action, state: cloneState(this.state) });
@@ -149,12 +160,16 @@ export class LocalController implements GameController {
 
   undo(): void {
     if (this.history.length === 0) return;
-    window.clearTimeout(this.timer);
+    clearTimeout(this.timer);
     this.reqId++;
     let prev = this.history.pop()!;
+    this.actions.pop();
     // Against the computer, rewind to the human's previous turn
     if (this.kind === 'ai') {
-      while (!this.seats[prev.turn].human && this.history.length > 0) prev = this.history.pop()!;
+      while (!this.seats[prev.turn].human && this.history.length > 0) {
+        prev = this.history.pop()!;
+        this.actions.pop();
+      }
     }
     this.state = prev;
     this.persist();
@@ -175,7 +190,7 @@ export class LocalController implements GameController {
 
   pause(): void {
     this.paused = true;
-    window.clearTimeout(this.timer);
+    clearTimeout(this.timer);
     this.reqId++;
   }
 
@@ -186,23 +201,23 @@ export class LocalController implements GameController {
   }
 
   idle(): void {
-    window.clearTimeout(this.timer);
+    clearTimeout(this.timer);
     const s = this.state;
     if (s.winner !== null || this.seats[s.turn].human || this.paused) return;
 
-    this.timer = window.setTimeout(() => {
+    this.timer = setTimeout(() => {
       if (this.worker) {
         const id = ++this.reqId;
         this.worker.postMessage({ id, state: cloneState(this.state), difficulty: this.config.difficulty } satisfies AiWorkerRequest);
       } else {
         this.submit(chooseAction(this.state, this.config.difficulty));
       }
-    }, AI_THINK_MS);
+    }, AI_THINK_MS) as unknown as number;
   }
 
   dispose(): void {
     this.paused = false;
-    window.clearTimeout(this.timer);
+    clearTimeout(this.timer);
     this.reqId++;
     this.worker?.terminate();
     this.worker = null;

@@ -49,6 +49,14 @@ export class DialogCoordinator {
     hudStore.callbacks.onClearHistory = () => this.clearHistory();
     hudStore.callbacks.onRematch = () => this.delegate.onRematch();
     hudStore.callbacks.onMenuFromWin = () => this.delegate.openMenu();
+    hudStore.callbacks.onReplayPlay = () => this.toggleReplayPlay();
+    hudStore.callbacks.onReplayPrev = () => this.replayPrev();
+    hudStore.callbacks.onReplayNext = () => this.replayNext();
+    hudStore.callbacks.onReplayFirst = () => this.replayFirst();
+    hudStore.callbacks.onReplayLast = () => this.replayLast();
+    hudStore.callbacks.onReplayExit = () => this.exitReplay();
+    hudStore.callbacks.onShowMoves = () => this.showMovesDialog();
+    hudStore.callbacks.onShowHistory = () => this.showHistory();
 
     this.hud.win.addEventListener('close', () => {
       if (this.hud.win.returnValue === 'again') {
@@ -64,6 +72,7 @@ export class DialogCoordinator {
       const id = btn.dataset.id;
       const record = MatchHistoryManager.list().find((r) => r.id === id);
       if (record && record.actions && record.actions.length > 0) {
+        hudStore.historyOpen.value = false;
         this.hud.historyDialog.close();
         this.delegate.startReplay(record);
       }
@@ -80,7 +89,10 @@ export class DialogCoordinator {
   showHistory(): void {
     sounds.playTick();
     this.hud.renderHistory(MatchHistoryManager.list());
-    this.hud.historyDialog.showModal();
+    hudStore.historyOpen.value = true;
+    if (!this.hud.historyDialog.open) {
+      try { this.hud.historyDialog.showModal(); } catch { /* ignore */ }
+    }
   }
 
   clearHistory(): void {
@@ -98,7 +110,8 @@ export class DialogCoordinator {
     if (ctrl instanceof ReplayController) {
       this.hud.renderMovesList(ctrl.actions, seats, ctrl.currentStep, (step) => {
         ctrl.jumpTo(step);
-        this.hud.movesDialog.close();
+        hudStore.movesOpen.value = false;
+        if (this.hud.movesDialog.open) this.hud.movesDialog.close();
       });
     } else {
       const state = this.delegate.getState();
@@ -107,8 +120,10 @@ export class DialogCoordinator {
         ? (step: number) => {
             const lastRecord = MatchHistoryManager.list()[0];
             if (lastRecord && lastRecord.actions && lastRecord.actions.length > 0) {
+              hudStore.winOpen.value = false;
               if (this.hud.win.open) this.hud.win.close();
-              this.hud.movesDialog.close();
+              hudStore.movesOpen.value = false;
+              if (this.hud.movesDialog.open) this.hud.movesDialog.close();
               this.delegate.startReplay(lastRecord);
               const activeCtrl = this.delegate.getController();
               if (activeCtrl instanceof ReplayController) {
@@ -120,7 +135,10 @@ export class DialogCoordinator {
 
       this.hud.renderMovesList(matchActions, seats, matchActions.length, onSelect);
     }
-    this.hud.movesDialog.showModal();
+    hudStore.movesOpen.value = true;
+    if (!this.hud.movesDialog.open) {
+      try { this.hud.movesDialog.showModal(); } catch { /* ignore */ }
+    }
   }
 
   toggleReplayPlay(): void {
@@ -151,6 +169,7 @@ export class DialogCoordinator {
   exitReplay(): void {
     const ctrl = this.delegate.getController();
     ctrl?.dispose();
+    this.hud.setReplayBarVisible(false);
     this.delegate.openMenu();
   }
 }

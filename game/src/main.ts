@@ -214,6 +214,7 @@ class Game {
     }
     this.interaction.clearPreview();
     this.hud.menu.returnValue = '';
+    hudStore.menuOpen.value = true;
     if (!this.hud.menu.open) this.hud.menu.showModal();
   }
 
@@ -295,8 +296,8 @@ class Game {
       case 'reset': {
         this.seats = u.seats;
         this.state = u.state;
-        this.movesCount = 0;
-        this.matchActions = [];
+        this.matchActions = u.actions ? [...u.actions] : [];
+        this.movesCount = this.matchActions.filter((a) => a.type === 'move').length;
         this.clock.reset(this.seats.length, this.clock.initialSeconds);
         this.interaction.clearPreview();
         this.destinations.reset();
@@ -340,7 +341,7 @@ class Game {
         }
         this.state = u.state;
         this.refreshTurnUi();
-        if (this.state.winner !== null) {
+        if (this.state.winner !== null && !(this.controller instanceof ReplayController)) {
           await this.finish(this.state.winner);
         }
         break;
@@ -366,6 +367,20 @@ class Game {
     this.hud.renderPlayers(s, this.seats, this.clock.remaining, this.clock.initialSeconds);
     this.scene.setActiveSeat(s.turn);
     this.updateControls();
+
+    if (this.controller instanceof ReplayController) {
+      this.clock.stop();
+      this.hud.hideTurnTimer();
+      const winner = s.winner;
+      const label = winner !== null
+        ? `${ANIMALS[this.seats[winner].animal].name} wins!`
+        : `${a.name}'s turn`;
+      this.hud.setTurn(seat, label);
+      this.hud.setHint('');
+      this.scene.showMoveMarkers([]);
+      this.scene.showGhost(null);
+      return;
+    }
 
     if (s.winner !== null) {
       this.clock.stop();
@@ -455,7 +470,7 @@ class Game {
     this.hud.setTurn(seat, `${ANIMALS[seat.animal].name} wins!`);
     this.hud.setHint('');
 
-    const kind = (this.controller?.kind ?? 'ai') as 'ai' | 'local' | 'online' | 'bot_vs_bot';
+    const kind = (this.controller?.kind ?? 'ai') as 'ai' | 'local' | 'online' | 'bot_vs_bot' | 'p2p';
     MatchHistoryManager.record({
       mode: kind,
       players: (this.state.players.length === 4 ? 4 : 2),
@@ -467,6 +482,7 @@ class Game {
       animals: this.seats.map((s) => s.animal),
       actions: [...this.matchActions],
     });
+    hudStore.historyRecords.value = MatchHistoryManager.list();
 
     await this.scene.celebrate(winner);
 
@@ -492,7 +508,11 @@ class Game {
     this.hud.setReplayBarVisible(true);
     const ctrl = new ReplayController(record);
     ctrl.onStepChange = (current, total, action) => {
-      const seat = action ? this.seats[(current - 1) % this.seats.length] : undefined;
+      const stepIdx = current - 1;
+      const turnSeat = action && stepIdx >= 0 && ctrl.states[stepIdx]
+        ? ctrl.states[stepIdx].turn
+        : undefined;
+      const seat = turnSeat !== undefined ? this.seats[turnSeat] : undefined;
       const desc = action ? formatActionDescription(action, seat?.animal) : 'Starting position';
       this.hud.updateReplayUi(
         `Replay · ${record.winnerName} won`,

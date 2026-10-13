@@ -3,7 +3,7 @@ import type { Seat } from '../ui/Hud';
 
 /** Changes the presenter (main.ts) applies to the scene, in order. */
 export type Update =
-  | { type: 'reset'; state: GameState; seats: Seat[] }
+  | { type: 'reset'; state: GameState; seats: Seat[]; actions?: Action[] }
   | { type: 'action'; seat: number; action: Action; state: GameState }
   | { type: 'sync'; state: GameState }
   | { type: 'seats'; seats: Seat[] };

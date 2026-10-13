@@ -101,7 +101,8 @@ export function TopBar() {
           title="Match history (H)"
           aria-label="Match history"
           onClick={() => {
-            hudStore.historyOpen.value = true;
+            if (cb.onShowHistory) cb.onShowHistory();
+            else hudStore.historyOpen.value = true;
           }}
         >
           <svg viewBox="0 0 24 24">
@@ -117,7 +118,8 @@ export function TopBar() {
           title="Move history log (L)"
           aria-label="Move history log"
           onClick={() => {
-            hudStore.movesOpen.value = true;
+            if (cb.onShowMoves) cb.onShowMoves();
+            else hudStore.movesOpen.value = true;
           }}
         >
           <svg viewBox="0 0 24 24">

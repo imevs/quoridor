@@ -40,6 +40,8 @@ export interface HudCallbacks {
   onReplayFirst?: () => void;
   onReplayLast?: () => void;
   onReplayExit?: () => void;
+  onShowMoves?: () => void;
+  onShowHistory?: () => void;
   onClearHistory?: () => void;
   onLobbySeat?: (seat: number, kind: 'open' | 'ai', diff: Difficulty) => void;
   onLobbyStart?: () => void;

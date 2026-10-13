@@ -1,5 +1,5 @@
 export interface WinDetailsParams {
-  mode: 'ai' | 'local' | 'online' | 'bot_vs_bot';
+  mode: 'ai' | 'local' | 'online' | 'bot_vs_bot' | 'p2p';
   winnerAnimalName: string;
   isHuman: boolean;
   isLocal: boolean;
@@ -27,7 +27,7 @@ export function formatWinDetails(params: WinDetailsParams): { title: string; sub
     if (!timedOutAnimalName) {
       sub = `Bot ${winnerAnimalName} reached the goal line.`;
     }
-  } else if (mode === 'online') {
+  } else if (mode === 'online' || mode === 'p2p') {
     title = isLocal ? 'Victory!' : `${winnerAnimalName} wins`;
   }
 

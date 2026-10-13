@@ -95,7 +95,8 @@ export function ReplayBar() {
           type="button"
           title="View move log"
           onClick={() => {
-            hudStore.movesOpen.value = true;
+            if (cb.onShowMoves) cb.onShowMoves();
+            else hudStore.movesOpen.value = true;
           }}
         >
           Moves

@@ -4,7 +4,7 @@ import type { Action } from './rules';
 export interface HistoryRecord {
   id: string;
   date: number; // timestamp
-  mode: 'ai' | 'local' | 'online' | 'bot_vs_bot';
+  mode: 'ai' | 'local' | 'online' | 'bot_vs_bot' | 'p2p';
   players: 2 | 4;
   winner: number;
   winnerAnimal: AnimalId;
