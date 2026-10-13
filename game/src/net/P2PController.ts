@@ -138,18 +138,6 @@ export class P2PController implements GameController {
         );
       },
     });
-
-    const signal = this.abort.signal;
-    document.getElementById('undo-accept')?.addEventListener(
-      'click',
-      () => this.sendOrHandle({ type: 'vote', accept: true }),
-      { signal },
-    );
-    document.getElementById('undo-decline')?.addEventListener(
-      'click',
-      () => this.sendOrHandle({ type: 'vote', accept: false }),
-      { signal },
-    );
   }
 
   // ------------------------------------------------------------------ Lifecycle
@@ -774,6 +762,9 @@ export class P2PController implements GameController {
     } else if (v.version === this.version + 1 && v.event?.type === 'action') {
       if (seatsChanged) this.onUpdate({ type: 'seats', seats });
       this.onUpdate({ type: 'action', seat: v.event.seat, action: v.event.action, state });
+    } else if (v.version === this.version + 1 && v.event?.type === 'undo') {
+      if (seatsChanged) this.onUpdate({ type: 'seats', seats });
+      this.onUpdate({ type: 'undo', seat: v.event.seat, state });
     } else {
       this.onUpdate({ type: 'seats', seats });
       this.onUpdate({ type: 'sync', state });
@@ -789,11 +780,15 @@ export class P2PController implements GameController {
     }
     const who = ANIMALS[v.seats[u.by].animal].name;
     if (u.by === this.seat) {
-      this.hud.showUndo(`Waiting for opponents to accept your undo (${u.accepted.length}/${u.voters.length})`, false);
+      this.hud.showUndo(`Waiting for opponents to accept your undo (${u.accepted.length}/${u.voters.length})`);
     } else if (u.voters.includes(this.seat) && !u.accepted.includes(this.seat)) {
-      this.hud.showUndo(`${who} asks to take back their last move`, true);
+      this.hud.showUndo(
+        `${who} asks to take back their last move`,
+        () => this.sendOrHandle({ type: 'vote', accept: true }),
+        () => this.sendOrHandle({ type: 'vote', accept: false }),
+      );
     } else {
-      this.hud.showUndo(`Undo requested by ${who} — waiting for other players`, false);
+      this.hud.showUndo(`Undo requested by ${who} — waiting for other players`);
     }
   }
 

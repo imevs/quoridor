@@ -5,6 +5,7 @@ import type { Seat } from '../ui/Hud';
 export type Update =
   | { type: 'reset'; state: GameState; seats: Seat[]; actions?: Action[] }
   | { type: 'action'; seat: number; action: Action; state: GameState }
+  | { type: 'undo'; seat: number; state: GameState }
   | { type: 'sync'; state: GameState }
   | { type: 'seats'; seats: Seat[] };
 

@@ -346,6 +346,20 @@ class Game {
         }
         break;
       }
+      case 'undo': {
+        this.clock.stop();
+        this.interaction.clearPreview();
+        this.destinations.reset();
+        if (this.matchActions.length > 0) {
+          this.matchActions.pop();
+        }
+        this.movesCount = this.matchActions.filter((a) => a.type === 'move').length;
+        this.state = u.state;
+        this.scene.syncState(this.state);
+        sounds.playWhoosh();
+        this.refreshTurnUi();
+        break;
+      }
     }
   }
 
@@ -530,15 +544,17 @@ class Game {
     if (this.processing || !this.controller?.canUndo()) return;
     this.interaction.clearStagedAction();
     this.hud.hideConfirmBanner();
-    this.clock.stop();
-    const isVsAi = this.controller?.kind === 'ai';
-    const stepsToPop = isVsAi && this.matchActions.length >= 2 ? 2 : 1;
-    this.clock.undo(stepsToPop);
-    for (let i = 0; i < stepsToPop && this.matchActions.length > 0; i++) {
-      this.matchActions.pop();
+    if (this.controller instanceof LocalController) {
+      this.clock.stop();
+      const isVsAi = this.controller?.kind === 'ai';
+      const stepsToPop = isVsAi && this.matchActions.length >= 2 ? 2 : 1;
+      this.clock.undo(stepsToPop);
+      for (let i = 0; i < stepsToPop && this.matchActions.length > 0; i++) {
+        this.matchActions.pop();
+      }
+      this.movesCount = this.matchActions.filter((a) => a.type === 'move').length;
+      sounds.playWhoosh();
     }
-    this.movesCount = this.matchActions.filter((a) => a.type === 'move').length;
-    sounds.playWhoosh();
     this.controller.undo();
   }
 

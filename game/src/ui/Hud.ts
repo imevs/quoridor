@@ -43,11 +43,13 @@ export class Hud {
   private tappedSeat: number | null = null;
 
   constructor() {
-    const root = document.getElementById('hud-root');
-    if (root) {
-      render(h(HudApp, null), root);
+    if (typeof document !== 'undefined') {
+      const root = document.getElementById('hud-root');
+      if (root) {
+        render(h(HudApp, null), root);
+      }
+      this.restoreConfig();
     }
-    this.restoreConfig();
   }
 
   // ---------------------------------------------------------------- DOM Accessors
@@ -336,8 +338,17 @@ export class Hud {
     hudStore.netStatus.value = { text: text ?? '', tone, visible: text !== null };
   }
 
-  showUndo(text: string | null, _canVote = false): void {
-    hudStore.undoBanner.value = { text: text ?? '', visible: text !== null };
+  showUndo(
+    text: string | null,
+    onAccept?: () => void,
+    onDecline?: () => void,
+  ): void {
+    hudStore.undoBanner.value = {
+      text: text ?? '',
+      visible: text !== null,
+      onAccept: text !== null ? onAccept : undefined,
+      onDecline: text !== null ? onDecline : undefined,
+    };
   }
 
   showConfirmBanner(

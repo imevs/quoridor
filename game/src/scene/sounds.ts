@@ -12,11 +12,15 @@ class SoundSystem {
     // AudioContext will be initialized on first user interaction
     const unlock = () => {
       this.initCtx();
-      window.removeEventListener('pointerdown', unlock);
-      window.removeEventListener('keydown', unlock);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('pointerdown', unlock);
+        window.removeEventListener('keydown', unlock);
+      }
     };
-    window.addEventListener('pointerdown', unlock);
-    window.addEventListener('keydown', unlock);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pointerdown', unlock);
+      window.addEventListener('keydown', unlock);
+    }
   }
 
   private initCtx(): AudioContext | null {
