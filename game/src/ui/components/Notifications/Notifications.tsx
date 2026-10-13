@@ -60,36 +60,15 @@ export function Notifications() {
         </div>
       )}
 
-      {/* Undo Banner */}
-      {undo.visible && (
-        <div id="undo-banner" class={styles.undoBanner}>
-          <span id="undo-text" class={styles.undoText}>
+      {/* Undo Waiting Banner (for requester while waiting for peers) */}
+      {undo.visible && !undo.onAccept && !undo.onDecline && (
+        <div id="undo-banner" class={styles.undoWaitingBanner} role="status" aria-live="polite">
+          <span class={styles.waitingSpinner} aria-hidden="true">
+            ⏳
+          </span>
+          <span id="undo-text" class={styles.waitingText}>
             {undo.text}
           </span>
-          {(undo.onAccept || undo.onDecline) && (
-            <div id="undo-actions" class={styles.undoActions}>
-              {undo.onDecline && (
-                <button
-                  id="undo-decline"
-                  class="ghost-btn small"
-                  type="button"
-                  onClick={undo.onDecline}
-                >
-                  Decline
-                </button>
-              )}
-              {undo.onAccept && (
-                <button
-                  id="undo-accept"
-                  class="primary-btn small"
-                  type="button"
-                  onClick={undo.onAccept}
-                >
-                  Accept
-                </button>
-              )}
-            </div>
-          )}
         </div>
       )}
 

@@ -1,0 +1,248 @@
+.undoModal {
+  width: min(440px, calc(100vw - 32px));
+  border-radius: 28px;
+  background: rgb(255 253 246 / 0.94);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1.5px solid var(--glass-border);
+  box-shadow: 0 24px 64px -16px rgb(20 50 15 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.6);
+}
+
+.bannerWrapper {
+  width: 100%;
+}
+
+.undoForm {
+  padding: 28px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  gap: 0;
+}
+
+.heroSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.avatarGlow {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--animal-color, #4f9a35) 28%, transparent) 0%,
+    color-mix(in srgb, var(--animal-color, #4f9a35) 8%, transparent) 65%,
+    transparent 100%
+  );
+  border: 2px solid color-mix(in srgb, var(--animal-color, #4f9a35) 60%, #fff);
+  box-shadow:
+    0 8px 24px color-mix(in srgb, var(--animal-color, #4f9a35) 25%, transparent),
+    inset 0 2px 6px rgb(255 255 255 / 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: floatAvatar 3s ease-in-out infinite alternate;
+}
+
+@keyframes floatAvatar {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-4px);
+  }
+}
+
+.avatarEmoji {
+  font-size: 42px;
+  line-height: 1;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.22));
+}
+
+.undoIconBadge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--leaf, #4f9a35), var(--leaf-deep, #28541c));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  border: 2.5px solid #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.28);
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.badgeLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--leaf-deep, #28541c);
+  background: rgb(79 154 53 / 0.12);
+  padding: 3px 12px;
+  border-radius: 99px;
+  border: 1px solid rgb(79 154 53 / 0.2);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--leaf-deep, #1d3319);
+  margin: 4px 0 0;
+  line-height: 1.15;
+}
+
+.message {
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ink, #201a18);
+  margin: 6px 0 4px;
+  font-weight: 500;
+}
+
+.subtext {
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--ink-soft, #566850);
+  margin: 0;
+  max-width: 36ch;
+}
+
+.undoActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+  width: 100%;
+}
+
+.btnIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.declineBtn {
+  flex: 1;
+  min-height: 48px;
+  padding: 11px 18px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgb(215 55 45 / 0.08);
+  color: #b52c24;
+  border: 1.5px solid rgb(215 55 45 / 0.22);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+}
+
+.declineBtn:hover {
+  background: rgb(215 55 45 / 0.16);
+  border-color: rgb(215 55 45 / 0.42);
+  transform: translateY(-1px);
+}
+
+.declineBtn:active {
+  transform: translateY(1px);
+}
+
+.acceptBtn {
+  flex: 1.25;
+  min-height: 48px;
+  padding: 11px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--leaf, #4f9a35), var(--leaf-deep, #28541c));
+  border: 0;
+  box-shadow: 0 8px 20px -4px rgb(40 84 28 / 0.42), inset 0 -2px 0 rgb(0 0 0 / 0.18);
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.12s, box-shadow 0.15s;
+}
+
+.acceptBtn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px -4px rgb(40 84 28 / 0.52), inset 0 -2px 0 rgb(0 0 0 / 0.18);
+}
+
+.acceptBtn:active {
+  transform: translateY(1px);
+}
+
+/* Portrait & Small Screen Responsive */
+@media (max-width: 480px) {
+  .undoModal {
+    width: min(390px, calc(100vw - 20px));
+    border-radius: 24px;
+  }
+
+  .undoForm {
+    padding: 24px 18px 18px;
+  }
+
+  .avatarGlow {
+    width: 68px;
+    height: 68px;
+    margin-bottom: 10px;
+  }
+
+  .avatarEmoji {
+    font-size: 36px;
+  }
+
+  .title {
+    font-size: 23px;
+  }
+
+  .message {
+    font-size: 15px;
+  }
+
+  .subtext {
+    font-size: 12.5px;
+  }
+
+  .undoActions {
+    margin-top: 18px;
+    gap: 10px;
+  }
+
+  .declineBtn,
+  .acceptBtn {
+    min-height: 44px;
+    font-size: 15px;
+    padding: 10px 14px;
+  }
+}

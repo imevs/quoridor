@@ -83,4 +83,23 @@ describe('P2P & Online Undo confirmation banner', () => {
     expect(banner.onAccept).toBeUndefined();
     expect(banner.onDecline).toBeUndefined();
   });
+
+  it('detects requester animal and name automatically from message text', () => {
+    const hud = new Hud();
+    hud.showUndo('Bear asks to take back their last move', () => {}, () => {});
+    const banner = hudStore.undoBanner.value;
+    expect(banner.requesterAnimal).toBe('bear');
+    expect(banner.requesterName).toBe('Bear');
+  });
+
+  it('supports explicit requester animal and name metadata', () => {
+    const hud = new Hud();
+    hud.showUndo('Some message', () => {}, () => {}, {
+      requesterAnimal: 'owl',
+      requesterName: 'Wise Owl',
+    });
+    const banner = hudStore.undoBanner.value;
+    expect(banner.requesterAnimal).toBe('owl');
+    expect(banner.requesterName).toBe('Wise Owl');
+  });
 });

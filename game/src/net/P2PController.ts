@@ -778,7 +778,9 @@ export class P2PController implements GameController {
       this.hud.showUndo(null);
       return;
     }
-    const who = ANIMALS[v.seats[u.by].animal].name;
+    const requesterSeat = v.seats[u.by];
+    const requesterAnimal = requesterSeat ? requesterSeat.animal : undefined;
+    const who = requesterAnimal ? ANIMALS[requesterAnimal].name : `Seat ${u.by + 1}`;
     if (u.by === this.seat) {
       this.hud.showUndo(`Waiting for opponents to accept your undo (${u.accepted.length}/${u.voters.length})`);
     } else if (u.voters.includes(this.seat) && !u.accepted.includes(this.seat)) {
@@ -786,6 +788,7 @@ export class P2PController implements GameController {
         `${who} asks to take back their last move`,
         () => this.sendOrHandle({ type: 'vote', accept: true }),
         () => this.sendOrHandle({ type: 'vote', accept: false }),
+        { requesterAnimal, requesterName: who },
       );
     } else {
       this.hud.showUndo(`Undo requested by ${who} — waiting for other players`);

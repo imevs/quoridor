@@ -134,24 +134,25 @@
   opacity: 0.95;
 }
 
-.undoBanner {
+.undoWaitingBanner {
   position: fixed;
   top: calc(max(14px, env(safe-area-inset-top)) + 54px);
   left: 50%;
   translate: -50% 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 14px;
-  padding: 8px 16px;
+  gap: 10px;
+  padding: 10px 22px;
   border-radius: 99px;
   z-index: 15;
-  background: var(--glass);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow);
+  background: rgb(255 253 246 / 0.94);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1.5px solid var(--leaf);
+  box-shadow: 0 10px 30px -6px rgb(20 50 15 / 0.35), 0 0 0 2px rgb(79 154 53 / 0.15);
   pointer-events: auto;
   animation: bannerIn 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+  white-space: nowrap;
 }
 
 @keyframes bannerIn {
@@ -165,15 +166,32 @@
   }
 }
 
-.undoText {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink);
+.waitingSpinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  animation: spinSlow 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-.undoActions {
-  display: flex;
-  gap: 6px;
+@keyframes spinSlow {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.waitingText {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.01em;
 }
 
 .confirmBanner {

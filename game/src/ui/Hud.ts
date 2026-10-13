@@ -1,7 +1,7 @@
 import { render, h } from 'preact';
 import { HudApp } from './components/HudApp';
 import { hudStore, type PlayerCardItem } from './hudStore';
-import type { AnimalId } from '../game/animals';
+import { ANIMALS, type AnimalId } from '../game/animals';
 import type { Difficulty } from '../game/ai';
 import { type Action, type GameState, shortestPath } from '../game/rules';
 import type { HistoryRecord } from '../game/history';
@@ -342,12 +342,27 @@ export class Hud {
     text: string | null,
     onAccept?: () => void,
     onDecline?: () => void,
+    meta?: { requesterAnimal?: AnimalId; requesterName?: string },
   ): void {
+    let animal = meta?.requesterAnimal;
+    let name = meta?.requesterName;
+    if (text && (!animal || !name)) {
+      for (const [key, def] of Object.entries(ANIMALS)) {
+        if (text.includes(def.name)) {
+          animal = animal ?? (key as AnimalId);
+          name = name ?? def.name;
+          break;
+        }
+      }
+    }
+
     hudStore.undoBanner.value = {
       text: text ?? '',
       visible: text !== null,
       onAccept: text !== null ? onAccept : undefined,
       onDecline: text !== null ? onDecline : undefined,
+      requesterAnimal: text !== null ? animal : undefined,
+      requesterName: text !== null ? name : undefined,
     };
   }
 

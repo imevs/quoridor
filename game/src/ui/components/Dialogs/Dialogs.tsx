@@ -5,6 +5,7 @@ import { HistoryDialog } from './HistoryDialog';
 import { MovesDialog } from './MovesDialog';
 import { LobbyDialog } from './LobbyDialog';
 import { InviteDialog } from './InviteDialog';
+import { UndoDialog } from './UndoDialog';
 
 export {
   Modal,
@@ -21,6 +22,7 @@ export { HistoryDialog } from './HistoryDialog';
 export { MovesDialog } from './MovesDialog';
 export { LobbyDialog } from './LobbyDialog';
 export { InviteDialog } from './InviteDialog';
+export { UndoDialog } from './UndoDialog';
 
 export function Dialogs() {
   return (
@@ -32,6 +34,7 @@ export function Dialogs() {
       <MovesDialog />
       <LobbyDialog />
       <InviteDialog />
+      <UndoDialog />
     </>
   );
 }

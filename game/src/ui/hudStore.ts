@@ -104,6 +104,8 @@ export class HudStore {
     visible: boolean;
     onAccept?: () => void;
     onDecline?: () => void;
+    requesterAnimal?: AnimalId;
+    requesterName?: string;
   }>({
     text: '',
     visible: false,
