@@ -187,6 +187,24 @@ async function run() {
     await host.send('Target.activateTarget', { targetId: guestTab.id });
     await new Promise((r) => setTimeout(r, 1000));
 
+    // Confirm joining the match via the Join Confirmation prompt
+    const hasJoinBtn = await guest.eval(`(() => new Promise((resolve) => {
+      let tries = 0;
+      const check = () => {
+        const btn = document.getElementById('btn-join-confirm');
+        if (btn) {
+          btn.click();
+          return resolve(true);
+        }
+        if (++tries > 50) return resolve(false);
+        setTimeout(check, 100);
+      };
+      check();
+    }))()`);
+    if (!hasJoinBtn) throw new Error('Join confirmation button not found on guest');
+    console.log(`  ✓ Guest confirmed join prompt`);
+    await new Promise((r) => setTimeout(r, 1500));
+
     const guestRole = await guest.eval(`sessionStorage.getItem('quoridors.p2p.role.' + '${gameId}')`);
     if (guestRole !== 'guest') throw new Error(`Guest role expected 'guest', got: ${guestRole}`);
     console.log(`  ✓ Guest connected and registered role as 'guest'`);

@@ -133,11 +133,14 @@ The GLTF export must specify `export_apply=True` to bake Geometry Nodes modifier
   - Anti-trap rule: A wall cannot be placed if it completely seals off any player from reaching their goal line.
   - 10 walls per player in 2-player games, 5 walls in 4-player games.
 
-### Controls
-- **Click**: Select an highlighted tile to move, or click a groove to place a wall.
+### Controls & UI
+- **Click / Tap**: Select a highlighted tile to move, or click a groove to place a wall.
+- **Mobile Staging**: On touch devices, tapping stages the action and rotates the pawn toward the destination with an explicit Confirm / Cancel banner.
 - **Hover**: Preview wall placement and validity (green = valid, red = blocked/invalid).
 - **Orbit**: Click and drag on empty space to rotate the camera; scroll to zoom.
+- **Multiplayer**: Invite links prompt guests to confirm before joining; undo requests require opponent vote consensus.
 - **Shortcuts**:
   - `Z`: Undo move
   - `C`: Reset camera behind active player
   - `Esc`: Open setup menu
+  - `H`: Open match history and replay viewer

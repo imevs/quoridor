@@ -33,6 +33,8 @@ graph TD
 - **Single Source of Truth**: The host's browser instantiates and owns the pure algorithmic [`Session`](file:///Users/vm/WebstormProjects/quoridors/game/src/game/session.ts) engine. All rules, legal move checks, wall counts, timers, AI moves, and undo votes are evaluated strictly on the host.
 - **Seat Assignment**: Seat `0` is permanently reserved for the host. Seats `1` through `3` are open for guest peers or AI players.
 - **Client Tokens**: On seat assignment, the session engine generates a secret `token` for each player (`sessionStorage.getItem('quoridors.p2p.token.<gameId>')`). Guests attach this token in message envelopes (`ClientMsgEnvelope.token`) so the host can authenticate reconnecting peers even if ephemeral WebRTC peer IDs change.
+- **Guest Admission**: When opening an invite link (`?p2p=<gameId>`), guests without an active session token see a confirmation prompt (`JoinDialog`). Tapping "Join Game" connects the peer and reserves the seat; declining clears invite query parameters and opens the main menu. Reconnecting players with stored session tokens bypass the prompt.
+- **Timer Synchronization**: Match decision timer (`turnTimer`) is host-configured and synchronized authoritatively via session state snapshots (`v.turnTimer`). Invite URLs do not carry timer parameters.
 
 ### 1.2 Dual-Transport Layer
 1. **Local `BroadcastChannel`** (`quoridors_p2p_<gameId>`):
@@ -97,6 +99,8 @@ sequenceDiagram
     CDP->>H: 1. Select 'P2P Online' & Submit Menu
     H-->>CDP: Verified gameId generated & role='host' stored
     CDP->>G: 2. Open Target with ?p2p=<gameId>
+    G-->>CDP: Displays Join Confirmation Dialog
+    CDP->>G: Click 'Join Game'
     G-->>CDP: Verified role='guest' stored & token saved
     CDP->>H: 3. Wait for Ready & Click Start Game
     H-->>CDP: Verified elementFromPoint is <CANVAS> (HUD not blocking)
