@@ -390,4 +390,19 @@ export class Hud {
       };
     }
   }
+
+  showJoinDialog(
+    gameId: string,
+    mode: 'p2p' | 'online',
+    onConfirm: () => void,
+    onDecline: () => void,
+  ): void {
+    hudStore.joinData.value = { gameId, mode, onConfirm, onDecline };
+    hudStore.joinOpen.value = true;
+  }
+
+  hideJoinDialog(): void {
+    hudStore.joinOpen.value = false;
+    hudStore.joinData.value = null;
+  }
 }

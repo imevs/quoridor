@@ -40,6 +40,7 @@ interface PendingUndo {
 export interface SessionData {
   id: string;
   players: 2 | 4;
+  turnTimer?: number;
   phase: Phase;
   seats: Array<Pick<SeatRecord, 'animal' | 'kind' | 'difficulty' | 'token'>>;
   state: WireState | null;
@@ -57,6 +58,7 @@ export const HOST_SEAT = 0;
 export class Session {
   readonly id: string;
   readonly players: 2 | 4;
+  turnTimer: number;
   phase: Phase = 'lobby';
   state: GameState | null = null;
   version = 0;
@@ -70,16 +72,17 @@ export class Session {
   private notices: string[] = [];
   private deps: SessionDeps;
 
-  private constructor(id: string, players: 2 | 4, seats: SeatRecord[], deps: SessionDeps) {
+  private constructor(id: string, players: 2 | 4, seats: SeatRecord[], deps: SessionDeps, turnTimer = 300) {
     this.id = id;
     this.players = players;
     this.seats = seats;
     this.deps = deps;
+    this.turnTimer = turnTimer;
     this.lastSeen = deps.now();
   }
 
   /** Creates a lobby with the host in seat 0. Returns the host's seat token. */
-  static create(id: string, players: 2 | 4, hostAnimal: AnimalId, deps: SessionDeps): { session: Session; token: string } {
+  static create(id: string, players: 2 | 4, hostAnimal: AnimalId, deps: SessionDeps, turnTimer = 300): { session: Session; token: string } {
     const others = ANIMAL_ORDER.filter((a) => a !== hostAnimal);
     const token = deps.token();
     const seats: SeatRecord[] = Array.from({ length: players }, (_, i) => ({
@@ -89,7 +92,7 @@ export class Session {
       token: i === 0 ? token : null,
       connected: 0,
     }));
-    return { session: new Session(id, players, seats, deps), token };
+    return { session: new Session(id, players, seats, deps, turnTimer), token };
   }
 
   static fromJSON(d: SessionData, deps: SessionDeps): Session {
@@ -98,6 +101,7 @@ export class Session {
       d.players,
       d.seats.map((x) => ({ ...x, connected: 0 })),
       deps,
+      d.turnTimer ?? 300,
     );
     s.phase = d.phase;
     s.state = d.state ? fromWire(d.state) : null;
@@ -113,6 +117,7 @@ export class Session {
     return {
       id: this.id,
       players: this.players,
+      turnTimer: this.turnTimer,
       phase: this.phase,
       seats: this.seats.map(({ animal, kind, difficulty, token }) => ({ animal, kind, difficulty, token })),
       state: this.state ? toWire(this.state) : null,
@@ -328,6 +333,7 @@ export class Session {
       id: this.id,
       phase: this.phase,
       players: this.players,
+      turnTimer: this.turnTimer,
       hostSeat: HOST_SEAT,
       seats: this.seats.map((s) => ({ animal: s.animal, kind: s.kind, difficulty: s.difficulty, connected: s.connected > 0 })),
       spectators: this.spectators,

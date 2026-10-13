@@ -56,10 +56,49 @@ class Game {
     const params = new URLSearchParams(window.location.search);
     const p2pId = params.get('p2p') ?? (params.get('mode') === 'p2p' ? params.get('game') : null);
     const joinId = params.get('game');
-    if (p2pId) {
+
+    const hasP2PToken = p2pId ? Boolean(sessionStorage.getItem(`quoridors.p2p.token.${p2pId}`)) : false;
+    const isP2PHost = p2pId ? sessionStorage.getItem(`quoridors.p2p.role.${p2pId}`) === 'host' : false;
+    const hasOnlineToken = joinId ? Boolean(sessionStorage.getItem(`quoridors.token.${joinId}`)) : false;
+
+    if (p2pId && (hasP2PToken || isP2PHost)) {
       void this.startP2P({ join: p2pId });
-    } else if (__ONLINE__ && joinId) {
+    } else if (p2pId) {
+      this.hud.showJoinDialog(
+        p2pId,
+        'p2p',
+        () => {
+          this.hud.hideJoinDialog();
+          void this.startP2P({ join: p2pId });
+        },
+        () => {
+          this.hud.hideJoinDialog();
+          const url = new URL(window.location.href);
+          url.searchParams.delete('p2p');
+          url.searchParams.delete('game');
+          url.searchParams.delete('mode');
+          window.history.replaceState(null, '', url.toString());
+          this.openMenu();
+        },
+      );
+    } else if (__ONLINE__ && joinId && hasOnlineToken) {
       void this.startOnline({ join: joinId });
+    } else if (__ONLINE__ && joinId) {
+      this.hud.showJoinDialog(
+        joinId,
+        'online',
+        () => {
+          this.hud.hideJoinDialog();
+          void this.startOnline({ join: joinId });
+        },
+        () => {
+          this.hud.hideJoinDialog();
+          const url = new URL(window.location.href);
+          url.searchParams.delete('game');
+          window.history.replaceState(null, '', url.toString());
+          this.openMenu();
+        },
+      );
     } else if (LocalController.hasSavedGame()) {
       const savedCfg = LocalController.getSavedConfig() ?? this.hud.readConfig();
       this.startLocal(savedCfg, true);
@@ -154,8 +193,9 @@ class Game {
 
 
     hudStore.callbacks.onStartGame = (cfg) => {
+      const turnTimer = typeof cfg.turnTimer === 'number' ? cfg.turnTimer : 300;
       if (cfg.mode === 'p2p') {
-        void this.startP2P({ create: { players: cfg.players, animal: cfg.animal } });
+        void this.startP2P({ create: { players: cfg.players, animal: cfg.animal, turnTimer } });
       } else if (cfg.mode === 'online' && __ONLINE__) {
         void this.startOnline({ create: { players: cfg.players, animal: cfg.animal } });
       } else {
@@ -235,7 +275,10 @@ class Game {
   }
 
   private async startP2P(intent: import('./net/P2PController').P2PIntent): Promise<void> {
-    this.clock.reset(2, 0);
+    const initial = 'create' in intent && typeof intent.create.turnTimer === 'number'
+      ? intent.create.turnTimer
+      : 300;
+    this.clock.reset(2, initial);
     this.hud.setReplayBarVisible(false);
     this.hud.setBotMatchActive(false);
     this.controller?.dispose();
@@ -298,7 +341,8 @@ class Game {
         this.state = u.state;
         this.matchActions = u.actions ? [...u.actions] : [];
         this.movesCount = this.matchActions.filter((a) => a.type === 'move').length;
-        this.clock.reset(this.seats.length, this.clock.initialSeconds);
+        const initialSeconds = typeof u.turnTimer === 'number' ? u.turnTimer : this.clock.initialSeconds;
+        this.clock.reset(this.seats.length, initialSeconds);
         this.interaction.clearPreview();
         this.destinations.reset();
         this.scene.setupPlayers(this.seats.map((s) => s.animal));

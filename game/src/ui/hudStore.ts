@@ -169,6 +169,13 @@ export class HudStore {
   readonly lobbyOpen = signal(false);
   readonly lobbyData = signal<{ view: SessionView; mySeat: number | null; link: string } | null>(null);
   readonly inviteOpen = signal(false);
+  readonly joinOpen = signal(false);
+  readonly joinData = signal<{
+    gameId: string;
+    mode: 'p2p' | 'online';
+    onConfirm: () => void;
+    onDecline: () => void;
+  } | null>(null);
 
   // Callbacks
   callbacks: HudCallbacks = {};

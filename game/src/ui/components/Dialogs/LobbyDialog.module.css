@@ -44,6 +44,21 @@
   width: 100%;
 }
 
+.timerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 6px auto 0;
+  padding: 4px 12px;
+  border-radius: 99px;
+  background: rgb(79 154 53 / 0.12);
+  border: 1px solid rgb(79 154 53 / 0.22);
+  color: var(--leaf-deep);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 @media (max-width: 520px) {
   .inviteRow {
     flex-wrap: wrap;

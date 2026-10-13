@@ -304,4 +304,17 @@ describe('Session persistence', () => {
     expect(restored.phase).toBe('lobby');
     expect(restored.nextTimer()).toBeNull();
   });
+
+  it('supports custom turnTimer in create, serialize, and view', () => {
+    const { session } = Session.create('g', 2, 'fox', deps, 180);
+    expect(session.turnTimer).toBe(180);
+    expect(session.view().turnTimer).toBe(180);
+
+    const json = session.toJSON();
+    expect(json.turnTimer).toBe(180);
+
+    const restored = Session.fromJSON(json, deps);
+    expect(restored.turnTimer).toBe(180);
+    expect(restored.view().turnTimer).toBe(180);
+  });
 });

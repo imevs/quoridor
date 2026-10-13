@@ -9,7 +9,7 @@ import { Lobby } from '../ui/Lobby';
 import type { GameController, Update } from './controller';
 import { dbg, instrumentedPeerConnection, logEnvironment, maybeInstallOverlay, probeIceServers, resolveTurnConfig } from './p2pDebug';
 
-export type P2PIntent = { create: { players: 2 | 4; animal: AnimalId } } | { join: string };
+export type P2PIntent = { create: { players: 2 | 4; animal: AnimalId; turnTimer?: number } } | { join: string };
 
 type ClientMsgEnvelope = {
   [key: string]: any;
@@ -181,8 +181,9 @@ export class P2PController implements GameController {
       this.seat = HOST_SEAT;
       this.session.connect(HOST_SEAT);
     } else {
-      const createData = (this.intent as { create: { players: 2 | 4; animal: AnimalId } }).create;
-      const { session, token } = Session.create(this.gameId, createData.players, createData.animal, deps);
+      const createData = (this.intent as { create: { players: 2 | 4; animal: AnimalId; turnTimer?: number } }).create;
+      const turnTimer = typeof createData.turnTimer === 'number' ? createData.turnTimer : 300;
+      const { session, token } = Session.create(this.gameId, createData.players, createData.animal, deps, turnTimer);
       this.session = session;
       this.seat = HOST_SEAT;
       session.connect(HOST_SEAT);
@@ -758,7 +759,7 @@ export class P2PController implements GameController {
     if (v.version === this.version) {
       this.onUpdate({ type: 'seats', seats });
     } else if (this.version < 0 || v.event?.type === 'start') {
-      this.onUpdate({ type: 'reset', state, seats });
+      this.onUpdate({ type: 'reset', state, seats, turnTimer: v.turnTimer });
     } else if (v.version === this.version + 1 && v.event?.type === 'action') {
       if (seatsChanged) this.onUpdate({ type: 'seats', seats });
       this.onUpdate({ type: 'action', seat: v.event.seat, action: v.event.action, state });

@@ -52,7 +52,13 @@ export function LobbyDialog() {
     >
       <div class={baseStyles.form}>
         <DialogCloseButton id="btn-lobby-x" onClick={handleUserLeave} />
-        <DialogHeader title="Online Game" desc={statusText} descId="lobby-status" />
+        <DialogHeader title="Online Game" desc={statusText} descId="lobby-status">
+          {typeof v.turnTimer === 'number' && (
+            <span class={styles.timerBadge} id="lobby-timer-badge">
+              ⏱️ {v.turnTimer === 0 ? 'No decision timer' : `${Math.round(v.turnTimer / 60)}m decision timer`}
+            </span>
+          )}
+        </DialogHeader>
 
         <div class={styles.inviteBox}>
           <label for="invite-link" class={baseStyles.fieldLabel}>

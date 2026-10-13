@@ -14,6 +14,12 @@ describe('protocol', () => {
 
   it('parses create', () => {
     expect(p({ type: 'create', players: 4, animal: 'bear' })).toEqual({ type: 'create', players: 4, animal: 'bear' });
+    expect(p({ type: 'create', players: 2, animal: 'fox', turnTimer: 300 })).toEqual({
+      type: 'create',
+      players: 2,
+      animal: 'fox',
+      turnTimer: 300,
+    });
     expect(p({ type: 'create', players: 3, animal: 'bear' })).toBeNull();
     expect(p({ type: 'create', players: 2, animal: 'cat' })).toBeNull();
   });

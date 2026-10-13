@@ -44,10 +44,11 @@ export interface SessionView {
   undo: UndoView | null;
   /** Seats that may currently request an undo. */
   undoable: number[];
+  turnTimer?: number;
 }
 
 export type ClientMsg =
-  | { type: 'create'; players: 2 | 4; animal: AnimalId }
+  | { type: 'create'; players: 2 | 4; animal: AnimalId; turnTimer?: number }
   | { type: 'join'; gameId: string; token?: string }
   | { type: 'seat'; seat: number; kind: 'open' | 'ai'; difficulty: Difficulty }
   | { type: 'start' }
@@ -104,7 +105,8 @@ export function parseClientMessage(raw: string): ClientMsg | null {
   switch (m.type) {
     case 'create':
       if ((m.players === 2 || m.players === 4) && ANIMAL_ORDER.includes(m.animal as AnimalId)) {
-        return { type: 'create', players: m.players, animal: m.animal as AnimalId };
+        const turnTimer = isInt(m.turnTimer, 0, 3600) ? m.turnTimer : undefined;
+        return { type: 'create', players: m.players, animal: m.animal as AnimalId, ...(turnTimer !== undefined ? { turnTimer } : {}) };
       }
       return null;
     case 'join':

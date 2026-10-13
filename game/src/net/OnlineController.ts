@@ -167,7 +167,7 @@ export class OnlineController implements GameController {
     if (v.version === this.version) {
       this.onUpdate({ type: 'seats', seats });
     } else if (this.version < 0 || v.event?.type === 'start') {
-      this.onUpdate({ type: 'reset', state, seats });
+      this.onUpdate({ type: 'reset', state, seats, turnTimer: v.turnTimer });
     } else if (v.version === this.version + 1 && v.event?.type === 'action') {
       if (seatsChanged) this.onUpdate({ type: 'seats', seats });
       this.onUpdate({ type: 'action', seat: v.event.seat, action: v.event.action, state });
