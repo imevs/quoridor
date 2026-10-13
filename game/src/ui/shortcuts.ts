@@ -10,6 +10,7 @@ export interface ShortcutActions {
   isModalOpen: () => boolean;
   isReplay: () => boolean;
   canToggleBot: () => boolean;
+  onCancelStaged?: () => boolean;
   onUndo: () => void;
   onHint: () => void;
   onCamera: () => void;
@@ -73,6 +74,7 @@ export function bindKeyboardShortcuts(actions: ShortcutActions, signal?: AbortSi
       } else if ((e.key === 's' || e.key === 'S') && actions.canToggleBot()) {
         actions.onToggleBotMatch();
       } else if (e.key === 'Escape') {
+        if (actions.onCancelStaged?.()) return;
         actions.onMenu();
       }
     },

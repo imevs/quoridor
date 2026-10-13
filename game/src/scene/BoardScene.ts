@@ -41,6 +41,8 @@ interface Pawn {
   ring: THREE.Mesh;
   glow: THREE.Mesh;
   color: THREE.Color;
+  restingYaw: number;
+  animating: boolean;
 }
 
 /** Writes box-projected (triplanar-style) UVs, mirroring the Blender BOX mapping. */
@@ -115,6 +117,7 @@ export class BoardScene {
   private hoveredMarker = -1;
   private markerColor = new THREE.Color('#ffe6a8');
   private activeSeat = -1;
+  private intendedTarget: THREE.Vector3 | null = null;
   private particles: { points: THREE.Points; vel: Float32Array; born: number; life: number }[] = [];
   private seatCount: 2 | 4 = 2;
   private destGroup = new THREE.Group();
@@ -407,7 +410,8 @@ export class BoardScene {
       const group = new THREE.Group();
       const model = tmpl ? tmpl.clone(true) : new THREE.Mesh(new THREE.SphereGeometry(0.4));
       model.scale.setScalar(PAWN_SCALE);
-      model.rotation.y = this.seatYaw(seat);
+      const restingYaw = this.seatYaw(seat);
+      model.rotation.y = restingYaw;
       const color = new THREE.Color(ANIMALS[id].color);
       const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false }));
       ring.rotation.x = -Math.PI / 2;
@@ -420,7 +424,7 @@ export class BoardScene {
       glow.position.y = 0.004;
       group.add(glow, ring, model);
       this.scene.add(group);
-      this.pawns.push({ group, model, ring, glow, color });
+      this.pawns.push({ group, model, ring, glow, color, restingYaw, animating: false });
     });
     this.pawnGroups = this.pawns.map((p) => p.group);
   }
@@ -432,10 +436,14 @@ export class BoardScene {
   /** Instantly mirrors a full game state (used on start / undo). */
   syncState(s: GameState): void {
     this.tween.clear();
+    this.intendedTarget = null;
     s.players.forEach((p, i) => {
       const pawn = this.pawns[i];
+      if (!pawn) return;
       pawn.group.position.copy(cellToWorld(p.r, p.c));
-      pawn.model.rotation.set(0, this.seatYaw(i), 0);
+      pawn.restingYaw = this.seatYaw(i);
+      pawn.animating = false;
+      pawn.model.rotation.set(0, pawn.restingYaw, 0);
       pawn.model.position.set(0, 0, 0);
       pawn.model.scale.setScalar(PAWN_SCALE);
     });
@@ -462,6 +470,7 @@ export class BoardScene {
 
   setActiveSeat(seat: number): void {
     this.activeSeat = seat;
+    this.intendedTarget = null;
     this.pawns.forEach((p, i) => {
       if (i !== seat) (p.glow.material as THREE.MeshBasicMaterial).opacity = 0;
     });
@@ -473,6 +482,9 @@ export class BoardScene {
   // ---------------------------------------------------------------------------
   async animateMove(seat: number, to: Cell): Promise<void> {
     const pawn = this.pawns[seat];
+    if (!pawn) return;
+    pawn.animating = true;
+    this.intendedTarget = null;
     const from = pawn.group.position.clone();
     const target = cellToWorld(to.r, to.c);
     const dir = target.clone().sub(from);
@@ -505,6 +517,8 @@ export class BoardScene {
       pawn.model.position.y = 0;
     }, ease.outCubic);
     pawn.model.scale.setScalar(PAWN_SCALE);
+    pawn.restingYaw = yawTo;
+    pawn.animating = false;
   }
 
   async animateWall(w: Wall): Promise<void> {
@@ -522,6 +536,9 @@ export class BoardScene {
   async celebrate(seat: number): Promise<void> {
     sounds.playWin();
     const pawn = this.pawns[seat];
+    if (!pawn) return;
+    pawn.animating = true;
+    this.intendedTarget = null;
     const base = pawn.group.position.clone();
     this.burst(base.clone().setY(1.2), [0xff8a3d, 0xf5c94c, 0x8fd14f, 0x7fb2e5, 0xff5d8f], 120, 4.5);
     for (let i = 0; i < 3; i++) {
@@ -532,6 +549,7 @@ export class BoardScene {
       }, ease.inOutCubic);
     }
     pawn.model.position.y = 0;
+    pawn.animating = false;
   }
 
   private burst(origin: THREE.Vector3, colors: number[], count: number, speed: number): void {
@@ -563,6 +581,7 @@ export class BoardScene {
   showMoveMarkers(cells: Cell[], hintCell: Cell | null = null): void {
     this.markerCells = cells;
     this.hoveredMarker = -1;
+    this.intendedTarget = null;
     this.markers.forEach((m, i) => {
       const cell = cells[i];
       m.visible = !!cell;
@@ -577,16 +596,30 @@ export class BoardScene {
 
   hoverMarker(cell: Cell | null): void {
     this.hoveredMarker = cell ? this.markerCells.findIndex((m) => m.r === cell.r && m.c === cell.c) : -1;
+    if (cell) {
+      this.intendedTarget = cellToWorld(cell.r, cell.c);
+    } else if (this.ghost?.visible) {
+      this.intendedTarget = this.ghost.position.clone();
+    } else {
+      this.intendedTarget = null;
+    }
   }
 
   showGhost(w: Wall | null, valid = true, isHint = false): void {
     if (!w) {
       this.ghost.visible = false;
+      if (this.hoveredMarker !== -1 && this.markerCells[this.hoveredMarker]) {
+        const mc = this.markerCells[this.hoveredMarker];
+        this.intendedTarget = cellToWorld(mc.r, mc.c);
+      } else {
+        this.intendedTarget = null;
+      }
       return;
     }
     this.ghost.visible = true;
     this.ghost.position.copy(wallToWorld(w));
     this.ghost.rotation.y = w.o === 'v' ? Math.PI / 2 : 0;
+    this.intendedTarget = this.ghost.position.clone();
     if (isHint) {
       this.ghostMat.color.set(0xffd43b);
       this.ghostMat.emissive.set(0xb58900);
@@ -774,6 +807,24 @@ export class BoardScene {
     if (active) {
       (active.glow.material as THREE.MeshBasicMaterial).opacity = 0.35 + 0.25 * Math.sin(t * 4);
       active.glow.scale.setScalar(1 + 0.08 * Math.sin(t * 4));
+
+      // Rotate active animal towards intended move or smoothly return to resting yaw
+      if (!active.animating) {
+        let desiredYaw = active.restingYaw;
+        if (this.intendedTarget) {
+          const dir = this.intendedTarget.clone().sub(active.group.position);
+          if (dir.lengthSq() > 0.002) {
+            desiredYaw = Math.atan2(dir.x, dir.z);
+          }
+        }
+        let dYaw = desiredYaw - active.model.rotation.y;
+        dYaw = Math.atan2(Math.sin(dYaw), Math.cos(dYaw));
+        if (Math.abs(dYaw) > 0.001) {
+          active.model.rotation.y += dYaw * 0.22;
+        } else {
+          active.model.rotation.y = desiredYaw;
+        }
+      }
     }
 
     // Breathing move markers

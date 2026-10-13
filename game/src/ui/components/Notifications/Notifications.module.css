@@ -176,6 +176,57 @@
   gap: 6px;
 }
 
+.confirmBanner {
+  position: fixed;
+  bottom: calc(max(12px, env(safe-area-inset-bottom)) + 68px);
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 12px 8px 16px;
+  border-radius: 99px;
+  z-index: 15;
+  background: rgb(255 253 246 / 0.94);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1.5px solid var(--leaf);
+  box-shadow: 0 12px 36px -8px rgb(20 50 15 / 0.4), 0 0 0 3px rgb(79 154 53 / 0.18);
+  pointer-events: auto;
+  animation: bannerIn 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+  max-width: calc(100vw - 24px);
+}
+
+.confirmInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.confirmIcon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.confirmText {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.confirmActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 /* Portrait Responsive */
 @media (max-width: 760px) {
   .hint {
@@ -218,6 +269,27 @@
 
   .destDesc {
     font-size: 11px;
+  }
+
+  .confirmBanner {
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 68px);
+    width: min(390px, calc(100vw - 16px));
+    padding: 6px 8px 6px 12px;
+    gap: 8px;
+    border-radius: 99px;
+  }
+
+  .confirmActions button {
+    padding: 6px 10px;
+    font-size: 12.5px;
+  }
+
+  :global(#players[data-count="4"]) ~ .confirmBanner {
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 120px);
+  }
+
+  .confirmText {
+    font-size: 13px;
   }
 }
 
@@ -267,5 +339,15 @@
 
   .undoText {
     font-size: 12px;
+  }
+
+  .confirmBanner {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    right: max(8px, env(safe-area-inset-right));
+    left: auto;
+    translate: none;
+    padding: 6px 12px;
+    gap: 8px;
+    z-index: 14;
   }
 }

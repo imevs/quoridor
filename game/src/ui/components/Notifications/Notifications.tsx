@@ -7,6 +7,7 @@ export function Notifications() {
   const toast = hudStore.toastState.value;
   const dest = hudStore.destinationState.value;
   const undo = hudStore.undoBanner.value;
+  const confirm = hudStore.confirmBanner.value;
   const cb = hudStore.callbacks;
 
   const destAnimal = dest ? ANIMALS[dest.seat.animal] : null;
@@ -89,6 +90,40 @@ export function Notifications() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Mobile Move Confirmation Banner */}
+      {confirm.visible && (
+        <div id="confirm-banner" class={styles.confirmBanner} role="region" aria-label="Confirm move">
+          <div class={styles.confirmInfo}>
+            <span class={styles.confirmIcon} aria-hidden="true">
+              {confirm.action?.type === 'wall' ? '🌿' : '🐾'}
+            </span>
+            <span id="confirm-text" class={styles.confirmText}>
+              {confirm.text}
+            </span>
+          </div>
+          <div id="confirm-actions" class={styles.confirmActions}>
+            <button
+              id="btn-confirm-cancel"
+              class="ghost-btn small"
+              type="button"
+              aria-label="Cancel move"
+              onClick={confirm.onCancel}
+            >
+              Cancel
+            </button>
+            <button
+              id="btn-confirm-move"
+              class="primary-btn small"
+              type="button"
+              aria-label="Confirm move"
+              onClick={confirm.onConfirm}
+            >
+              ✓ Confirm
+            </button>
+          </div>
         </div>
       )}
     </>

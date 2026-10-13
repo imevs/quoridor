@@ -89,6 +89,18 @@ class Game {
           else this.destinations.clear();
         },
         onToast: (msg) => this.hud.toast(msg),
+        onStageAction: (action, text) => {
+          if (action) {
+            this.hud.showConfirmBanner(
+              action,
+              text,
+              () => this.interaction.confirmStagedAction(),
+              () => this.interaction.cancelStagedAction(),
+            );
+          } else {
+            this.hud.hideConfirmBanner();
+          }
+        },
       },
     );
 
@@ -170,6 +182,13 @@ class Game {
       isModalOpen: () => Boolean(document.querySelector('dialog[open]')),
       isReplay: () => this.controller instanceof ReplayController,
       canToggleBot: () => this.controller?.kind === 'bot_vs_bot',
+      onCancelStaged: () => {
+        if (this.interaction.getStagedAction()) {
+          this.interaction.cancelStagedAction();
+          return true;
+        }
+        return false;
+      },
       onUndo: () => this.undo(),
       onHint: () => this.hints.requestHint(),
       onCamera: () => this.camera.cycle(),
@@ -355,6 +374,8 @@ class Game {
     }
 
     this.hints.clear();
+    this.interaction?.clearStagedAction();
+    this.hud.hideConfirmBanner();
 
     if (this.isMyTurn()) {
       const label = this.controller?.kind === 'local' ? `${a.name}'s turn` : 'Your turn';
@@ -487,6 +508,8 @@ class Game {
 
   private undo(): void {
     if (this.processing || !this.controller?.canUndo()) return;
+    this.interaction.clearStagedAction();
+    this.hud.hideConfirmBanner();
     this.clock.stop();
     const isVsAi = this.controller?.kind === 'ai';
     const stepsToPop = isVsAi && this.matchActions.length >= 2 ? 2 : 1;
@@ -507,6 +530,8 @@ class Game {
   }
 
   private submitAction(action: Action): void {
+    this.interaction.clearStagedAction();
+    this.hud.hideConfirmBanner();
     this.hints.clear();
     this.clock.stop();
     this.controller?.submit(action);

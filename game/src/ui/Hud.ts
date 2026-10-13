@@ -339,4 +339,29 @@ export class Hud {
   showUndo(text: string | null, _canVote = false): void {
     hudStore.undoBanner.value = { text: text ?? '', visible: text !== null };
   }
+
+  showConfirmBanner(
+    action: Action,
+    text: string,
+    onConfirm: () => void,
+    onCancel: () => void,
+  ): void {
+    hudStore.confirmBanner.value = {
+      visible: true,
+      action,
+      text,
+      onConfirm,
+      onCancel,
+    };
+  }
+
+  hideConfirmBanner(): void {
+    if (hudStore.confirmBanner.value.visible) {
+      hudStore.confirmBanner.value = {
+        visible: false,
+        action: null,
+        text: '',
+      };
+    }
+  }
 }

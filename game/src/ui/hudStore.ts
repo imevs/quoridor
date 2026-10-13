@@ -107,6 +107,19 @@ export class HudStore {
     visible: false,
   });
 
+  // Mobile Move Confirmation
+  readonly confirmBanner = signal<{
+    visible: boolean;
+    action: Action | null;
+    text: string;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+  }>({
+    visible: false,
+    action: null,
+    text: '',
+  });
+
   // Replay
   readonly replayState = signal<{
     visible: boolean;

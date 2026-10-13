@@ -1,5 +1,6 @@
 import type { Action, GameState } from '../game/rules';
 import { checkWall, legalMoves } from '../game/rules';
+import { formatNotation } from '../game/replay';
 import type { BoardScene, Pick } from './BoardScene';
 
 export interface InteractionCallbacks {
@@ -8,6 +9,37 @@ export interface InteractionCallbacks {
   onAction: (action: Action) => void;
   onHoverPawn: (seat: number | null) => void;
   onToast: (message: string) => void;
+  onStageAction?: (action: Action | null, text: string) => void;
+}
+
+export function isMobileOrTouch(e?: PointerEvent): boolean {
+  if (e && e.pointerType === 'touch') return true;
+  if (typeof window !== 'undefined') {
+    if (window.matchMedia?.('(pointer: coarse)').matches) return true;
+    if (window.innerWidth <= 768) return true;
+    if ('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0)) return true;
+  }
+  return false;
+}
+
+function isSameAction(a: Action | null, b: Action | null): boolean {
+  if (!a || !b) return false;
+  if (a.type !== b.type) return false;
+  if (a.type === 'move' && b.type === 'move') {
+    return a.r === b.r && a.c === b.c;
+  }
+  if (a.type === 'wall' && b.type === 'wall') {
+    return a.wall.r === b.wall.r && a.wall.c === b.wall.c && a.wall.o === b.wall.o;
+  }
+  return false;
+}
+
+function describeAction(action: Action): string {
+  const notation = formatNotation(action).toUpperCase();
+  if (action.type === 'move') {
+    return `Move to ${notation}`;
+  }
+  return `Hedge · ${notation}`;
 }
 
 /**
@@ -19,6 +51,7 @@ export class BoardInteractionManager {
   private callbacks: InteractionCallbacks;
   private downAt: { x: number; y: number } | null = null;
   private currentHintAction: Action | null = null;
+  private stagedAction: Action | null = null;
   private abort = new AbortController();
 
   constructor(canvas: HTMLCanvasElement, scene: BoardScene, callbacks: InteractionCallbacks) {
@@ -32,7 +65,41 @@ export class BoardInteractionManager {
     this.currentHintAction = action;
   }
 
+  getStagedAction(): Action | null {
+    return this.stagedAction;
+  }
+
+  confirmStagedAction(): void {
+    if (!this.stagedAction) return;
+    const action = this.stagedAction;
+    this.stagedAction = null;
+    this.clearPreview();
+    this.callbacks.onStageAction?.(null, '');
+    this.callbacks.onAction(action);
+  }
+
+  cancelStagedAction(): void {
+    if (!this.stagedAction) return;
+    this.stagedAction = null;
+    this.clearPreview();
+    this.callbacks.onStageAction?.(null, '');
+  }
+
+  clearStagedAction(): void {
+    this.cancelStagedAction();
+  }
+
   clearPreview(): void {
+    if (this.stagedAction) {
+      if (this.stagedAction.type === 'move') {
+        this.scene.showGhost(null);
+        this.scene.hoverMarker(this.stagedAction);
+      } else {
+        this.scene.hoverMarker(null);
+        this.scene.showGhost(this.stagedAction.wall, true);
+      }
+      return;
+    }
     if (this.currentHintAction?.type === 'wall') {
       this.scene.showGhost(this.currentHintAction.wall, true, true);
     } else {
@@ -44,6 +111,7 @@ export class BoardInteractionManager {
 
   dispose(): void {
     this.abort.abort();
+    this.clearStagedAction();
     this.clearPreview();
   }
 
@@ -84,6 +152,10 @@ export class BoardInteractionManager {
   }
 
   private onPointerMove(e: PointerEvent): void {
+    if (this.stagedAction && isMobileOrTouch(e)) {
+      return;
+    }
+
     const state = this.callbacks.getState();
     if (!state || e.buttons !== 0) {
       if (e.buttons === 0) {
@@ -135,7 +207,12 @@ export class BoardInteractionManager {
     const state = this.callbacks.getState();
     if (!state || !this.callbacks.canAct()) return;
     const action = this.previewFor(this.scene.pick(e.clientX, e.clientY));
-    if (!action) return;
+    if (!action) {
+      if (this.stagedAction) {
+        this.cancelStagedAction();
+      }
+      return;
+    }
     if (action.type === 'wall') {
       if (state.players[state.turn].walls <= 0) {
         this.callbacks.onToast('No hedges left');
@@ -147,7 +224,27 @@ export class BoardInteractionManager {
         return;
       }
     }
+
+    if (isMobileOrTouch(e)) {
+      if (isSameAction(this.stagedAction, action)) {
+        this.confirmStagedAction();
+        return;
+      }
+      this.stagedAction = action;
+      if (action.type === 'move') {
+        this.scene.showGhost(null);
+        this.scene.hoverMarker(action);
+      } else {
+        this.scene.hoverMarker(null);
+        this.scene.showGhost(action.wall, true);
+      }
+      this.callbacks.onStageAction?.(action, describeAction(action));
+      return;
+    }
+
     this.currentHintAction = null;
+    this.stagedAction = null;
+    this.callbacks.onStageAction?.(null, '');
     this.callbacks.onAction(action);
   }
 }
