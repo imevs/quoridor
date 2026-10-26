@@ -6,7 +6,7 @@ This document details rule variations and alternative game modes for Quoridor, c
 
 ## 1. Core Rule Tweaks (Minimal Engine Changes)
 
-These variants preserve the base $9 \times 9$ board and wall placement mechanics, modifying only player counts, step rules, or starting setups in [`rules.ts`](file:///Users/vm/WebstormProjects/quoridors/game/src/game/rules.ts).
+These variants preserve the base $9 \times 9$ board and wall placement mechanics, modifying only player counts, step rules, or starting setups in [`rules.ts`](game/src/game/rules.ts).
 
 ### 1.1. 2v2 Cooperative Team Mode
 * **Players**: 4 players divided into two partnerships (South + North vs. West + East).
@@ -106,7 +106,7 @@ Tailored to the existing 3D pawn models in the project (Fox, Wolf, Bear, Owl):
 
 To implement any of these variations cleanly without breaking the existing headless rules engine:
 
-1. **Parameterize Game Options in [`rules.ts`](file:///Users/vm/WebstormProjects/quoridors/game/src/game/rules.ts)**:
+1. **Parameterize Game Options in [`rules.ts`](game/src/game/rules.ts)**:
    ```typescript
    export interface GameConfig {
      boardSize?: number;            // Default: 9
@@ -116,7 +116,7 @@ To implement any of these variations cleanly without breaking the existing headl
      mode?: 'standard' | '2v2' | 'king_of_hill' | 'checkpoint';
    }
    ```
-2. **Pathfinding & AI ([`ai.ts`](file:///Users/vm/WebstormProjects/quoridors/game/src/game/ai.ts))**:
+2. **Pathfinding & AI ([`ai.ts`](game/src/game/ai.ts))**:
    * BFS pathfinding logic is already parameterized by goal predicates; updating goals for King of the Hill or Checkpoint variants requires swapping the goal predicate function.
-3. **Networking & State Replication ([`server/src/`](file:///Users/vm/WebstormProjects/quoridors/server/))**:
+3. **Networking & State Replication ([`server/src/`](server/src/))**:
    * Include `gameConfig` in session creation messages so server and clients agree on rule variations deterministically.

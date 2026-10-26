@@ -1,6 +1,6 @@
 # Quoridors AI Algorithm
 
-The AI in [`game/src/game/ai.ts`](file:///Users/vm/WebstormProjects/quoridors/game/src/game/ai.ts) determines bot actions for single-player, bot-vs-bot spectator mode, and server-filled multiplayer seats. It combines **threat-aware heuristic evaluation**, **high-impact wall pruning**, **priority move ordering**, and **3-ply alpha-beta minimax lookahead**.
+The AI in [`game/src/game/ai.ts`](game/src/game/ai.ts) determines bot actions for single-player, bot-vs-bot spectator mode, and server-filled multiplayer seats. It combines **threat-aware heuristic evaluation**, **high-impact wall pruning**, **priority move ordering**, and **3-ply alpha-beta minimax lookahead**.
 
 ---
 

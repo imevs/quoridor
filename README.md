@@ -94,7 +94,8 @@ cd game
 npm run test:e2e
 ```
 
-For full networking specifications and E2E test lifecycle, see [`P2P_ARCHITECTURE.md`](file:///Users/vm/WebstormProjects/quoridors/P2P_ARCHITECTURE.md).
+For full networking specifications and E2E test lifecycle, see [`P2P_ARCHITECTURE.md`](P2P_ARCHITECTURE.md).
+For turn timer and clock synchronization architecture, see [`CLOCK_SYNC.md`](CLOCK_SYNC.md).
 
 ### Production Build
 

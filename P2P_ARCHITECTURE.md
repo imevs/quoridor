@@ -30,11 +30,11 @@ graph TD
 ```
 
 ### 1.1 Host-Authoritative Architecture
-- **Single Source of Truth**: The host's browser instantiates and owns the pure algorithmic [`Session`](file:///Users/vm/WebstormProjects/quoridors/game/src/game/session.ts) engine. All rules, legal move checks, wall counts, timers, AI moves, and undo votes are evaluated strictly on the host.
+- **Single Source of Truth**: The host's browser instantiates and owns the pure algorithmic [`Session`](game/src/game/session.ts) engine. All rules, legal move checks, wall counts, timers, AI moves, and undo votes are evaluated strictly on the host.
 - **Seat Assignment**: Seat `0` is permanently reserved for the host. Seats `1` through `3` are open for guest peers or AI players.
 - **Client Tokens**: On seat assignment, the session engine generates a secret `token` for each player (`sessionStorage.getItem('quoridors.p2p.token.<gameId>')`). Guests attach this token in message envelopes (`ClientMsgEnvelope.token`) so the host can authenticate reconnecting peers even if ephemeral WebRTC peer IDs change.
 - **Guest Admission**: When opening an invite link (`?p2p=<gameId>`), guests without an active session token see a confirmation prompt (`JoinDialog`). Tapping "Join Game" connects the peer and reserves the seat; declining clears invite query parameters and opens the main menu. Reconnecting players with stored session tokens bypass the prompt.
-- **Timer Synchronization**: Match decision timer (`turnTimer`) is host-configured and synchronized authoritatively via session state snapshots (`v.turnTimer`). Invite URLs do not carry timer parameters.
+- **Timer Synchronization**: Match decision timer (`turnTimer`) is host-configured and synchronized authoritatively via session state snapshots (`v.turnTimer`). Invite URLs do not carry timer parameters. See [`CLOCK_SYNC.md`](CLOCK_SYNC.md) for the complete clock synchronization and forfeit specification.
 
 ### 1.2 Dual-Transport Layer
 1. **Local `BroadcastChannel`** (`quoridors_p2p_<gameId>`):
@@ -42,7 +42,7 @@ graph TD
    - Provides sub-millisecond, zero-network pairing during local pass-and-play testing, split-screen games, and automated test runners.
 2. **Decentralized WebRTC Mesh** (`@trystero-p2p/nostr`):
    - Uses redundant Nostr relay endpoints (`wss://nos.lol`, `wss://nostr.mom`, `wss://relay.primal.net`, `wss://purplerelay.com`) for peer discovery and SDP offer/answer exchange.
-   - STUN: Trystero's defaults (Google, Cloudflare). TURN: resolved by `resolveTurnConfig()` in [`p2pDebug.ts`](file:///Users/vm/WebstormProjects/quoridors/game/src/net/p2pDebug.ts):
+   - STUN: Trystero's defaults (Google, Cloudflare). TURN: resolved by `resolveTurnConfig()` in [`p2pDebug.ts`](game/src/net/p2pDebug.ts):
      1. `localStorage['quoridors.p2p.turn']` — JSON array of `RTCIceServer`, for field testing.
      2. Build-time env `VITE_TURN_URLS` (comma-separated), `VITE_TURN_USERNAME`, `VITE_TURN_CREDENTIAL`.
      3. Fallback: the public `openrelay.metered.ca` relay, which is rate-limited and often down.
@@ -76,7 +76,7 @@ Two browsers on one machine pair through `BroadcastChannel` and loopback, so the
 
 ## 2. Reusable Automated E2E Testing Suite
 
-To ensure regressions never slip through, the test suite is committed to the repository at [`game/e2e/p2p.e2e.mjs`](file:///Users/vm/WebstormProjects/quoridors/game/e2e/p2p.e2e.mjs) and registered in `package.json`.
+To ensure regressions never slip through, the test suite is committed to the repository at [`game/e2e/p2p.e2e.mjs`](game/e2e/p2p.e2e.mjs) and registered in `package.json`.
 
 ### 2.1 Running the Tests
 

@@ -85,7 +85,7 @@ Execute web commands inside the `game/` subdirectory:
 | **Production Build** | `npm run build` | Runs `tsc && vite build` |
 | **Preview Build** | `npm run preview` | Validates production bundle locally |
 
-See [`P2P_ARCHITECTURE.md`](file:///Users/vm/WebstormProjects/quoridors/P2P_ARCHITECTURE.md) for P2P networking design and state machine invariants.
+See [`P2P_ARCHITECTURE.md`](P2P_ARCHITECTURE.md) for P2P networking design and state machine invariants.
 
 ---
 
