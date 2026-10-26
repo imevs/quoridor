@@ -1,11 +1,8 @@
 import * as THREE from 'three';
 import { N, type Wall } from '../game/rules';
+import { HALF, PITCH, TILE_TOP } from './BoardGeometry';
 
 export type Pick = { kind: 'cell'; r: number; c: number } | { kind: 'wall'; wall: Wall } | null;
-
-const PITCH = 1.2;
-const HALF = ((N - 1) * PITCH) / 2; // 4.8
-const TILE_TOP = 0.12;
 
 export interface PawnTarget {
   group: THREE.Object3D;
