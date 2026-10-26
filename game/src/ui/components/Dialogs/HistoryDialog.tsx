@@ -62,7 +62,7 @@ export function HistoryDialog() {
                     {r.actions && r.actions.length > 0 && (
                       <div class={historyStyles.historyItemActions}>
                         <button
-                          class="ghost-btn small btn-replay-match"
+                          class={`ghost-btn small btn-replay-match ${historyStyles.replayMatchBtn}`}
                           data-id={r.id}
                           type="button"
                           onClick={() => {
@@ -70,7 +70,10 @@ export function HistoryDialog() {
                             cb.onStartReplay?.(r);
                           }}
                         >
-                          Replay
+                          <svg viewBox="0 0 24 24" class={historyStyles.replayIcon} aria-hidden="true">
+                            <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" />
+                          </svg>
+                          <span>Replay</span>
                         </button>
                       </div>
                     )}

@@ -135,6 +135,37 @@ button {
   border-radius: 10px;
 }
 
+.icon-btn {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(29 51 25 / 0.12);
+  background: rgb(255 255 255 / 0.75);
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 0;
+  transition: transform 0.15s ease, background 0.2s, box-shadow 0.2s;
+}
+
+.icon-btn svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-btn.small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.icon-btn.small svg {
+  width: 15px;
+  height: 15px;
+}
+
 .badge {
   font-size: 10px;
   font-weight: 700;
