@@ -9,6 +9,7 @@ export interface ClockCoordinatorDelegate {
   getSeats: () => Seat[];
   isPaused: () => boolean;
   onTimeout: (winner: number, timedOutSeat: number) => void;
+  onTickSecond?: (clocks: number[]) => void;
 }
 
 /**
@@ -21,6 +22,7 @@ export class ClockCoordinator {
   private delegate: ClockCoordinatorDelegate;
   private timerId: number | null = null;
   private lastTime = 0;
+  private lastWholeSecond = -1;
 
   constructor(hud: Hud, delegate: ClockCoordinatorDelegate, initialSeconds = 300, increment = 2) {
     this.hud = hud;
@@ -40,9 +42,17 @@ export class ClockCoordinator {
     return this.clock.initialSeconds;
   }
 
-  reset(playerCount: number, initialSeconds?: number): void {
+  reset(playerCount: number, initialSeconds?: number, remaining?: number[]): void {
     this.stop();
     this.clock.reset(playerCount, initialSeconds ?? this.clock.initialSeconds);
+    if (remaining && remaining.length === playerCount) {
+      this.clock.restore(remaining, initialSeconds);
+    }
+  }
+
+  restore(remaining: number[], initialSeconds?: number): void {
+    this.stop();
+    this.clock.restore(remaining, initialSeconds);
   }
 
   recordMove(): void {
@@ -96,6 +106,11 @@ export class ClockCoordinator {
 
       if (tick.beepSecond !== undefined) {
         sounds.playCountdown(tick.beepSecond <= 3);
+      }
+
+      if (this.lastWholeSecond !== tick.wholeSecond) {
+        this.lastWholeSecond = tick.wholeSecond;
+        this.delegate.onTickSecond?.(this.clock.remaining);
       }
 
       if (tick.isExpired) {

@@ -317,4 +317,54 @@ describe('Session persistence', () => {
     expect(restored.turnTimer).toBe(180);
     expect(restored.view().turnTimer).toBe(180);
   });
+
+  it('deducts turn elapsed time from player clocks and restores remaining time across reloads', () => {
+    let now = 1000;
+    const timeDeps: SessionDeps = {
+      now: () => now,
+      token: () => 'token',
+    };
+    const { session } = Session.create('g', 2, 'fox', timeDeps, 300);
+    session.connect(0);
+    session.join();
+    session.connect(1);
+    session.start(0);
+
+    // Player 0 thinks for 15 seconds then moves
+    now += 15_000;
+    session.act(0, { type: 'move', r: 7, c: 4 });
+
+    // Player 1 thinks for 25 seconds
+    now += 25_000;
+    const view = session.view();
+    expect(view.clocks?.[0]).toBeCloseTo(285);
+    expect(view.clocks?.[1]).toBeCloseTo(275);
+
+    // Reload from JSON
+    const data = JSON.parse(JSON.stringify(session.toJSON()));
+    const restored = Session.fromJSON(data, timeDeps);
+    const restoredView = restored.view();
+    expect(restoredView.clocks?.[0]).toBeCloseTo(285);
+    expect(restoredView.clocks?.[1]).toBeCloseTo(275);
+  });
+
+  it('terminates game with timeout winner when decision timer expires during tick', () => {
+    let now = 1000;
+    const timeDeps: SessionDeps = {
+      now: () => now,
+      token: () => 'token',
+    };
+    const { session } = Session.create('g', 2, 'fox', timeDeps, 60);
+    session.connect(0);
+    session.join();
+    session.connect(1);
+    session.start(0);
+
+    // Player 0 lets 65 seconds elapse (timer is 60s)
+    now += 65_000;
+    const changed = session.tick();
+    expect(changed).toBe(true);
+    expect(session.phase).toBe('finished');
+    expect(session.state?.winner).toBe(1);
+  });
 });

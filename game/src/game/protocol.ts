@@ -45,6 +45,7 @@ export interface SessionView {
   /** Seats that may currently request an undo. */
   undoable: number[];
   turnTimer?: number;
+  clocks?: number[];
 }
 
 export type ClientMsg =

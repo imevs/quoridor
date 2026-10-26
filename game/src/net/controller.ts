@@ -3,10 +3,10 @@ import type { Seat } from '../ui/Hud';
 
 /** Changes the presenter (main.ts) applies to the scene, in order. */
 export type Update =
-  | { type: 'reset'; state: GameState; seats: Seat[]; actions?: Action[]; turnTimer?: number }
-  | { type: 'action'; seat: number; action: Action; state: GameState }
-  | { type: 'undo'; seat: number; state: GameState }
-  | { type: 'sync'; state: GameState }
+  | { type: 'reset'; state: GameState; seats: Seat[]; actions?: Action[]; turnTimer?: number; clocks?: number[] }
+  | { type: 'action'; seat: number; action: Action; state: GameState; clocks?: number[] }
+  | { type: 'undo'; seat: number; state: GameState; clocks?: number[] }
+  | { type: 'sync'; state: GameState; clocks?: number[] }
   | { type: 'seats'; seats: Seat[] };
 
 export type ControllerKind = 'ai' | 'local' | 'online' | 'p2p' | 'bot_vs_bot' | 'replay';

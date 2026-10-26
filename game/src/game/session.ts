@@ -8,6 +8,7 @@ import { type Difficulty, chooseAction } from './ai';
 import { ANIMAL_ORDER, type AnimalId } from './animals';
 import { type WireState, fromWire, toWire } from './serialize';
 import type { GameEvent, Phase, SeatKind, SessionView } from './protocol';
+import { resolveTimeoutWinner } from './clock';
 
 export const AI_DELAY_START_MS = 1500;
 export const AI_DELAY_MS = 1100;
@@ -41,6 +42,7 @@ export interface SessionData {
   id: string;
   players: 2 | 4;
   turnTimer?: number;
+  clocks?: number[];
   phase: Phase;
   seats: Array<Pick<SeatRecord, 'animal' | 'kind' | 'difficulty' | 'token'>>;
   state: WireState | null;
@@ -48,6 +50,7 @@ export interface SessionData {
   version: number;
   event: GameEvent | null;
   lastSeen: number;
+  turnStartedAt?: number;
 }
 
 const ok: Result = { ok: true };
@@ -59,6 +62,7 @@ export class Session {
   readonly id: string;
   readonly players: 2 | 4;
   turnTimer: number;
+  clocks: number[];
   phase: Phase = 'lobby';
   state: GameState | null = null;
   version = 0;
@@ -67,18 +71,24 @@ export class Session {
   spectators = 0;
   private seats: SeatRecord[];
   private history: GameState[] = [];
+  private clockHistory: number[][] = [];
+  private turnStartedAt: number;
   private undo: PendingUndo | null = null;
   private aiAt: number | null = null;
   private notices: string[] = [];
   private deps: SessionDeps;
 
-  private constructor(id: string, players: 2 | 4, seats: SeatRecord[], deps: SessionDeps, turnTimer = 300) {
+  private constructor(id: string, players: 2 | 4, seats: SeatRecord[], deps: SessionDeps, turnTimer = 300, clocks?: number[]) {
     this.id = id;
     this.players = players;
     this.seats = seats;
     this.deps = deps;
     this.turnTimer = turnTimer;
+    this.clocks = clocks && clocks.length === players
+      ? [...clocks]
+      : Array.from({ length: players }, () => turnTimer);
     this.lastSeen = deps.now();
+    this.turnStartedAt = deps.now();
   }
 
   /** Creates a lobby with the host in seat 0. Returns the host's seat token. */
@@ -102,6 +112,7 @@ export class Session {
       d.seats.map((x) => ({ ...x, connected: 0 })),
       deps,
       d.turnTimer ?? 300,
+      d.clocks,
     );
     s.phase = d.phase;
     s.state = d.state ? fromWire(d.state) : null;
@@ -109,6 +120,7 @@ export class Session {
     s.version = d.version;
     s.event = d.event;
     s.lastSeen = d.lastSeen;
+    s.turnStartedAt = d.turnStartedAt ?? deps.now();
     s.scheduleAi(AI_DELAY_START_MS);
     return s;
   }
@@ -118,6 +130,7 @@ export class Session {
       id: this.id,
       players: this.players,
       turnTimer: this.turnTimer,
+      clocks: [...this.clocks],
       phase: this.phase,
       seats: this.seats.map(({ animal, kind, difficulty, token }) => ({ animal, kind, difficulty, token })),
       state: this.state ? toWire(this.state) : null,
@@ -125,6 +138,7 @@ export class Session {
       version: this.version,
       event: this.event,
       lastSeen: this.lastSeen,
+      turnStartedAt: this.turnStartedAt,
     };
   }
 
@@ -217,8 +231,11 @@ export class Session {
   private begin(): void {
     this.state = createGame(this.players);
     this.history = [];
+    this.clockHistory = [];
     this.undo = null;
     this.phase = 'playing';
+    this.clocks = Array.from({ length: this.players }, () => this.turnTimer);
+    this.turnStartedAt = this.deps.now();
     this.bump({ type: 'start' });
     this.scheduleAi(AI_DELAY_START_MS);
   }
@@ -236,6 +253,12 @@ export class Session {
   private apply(seat: number, action: Action): void {
     const s = this.state!;
     this.history.push(cloneState(s));
+    this.clockHistory.push([...this.clocks]);
+    if (this.turnTimer > 0 && this.clocks.length > seat) {
+      const elapsed = Math.max(0, (this.deps.now() - this.turnStartedAt) / 1000);
+      this.clocks[seat] = Math.max(0, this.clocks[seat] - elapsed);
+    }
+    this.turnStartedAt = this.deps.now();
     applyAction(s, action);
     if (s.winner !== null) this.phase = 'finished';
     this.bump({ type: 'action', seat, action });
@@ -297,8 +320,14 @@ export class Session {
     if (waiting.length > 0) return;
     this.undo = null;
     let prev = this.history.pop()!;
-    while (prev.turn !== u.by) prev = this.history.pop()!;
+    let prevClocks = this.clockHistory.pop() ?? [...this.clocks];
+    while (prev.turn !== u.by && this.history.length > 0) {
+      prev = this.history.pop()!;
+      prevClocks = this.clockHistory.pop() ?? prevClocks;
+    }
     this.state = prev;
+    this.clocks = prevClocks;
+    this.turnStartedAt = this.deps.now();
     this.bump({ type: 'undo', seat: u.by });
     this.aiAt = null;
   }
@@ -320,6 +349,21 @@ export class Session {
       this.scheduleAi(AI_DELAY_MS);
       return true;
     }
+    if (this.phase === 'playing' && this.state && this.state.winner === null && this.turnTimer > 0) {
+      const s = this.state;
+      const elapsed = (now - this.turnStartedAt) / 1000;
+      const remaining = Math.max(0, (this.clocks[s.turn] ?? this.turnTimer) - elapsed);
+      if (remaining <= 0) {
+        this.clocks[s.turn] = 0;
+        const winner = resolveTimeoutWinner(s, s.turn);
+        s.winner = winner;
+        this.phase = 'finished';
+        const p = s.players[s.turn];
+        this.bump({ type: 'action', seat: s.turn, action: { type: 'move', r: p.r, c: p.c } });
+        this.notices.push(`Time expired for player ${s.turn + 1}`);
+        return true;
+      }
+    }
     if (this.aiAt === null || now < this.aiAt) return false;
     const s = this.state!;
     const ai = this.deps.ai ?? chooseAction;
@@ -329,11 +373,17 @@ export class Session {
 
   // ------------------------------------------------------------------ View
   view(): SessionView {
+    const currentClocks = [...this.clocks];
+    if (this.phase === 'playing' && this.state && this.turnTimer > 0 && currentClocks.length > this.state.turn) {
+      const elapsed = Math.max(0, (this.deps.now() - this.turnStartedAt) / 1000);
+      currentClocks[this.state.turn] = Math.max(0, currentClocks[this.state.turn] - elapsed);
+    }
     return {
       id: this.id,
       phase: this.phase,
       players: this.players,
       turnTimer: this.turnTimer,
+      clocks: this.turnTimer > 0 ? currentClocks : undefined,
       hostSeat: HOST_SEAT,
       seats: this.seats.map((s) => ({ animal: s.animal, kind: s.kind, difficulty: s.difficulty, connected: s.connected > 0 })),
       spectators: this.spectators,

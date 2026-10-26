@@ -156,6 +156,11 @@ class Game {
       getSeats: () => this.seats,
       isPaused: () => this.controller instanceof LocalController && this.controller.paused,
       onTimeout: (winner, timedOutSeat) => this.onClockTimeout(winner, timedOutSeat),
+      onTickSecond: (clocks) => {
+        if (this.controller instanceof LocalController) {
+          LocalController.updateSavedClocks(clocks);
+        }
+      },
     });
 
     this.hints = new HintCoordinator({
@@ -301,6 +306,9 @@ class Game {
     this.hud.hideTurnTimer();
     this.controller?.dispose();
     this.controller = ctrl;
+    if (ctrl instanceof LocalController) {
+      ctrl.getClocks = () => this.clock.remaining;
+    }
     this.queue = [];
     this.processing = false;
 
@@ -342,7 +350,7 @@ class Game {
         this.matchActions = u.actions ? [...u.actions] : [];
         this.movesCount = this.matchActions.filter((a) => a.type === 'move').length;
         const initialSeconds = typeof u.turnTimer === 'number' ? u.turnTimer : this.clock.initialSeconds;
-        this.clock.reset(this.seats.length, initialSeconds);
+        this.clock.reset(this.seats.length, initialSeconds, u.clocks);
         this.interaction.clearPreview();
         this.destinations.reset();
         this.scene.setupPlayers(this.seats.map((s) => s.animal));
@@ -363,7 +371,9 @@ class Game {
       case 'sync': {
         this.state = u.state;
         if (this.clock.remaining.length !== this.state.players.length) {
-          this.clock.reset(this.state.players.length, this.clock.initialSeconds);
+          this.clock.reset(this.state.players.length, this.clock.initialSeconds, u.clocks);
+        } else if (u.clocks && u.clocks.length === this.seats.length) {
+          this.clock.restore(u.clocks);
         }
         this.interaction.clearPreview();
         this.destinations.reset();
@@ -377,6 +387,9 @@ class Game {
         this.scene.showMoveMarkers([]);
         this.matchActions.push(u.action);
         this.clock.recordMove();
+        if (u.clocks && u.clocks.length === this.seats.length) {
+          this.clock.restore(u.clocks);
+        }
         if (u.action.type === 'move') {
           this.movesCount++;
           await this.scene.animateMove(u.seat, u.action);
@@ -398,6 +411,9 @@ class Game {
           this.matchActions.pop();
         }
         this.movesCount = this.matchActions.filter((a) => a.type === 'move').length;
+        if (u.clocks && u.clocks.length === this.seats.length) {
+          this.clock.restore(u.clocks);
+        }
         this.state = u.state;
         this.scene.syncState(this.state);
         sounds.playWhoosh();

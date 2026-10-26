@@ -16,21 +16,25 @@ export interface ClientConnection {
 export interface SessionManagerOptions {
   idleTimeoutMs?: number; // default: 5 min (300,000)
   finishedTtlMs?: number; // default: 24h (86,400,000)
+  tickIntervalMs?: number; // default: 5s (5,000)
 }
 
 export class SessionManager {
   private sessions = new Map<string, Session>();
   private sockets = new Map<string, Set<ClientConnection>>();
   private timer: NodeJS.Timeout | null = null;
+  private sessionTimers = new Map<string, NodeJS.Timeout>();
   private store: SessionStore;
   private deps: SessionDeps;
   readonly idleTimeoutMs: number;
   readonly finishedTtlMs: number;
+  readonly tickIntervalMs: number;
 
   constructor(store: SessionStore, options: SessionManagerOptions = {}) {
     this.store = store;
     this.idleTimeoutMs = options.idleTimeoutMs ?? 5 * 60 * 1000;
     this.finishedTtlMs = options.finishedTtlMs ?? 24 * 60 * 60 * 1000;
+    this.tickIntervalMs = options.tickIntervalMs ?? 5000;
     this.deps = {
       now: () => Date.now(),
       token: () => `tok_${randomBytes(16).toString('hex')}`,
@@ -45,6 +49,7 @@ export class SessionManager {
       const s = Session.fromJSON(d, this.deps);
       this.sessions.set(s.id, s);
       this.sockets.set(s.id, new Set());
+      this.scheduleNextTimer(s);
     }
   }
 
@@ -211,6 +216,29 @@ export class SessionManager {
       type: 'snapshot',
       view: session.view(),
     });
+    this.scheduleNextTimer(session);
+  }
+
+  private scheduleNextTimer(session: Session): void {
+    const existing = this.sessionTimers.get(session.id);
+    if (existing) {
+      clearTimeout(existing);
+      this.sessionTimers.delete(session.id);
+    }
+    const next = session.nextTimer();
+    if (next !== null) {
+      const delay = Math.max(0, next - Date.now());
+      const timer = setTimeout(() => {
+        this.sessionTimers.delete(session.id);
+        if (session.tick()) {
+          this.flushNotices(session);
+          this.saveSession(session);
+          this.broadcastSnapshot(session);
+        }
+        this.scheduleNextTimer(session);
+      }, delay);
+      this.sessionTimers.set(session.id, timer);
+    }
   }
 
   private send(ws: WebSocket, msg: ServerMsg): void {
@@ -220,7 +248,7 @@ export class SessionManager {
   }
 
   private startLoop(): void {
-    this.timer = setInterval(() => this.tick(), 200);
+    this.timer = setInterval(() => this.tick(), this.tickIntervalMs);
   }
 
   tick(): void {
@@ -240,6 +268,11 @@ export class SessionManager {
       const isFinishedExpired = session.phase === 'finished' && now - session.lastSeen > this.finishedTtlMs;
 
       if (isIdle || isFinishedExpired) {
+        const timer = this.sessionTimers.get(id);
+        if (timer) {
+          clearTimeout(timer);
+          this.sessionTimers.delete(id);
+        }
         this.sessions.delete(id);
         this.sockets.delete(id);
         this.store.delete(id);
@@ -252,6 +285,10 @@ export class SessionManager {
       clearInterval(this.timer);
       this.timer = null;
     }
+    for (const timer of this.sessionTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.sessionTimers.clear();
     this.store.close();
   }
 }

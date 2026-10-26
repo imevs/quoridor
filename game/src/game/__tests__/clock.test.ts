@@ -139,6 +139,14 @@ describe('ChessClock', () => {
     expect(clock.undo(1)).toEqual([180, 180, 180, 180]);
   });
 
+  it('restores remaining clocks for reload resilience', () => {
+    const clock = new ChessClock(300, 2);
+    clock.restore([145.5, 230], 300);
+    expect(clock.initialSeconds).toBe(300);
+    expect(clock.remaining[0]).toBe(145.5);
+    expect(clock.remaining[1]).toBe(230);
+  });
+
   it('safely handles invalid seat startTurn or tick without active turn', () => {
     const clock = new ChessClock(300, 2);
     clock.startTurn(99);

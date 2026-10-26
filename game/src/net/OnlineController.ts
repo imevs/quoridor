@@ -167,16 +167,16 @@ export class OnlineController implements GameController {
     if (v.version === this.version) {
       this.onUpdate({ type: 'seats', seats });
     } else if (this.version < 0 || v.event?.type === 'start') {
-      this.onUpdate({ type: 'reset', state, seats, turnTimer: v.turnTimer });
+      this.onUpdate({ type: 'reset', state, seats, turnTimer: v.turnTimer, clocks: v.clocks });
     } else if (v.version === this.version + 1 && v.event?.type === 'action') {
       if (seatsChanged) this.onUpdate({ type: 'seats', seats });
-      this.onUpdate({ type: 'action', seat: v.event.seat, action: v.event.action, state });
+      this.onUpdate({ type: 'action', seat: v.event.seat, action: v.event.action, state, clocks: v.clocks });
     } else if (v.version === this.version + 1 && v.event?.type === 'undo') {
       if (seatsChanged) this.onUpdate({ type: 'seats', seats });
-      this.onUpdate({ type: 'undo', seat: v.event.seat, state });
+      this.onUpdate({ type: 'undo', seat: v.event.seat, state, clocks: v.clocks });
     } else {
       this.onUpdate({ type: 'seats', seats });
-      this.onUpdate({ type: 'sync', state });
+      this.onUpdate({ type: 'sync', state, clocks: v.clocks });
     }
     this.version = v.version;
   }

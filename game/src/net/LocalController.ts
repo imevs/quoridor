@@ -15,12 +15,14 @@ export interface LocalSavedGame {
   state: WireState;
   history: WireState[];
   actions?: Action[];
+  clocks?: number[];
 }
 
 /** Offline play: vs computer or pass & play, with the rules engine in-process and localStorage persistence. */
 export class LocalController implements GameController {
   readonly kind: 'ai' | 'local' | 'bot_vs_bot';
   paused = false;
+  getClocks?: () => number[];
   onUpdate: (u: Update) => void = () => {};
   onExit: (message?: string) => void = () => {};
   private config: GameConfig;
@@ -79,6 +81,20 @@ export class LocalController implements GameController {
     }
   }
 
+  static updateSavedClocks(clocks: number[]): void {
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as LocalSavedGame;
+      if (parsed && parsed.state && parsed.state.winner === null) {
+        parsed.clocks = [...clocks];
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsed));
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
   start(restoreExisting = false): void {
     this.paused = false;
     clearTimeout(this.timer);
@@ -94,11 +110,14 @@ export class LocalController implements GameController {
             this.state = fromWire(parsed.state);
             this.history = (parsed.history || []).map(fromWire);
             this.actions = parsed.actions ?? [];
+            const turnTimer = typeof this.config.turnTimer === 'number' ? this.config.turnTimer : 300;
             this.onUpdate({
               type: 'reset',
               state: cloneState(this.state),
               seats: this.seats,
               actions: [...this.actions],
+              turnTimer,
+              clocks: parsed.clocks,
             });
             return;
           }
@@ -118,7 +137,8 @@ export class LocalController implements GameController {
     this.history = [];
     this.actions = [];
     this.persist();
-    this.onUpdate({ type: 'reset', state: cloneState(this.state), seats: this.seats, actions: [] });
+    const turnTimer = typeof this.config.turnTimer === 'number' ? this.config.turnTimer : 300;
+    this.onUpdate({ type: 'reset', state: cloneState(this.state), seats: this.seats, actions: [], turnTimer });
   }
 
   private persist(): void {
@@ -133,6 +153,7 @@ export class LocalController implements GameController {
         state: toWire(this.state),
         history: this.history.map(toWire),
         actions: this.actions,
+        clocks: this.getClocks ? this.getClocks() : undefined,
       };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
     } catch {

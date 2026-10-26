@@ -90,6 +90,7 @@ export class P2PController implements GameController {
   private abort = new AbortController();
   private savedHostSession: SessionData | null = null;
   private autoStartTimerId = 0;
+  private nextActionTimerId: number | null = null;
 
   constructor(hud: Hud, intent: P2PIntent) {
     this.hud = hud;
@@ -199,19 +200,22 @@ export class P2PController implements GameController {
     // Setup network and local broadcast
     this.setupChannels();
 
-    // Start timer loop for AI and undo expiry
+    // Start timer loop for clock expiry check and periodic host session persistence every 5 seconds
     this.timerId = window.setInterval(() => {
       if (!this.session || this.disposed) return;
       if (this.session.tick()) {
         this.saveHostSession();
         this.flushNotices();
         this.broadcastSnapshot();
+      } else if (this.isHost && this.session.phase === 'playing') {
+        this.saveHostSession();
       }
-    }, 100);
+    }, 5000);
 
     // Initial render
     this.applyView(this.session.view());
     this.broadcastSnapshot();
+    this.scheduleDueSessionTimer();
   }
 
   private initGuest(): void {
@@ -664,6 +668,29 @@ export class P2PController implements GameController {
         .catch((e) => console.warn(`[P2P Host] Broadcast snapshot v${view.version} failed:`, e));
     }
     this.maybeAutoStart();
+    this.scheduleDueSessionTimer();
+  }
+
+  private scheduleDueSessionTimer(): void {
+    if (!this.session || this.disposed) return;
+    if (this.nextActionTimerId !== null) {
+      window.clearTimeout(this.nextActionTimerId);
+      this.nextActionTimerId = null;
+    }
+    const next = this.session.nextTimer();
+    if (next !== null) {
+      const delay = Math.max(0, next - Date.now());
+      this.nextActionTimerId = window.setTimeout(() => {
+        this.nextActionTimerId = null;
+        if (!this.session || this.disposed) return;
+        if (this.session.tick()) {
+          this.saveHostSession();
+          this.flushNotices();
+          this.broadcastSnapshot();
+        }
+        this.scheduleDueSessionTimer();
+      }, delay);
+    }
   }
 
   // ------------------------------------------------------------------ Guest Logic
@@ -759,16 +786,16 @@ export class P2PController implements GameController {
     if (v.version === this.version) {
       this.onUpdate({ type: 'seats', seats });
     } else if (this.version < 0 || v.event?.type === 'start') {
-      this.onUpdate({ type: 'reset', state, seats, turnTimer: v.turnTimer });
+      this.onUpdate({ type: 'reset', state, seats, turnTimer: v.turnTimer, clocks: v.clocks });
     } else if (v.version === this.version + 1 && v.event?.type === 'action') {
       if (seatsChanged) this.onUpdate({ type: 'seats', seats });
-      this.onUpdate({ type: 'action', seat: v.event.seat, action: v.event.action, state });
+      this.onUpdate({ type: 'action', seat: v.event.seat, action: v.event.action, state, clocks: v.clocks });
     } else if (v.version === this.version + 1 && v.event?.type === 'undo') {
       if (seatsChanged) this.onUpdate({ type: 'seats', seats });
-      this.onUpdate({ type: 'undo', seat: v.event.seat, state });
+      this.onUpdate({ type: 'undo', seat: v.event.seat, state, clocks: v.clocks });
     } else {
       this.onUpdate({ type: 'seats', seats });
-      this.onUpdate({ type: 'sync', state });
+      this.onUpdate({ type: 'sync', state, clocks: v.clocks });
     }
     this.version = v.version;
   }
@@ -844,6 +871,10 @@ export class P2PController implements GameController {
     if (this.autoStartTimerId) {
       window.clearTimeout(this.autoStartTimerId);
       this.autoStartTimerId = 0;
+    }
+    if (this.nextActionTimerId !== null) {
+      window.clearTimeout(this.nextActionTimerId);
+      this.nextActionTimerId = null;
     }
     window.clearInterval(this.timerId);
     window.clearInterval(this.joinTimerId);

@@ -56,6 +56,13 @@ export class ChessClock {
     this.lastBeepSecond = -1;
   }
 
+  restore(remaining: number[], initialSeconds?: number): void {
+    if (initialSeconds !== undefined) {
+      this.initial = Math.max(0, initialSeconds);
+    }
+    this.clocks = remaining.map((c) => Math.max(0, c));
+  }
+
   startTurn(turn: number): void {
     if (turn < 0 || turn >= this.clocks.length) return;
     this.activeTurn = turn;
