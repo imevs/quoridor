@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // Blender-generated assets (single source of truth lives in the parent project)
 import boardUrl from '../../../quoridor_board.glb?url';
@@ -14,7 +13,12 @@ import { type Cell, type GameState, type Wall, type Goal, N } from '../game/rule
 import { Tweener, ease } from './tween';
 import { sounds } from './sounds';
 
-export type CameraPreset = 'seat' | 'top' | 'iso';
+import { BoardCameraRig, type CameraPreset } from './BoardCameraRig';
+import { BoardLighting } from './BoardLighting';
+import { BoardPicker, type Pick } from './BoardPicker';
+import { ParticleSystem } from './ParticleSystem';
+
+export type { CameraPreset, Pick };
 
 /** Board geometry constants (must match build_quoridor_board.py). */
 const PITCH = 1.2;
@@ -26,59 +30,9 @@ export const cellToWorld = (r: number, c: number) => new THREE.Vector3(-HALF + c
 const wallToWorld = (w: Wall) => new THREE.Vector3(-HALF + w.c * PITCH + PITCH / 2, 0, -HALF + w.r * PITCH + PITCH / 2);
 const wallKey = (w: Wall) => `${w.r},${w.c},${w.o}`;
 
-export type Pick = { kind: 'cell'; r: number; c: number } | { kind: 'wall'; wall: Wall } | null;
-
 /** Seat index -> yaw that faces the player's goal (figurines face +Z by default). */
 const SEAT_YAW_2 = [Math.PI, 0];
 const SEAT_YAW_4 = [Math.PI, Math.PI / 2, 0, -Math.PI / 2];
-/** Camera azimuth looking from each seat's side of the board. */
-const SEAT_AZ_2 = [0, Math.PI];
-const SEAT_AZ_4 = [0, -Math.PI / 2, Math.PI, Math.PI / 2];
-
-/** Camera & viewport framing constants. */
-const MOBILE_LANDSCAPE_MAX_HEIGHT = 550;
-const DESKTOP_MIN_WIDTH = 760;
-const DESKTOP_MIN_HEIGHT = 450;
-
-const CAMERA_FOV = 32;
-const CAMERA_NEAR = 0.1;
-const CAMERA_FAR = 200;
-const CONTROLS_MIN_DISTANCE = 8;
-const CONTROLS_MIN_POLAR_ANGLE = 0.01;
-const CONTROLS_MAX_POLAR_ANGLE = 1.22;
-const CONTROLS_DAMPING = 0.08;
-
-const PHI_TOP = 0.01;
-const PHI_ISO = 0.75;
-const PHI_SEAT = 0.82;
-
-const DEFAULT_BOARD_SPAN = 13.4;
-const TOP_VIEW_BOARD_SPAN = 12.8;
-const MOBILE_LANDSCAPE_SEAT_DISTANCE = 16.5;
-const MOBILE_LANDSCAPE_ISO_DISTANCE = 18.5;
-
-const MOBILE_LANDSCAPE_OFFSET_Y_RATIO = 0.11;
-const MOBILE_LANDSCAPE_OFFSET_X_RATIO = 0.035;
-const MOBILE_LANDSCAPE_OFFSET_X_MIN = 16;
-const MOBILE_LANDSCAPE_OFFSET_X_MAX = 36;
-const DESKTOP_OFFSET_Y_RATIO = 0.04;
-const DESKTOP_OFFSET_Y_MAX = 32;
-
-/** Lighting constants. */
-const SUN_COLOR = 0xfff0d9;
-const SUN_INTENSITY = 2.6;
-const SUN_SHADOW_MAP_SIZE = 2048;
-const SUN_SHADOW_FRUSTUM = 9;
-const SUN_SHADOW_BIAS = -0.0004;
-const SUN_SHADOW_NORMAL_BIAS = 0.02;
-const SUN_SHADOW_RADIUS = 4;
-const HEMI_SKY_COLOR = 0xdff0ff;
-const HEMI_GROUND_COLOR = 0x4a6b2a;
-const HEMI_INTENSITY = 0.9;
-const FILL_COLOR = 0xcfe6ff;
-const FILL_INTENSITY = 0.55;
-const SHADOW_PLANE_RADIUS = 16;
-const SHADOW_PLANE_OPACITY = 0.22;
 
 interface Pawn {
   group: THREE.Group; // positioned on the tile
@@ -143,12 +97,19 @@ function addGrading(mat: THREE.MeshStandardMaterial, glsl: string): void {
 export class BoardScene {
   readonly renderer: THREE.WebGLRenderer;
   readonly scene = new THREE.Scene();
-  readonly camera: THREE.PerspectiveCamera;
-  readonly controls: OrbitControls;
+  readonly cameraRig: BoardCameraRig;
+  readonly lighting: BoardLighting;
+  readonly picker: BoardPicker;
+  readonly particles: ParticleSystem;
   readonly tween = new Tweener();
 
-  private raycaster = new THREE.Raycaster();
-  private pickPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -TILE_TOP);
+  get camera(): THREE.PerspectiveCamera {
+    return this.cameraRig.camera;
+  }
+
+  get controls(): OrbitControls {
+    return this.cameraRig.controls;
+  }
 
   private hedgeTemplate!: THREE.Object3D;
   private animalTemplates = new Map<AnimalId, THREE.Object3D>();
@@ -163,7 +124,6 @@ export class BoardScene {
   private markerColor = new THREE.Color('#ffe6a8');
   private activeSeat = -1;
   private intendedTarget: THREE.Vector3 | null = null;
-  private particles: { points: THREE.Points; vel: Float32Array; born: number; life: number }[] = [];
   private seatCount: 2 | 4 = 2;
   private destGroup = new THREE.Group();
   private destPads: THREE.Mesh[] = [];
@@ -172,7 +132,6 @@ export class BoardScene {
   private destPadMat!: THREE.MeshBasicMaterial;
   private destBarMat!: THREE.MeshBasicMaterial;
 
-  private activePreset: CameraPreset = 'seat';
   private container: HTMLElement;
 
   constructor(container: HTMLElement) {
@@ -186,67 +145,13 @@ export class BoardScene {
     this.renderer.toneMappingExposure = 1.05;
     container.appendChild(this.renderer.domElement);
 
-    this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, container.clientWidth / container.clientHeight, CAMERA_NEAR, CAMERA_FAR);
-    this.camera.position.set(0, 15, 15);
-
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = CONTROLS_DAMPING;
-    this.controls.enablePan = false;
-    this.controls.minDistance = CONTROLS_MIN_DISTANCE;
-    this.controls.maxDistance = Math.max(50, this.idealDistance() * 1.45);
-    this.controls.minPolarAngle = CONTROLS_MIN_POLAR_ANGLE;
-    this.controls.maxPolarAngle = CONTROLS_MAX_POLAR_ANGLE;
-    this.controls.target.set(0, 0, 0);
-
-    this.setupLighting();
-    this.updateCameraProjection();
-    this.fitCamera();
+    this.cameraRig = new BoardCameraRig(container, this.renderer.domElement, this.tween);
+    this.lighting = new BoardLighting(this.scene, this.renderer);
+    this.picker = new BoardPicker(this.cameraRig.camera, this.renderer.domElement);
+    this.particles = new ParticleSystem(this.scene);
 
     window.addEventListener('resize', () => this.onResize());
     this.renderer.setAnimationLoop(() => this.frame());
-  }
-
-  // ---------------------------------------------------------------------------
-  // Setup
-  // ---------------------------------------------------------------------------
-  private setupLighting(): void {
-    const pmrem = new THREE.PMREMGenerator(this.renderer);
-    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    this.scene.environmentIntensity = 0.35;
-
-    const hemi = new THREE.HemisphereLight(HEMI_SKY_COLOR, HEMI_GROUND_COLOR, HEMI_INTENSITY);
-    this.scene.add(hemi);
-
-    // Key directional light
-    const sun = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
-    sun.position.set(-7, 14, 9);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(SUN_SHADOW_MAP_SIZE, SUN_SHADOW_MAP_SIZE);
-    sun.shadow.camera.left = -SUN_SHADOW_FRUSTUM;
-    sun.shadow.camera.right = SUN_SHADOW_FRUSTUM;
-    sun.shadow.camera.top = SUN_SHADOW_FRUSTUM;
-    sun.shadow.camera.bottom = -SUN_SHADOW_FRUSTUM;
-    sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 40;
-    sun.shadow.bias = SUN_SHADOW_BIAS;
-    sun.shadow.normalBias = SUN_SHADOW_NORMAL_BIAS;
-    sun.shadow.radius = SUN_SHADOW_RADIUS;
-    this.scene.add(sun);
-
-    const fill = new THREE.DirectionalLight(FILL_COLOR, FILL_INTENSITY);
-    fill.position.set(8, 6, -6);
-    this.scene.add(fill);
-
-    // Ground plane for shadow reception
-    const ground = new THREE.Mesh(
-      new THREE.CircleGeometry(SHADOW_PLANE_RADIUS, 64),
-      new THREE.ShadowMaterial({ color: 0x1d3317, opacity: SHADOW_PLANE_OPACITY }),
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.46;
-    ground.receiveShadow = true;
-    this.scene.add(ground);
   }
 
   async load(onProgress: (p: number) => void): Promise<void> {
@@ -599,26 +504,7 @@ export class BoardScene {
   }
 
   private burst(origin: THREE.Vector3, colors: number[], count: number, speed: number): void {
-    const positions = new Float32Array(count * 3);
-    const cols = new Float32Array(count * 3);
-    const vel = new Float32Array(count * 3);
-    const c = new THREE.Color();
-    for (let i = 0; i < count; i++) {
-      positions.set([origin.x + (Math.random() - 0.5) * 0.6, origin.y, origin.z + (Math.random() - 0.5) * 0.6], i * 3);
-      const a = Math.random() * Math.PI * 2;
-      const up = 0.6 + Math.random();
-      const sp = speed * (0.3 + Math.random() * 0.7);
-      vel.set([Math.cos(a) * sp * 0.5, up * sp * 0.7, Math.sin(a) * sp * 0.5], i * 3);
-      c.setHex(colors[i % colors.length]);
-      cols.set([c.r, c.g, c.b], i * 3);
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
-    const mat = new THREE.PointsMaterial({ size: 0.09, vertexColors: true, transparent: true, depthWrite: false });
-    const points = new THREE.Points(geo, mat);
-    this.scene.add(points);
-    this.particles.push({ points, vel, born: this.tween.now, life: 1.1 });
+    this.particles.burst(origin, colors, count, speed, this.tween.now);
   }
 
   // ---------------------------------------------------------------------------
@@ -677,47 +563,12 @@ export class BoardScene {
 
   /** Converts a pointer position to a cell (tile centre zone) or a wall slot (grooves). */
   pick(clientX: number, clientY: number): Pick {
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
-    this.raycaster.setFromCamera(ndc, this.camera);
-    const hit = new THREE.Vector3();
-    if (!this.raycaster.ray.intersectPlane(this.pickPlane, hit)) return null;
-    const fc = (hit.x + HALF) / PITCH;
-    const fr = (hit.z + HALF) / PITCH;
-    if (fr < -0.5 || fr > N - 0.5 || fc < -0.5 || fc > N - 0.5) return null;
-    const rr = Math.round(fr);
-    const rc = Math.round(fc);
-    const dr = fr - rr;
-    const dc = fc - rc;
-    const clampW = (v: number) => Math.max(0, Math.min(N - 2, v));
-    if (Math.max(Math.abs(dr), Math.abs(dc)) < 0.27) return { kind: 'cell', r: rr, c: rc };
-    if (Math.abs(dr) >= Math.abs(dc)) {
-      // Near a horizontal groove (between rows)
-      const wr = dr > 0 ? rr : rr - 1;
-      if (wr < 0 || wr > N - 2) return { kind: 'cell', r: rr, c: rc };
-      return { kind: 'wall', wall: { r: wr, c: clampW(Math.round(fc - 0.5)), o: 'h' } };
-    }
-    const wc = dc > 0 ? rc : rc - 1;
-    if (wc < 0 || wc > N - 2) return { kind: 'cell', r: rr, c: rc };
-    return { kind: 'wall', wall: { r: clampW(Math.round(fr - 0.5)), c: wc, o: 'v' } };
+    return this.picker.pick(clientX, clientY);
   }
 
   /** Raycasts directly against animal figurine models to detect hovered pawn. */
   pickPawn(clientX: number, clientY: number): number | null {
-    if (this.pawns.length === 0) return null;
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
-    this.raycaster.setFromCamera(ndc, this.camera);
-    const hits = this.raycaster.intersectObjects(this.pawnGroups, true);
-    if (hits.length > 0) {
-      let obj: THREE.Object3D | null = hits[0].object;
-      while (obj) {
-        const idx = this.pawns.findIndex((p) => p.group === obj);
-        if (idx !== -1) return idx;
-        obj = obj.parent;
-      }
-    }
-    return null;
+    return this.picker.pickPawn(clientX, clientY, this.pawns, this.pawnGroups);
   }
 
   /** Highlights the 9 destination goal tiles and edge runner for a player's goal. */
@@ -750,154 +601,21 @@ export class BoardScene {
     }
   }
 
-  /** Whether the current viewport is mobile landscape (compact vertical height). */
-  private isMobileLandscape(): boolean {
-    const w = this.container.clientWidth;
-    const h = this.container.clientHeight;
-    return h <= MOBILE_LANDSCAPE_MAX_HEIGHT && w > h;
-  }
-
   /** Smoothly orbit the camera behind a seat. */
   async focusSeat(seat: number, duration = 1.0): Promise<void> {
-    this.activePreset = 'seat';
-    const az = (this.seatCount === 4 ? SEAT_AZ_4 : SEAT_AZ_2)[seat] ?? 0;
-    await this.animateCameraSpherical(az, PHI_SEAT, this.idealDistance('seat'), duration);
+    await this.cameraRig.focusSeat(seat, this.seatCount, duration);
   }
 
   /** Set spectator camera preset (seat POV, direct top-down, or isometric angle). */
   async setCameraPreset(preset: CameraPreset, seat = 0, duration = 0.8): Promise<void> {
-    this.activePreset = preset;
-    sounds.playWhoosh();
-    switch (preset) {
-      case 'top':
-        // Top-down overhead view
-        await this.animateCameraSpherical(0, PHI_TOP, this.idealDistance('top'), duration);
-        break;
-      case 'iso':
-        // Isometric angled spectator view
-        await this.animateCameraSpherical(Math.PI / 4, PHI_ISO, this.idealDistance('iso'), duration);
-        break;
-      case 'seat':
-      default:
-        await this.focusSeat(seat, duration);
-        break;
-    }
-  }
-
-  private getTargetViewOffset(preset: CameraPreset = this.activePreset): { x: number; y: number } {
-    const w = this.container.clientWidth;
-    const h = this.container.clientHeight;
-    if (this.isMobileLandscape()) {
-      if (preset === 'seat') {
-        // On mobile landscape in Player View, offset view upward so tilted board
-        // occupies full vertical space, and slightly right to center between cards and buttons.
-        const offsetY = Math.round(h * MOBILE_LANDSCAPE_OFFSET_Y_RATIO);
-        const offsetX = -Math.round(Math.min(MOBILE_LANDSCAPE_OFFSET_X_MAX, Math.max(MOBILE_LANDSCAPE_OFFSET_X_MIN, w * MOBILE_LANDSCAPE_OFFSET_X_RATIO)));
-        return { x: offsetX, y: offsetY };
-      }
-    } else if (w > DESKTOP_MIN_WIDTH && h > DESKTOP_MIN_HEIGHT) {
-      if (preset === 'seat') {
-        // Offset view slightly upward on desktop (~30px) so board has clearance above bottom cards
-        const offsetY = Math.round(Math.min(DESKTOP_OFFSET_Y_MAX, h * DESKTOP_OFFSET_Y_RATIO));
-        return { x: 0, y: offsetY };
-      }
-    }
-    return { x: 0, y: 0 };
-  }
-
-  private applyViewOffset(x: number, y: number): void {
-    const w = this.container.clientWidth;
-    const h = this.container.clientHeight;
-    if (Math.abs(x) < 0.1 && Math.abs(y) < 0.1) {
-      this.camera.clearViewOffset();
-    } else {
-      this.camera.setViewOffset(w, h, Math.round(x), Math.round(y), w, h);
-    }
-    this.camera.updateProjectionMatrix();
-  }
-
-  private async animateCameraSpherical(toTheta: number, toPhi: number, toR: number, duration: number): Promise<void> {
-    const offset = this.camera.position.clone().sub(this.controls.target);
-    const sph = new THREE.Spherical().setFromVector3(offset);
-    const fromTheta = sph.theta;
-    let d = toTheta - fromTheta;
-    d = Math.atan2(Math.sin(d), Math.cos(d));
-    const fromPhi = sph.phi;
-    const fromR = sph.radius;
-
-    const fromOffsetX = this.camera.view && this.camera.view.enabled ? this.camera.view.offsetX : 0;
-    const fromOffsetY = this.camera.view && this.camera.view.enabled ? this.camera.view.offsetY : 0;
-    const toOffset = this.getTargetViewOffset(this.activePreset);
-
-    await this.tween.run(duration, (k) => {
-      sph.theta = fromTheta + d * k;
-      sph.phi = fromPhi + (toPhi - fromPhi) * k;
-      sph.radius = fromR + (toR - fromR) * k;
-      this.camera.position.copy(this.controls.target).add(new THREE.Vector3().setFromSpherical(sph));
-
-      const curX = fromOffsetX + (toOffset.x - fromOffsetX) * k;
-      const curY = fromOffsetY + (toOffset.y - fromOffsetY) * k;
-      this.applyViewOffset(curX, curY);
-    });
-  }
-
-  private idealDistance(preset: CameraPreset = this.activePreset): number {
-    const aspect = this.camera.aspect;
-    const vFov = THREE.MathUtils.degToRad(CAMERA_FOV);
-    if (this.isMobileLandscape()) {
-      if (preset === 'seat') {
-        // In Player View on mobile landscape: tightly frame the 3D board to occupy the whole available vertical space
-        return MOBILE_LANDSCAPE_SEAT_DISTANCE;
-      }
-      if (preset === 'top') {
-        // In Top View: frame the 12.2m lawn board to fit centered with clean margins
-        return (TOP_VIEW_BOARD_SPAN / 2) / Math.tan(vFov / 2);
-      }
-      if (preset === 'iso') {
-        return MOBILE_LANDSCAPE_ISO_DISTANCE;
-      }
-    }
-    const boardSpan = DEFAULT_BOARD_SPAN;
-    const distV = boardSpan / 2 / Math.tan(vFov / 2);
-    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
-    const distH = boardSpan / 2 / Math.tan(hFov / 2);
-    // On desktop, scale 1.05 provides clean clearance above the bottom player cards row.
-    // On mobile portrait, scale 0.94 fits the narrow screen snugly.
-    const scale = aspect >= 1.0 ? 1.05 : 0.94;
-    return Math.max(distV * scale, distH * scale, 15);
-  }
-
-  private updateCameraProjection(): void {
-    const w = this.container.clientWidth;
-    const h = this.container.clientHeight;
-    this.camera.aspect = w / h;
-    const target = this.getTargetViewOffset(this.activePreset);
-    this.applyViewOffset(target.x, target.y);
-  }
-
-  private fitCamera(preserveAngles = false): void {
-    const r = this.idealDistance(this.activePreset);
-    if (preserveAngles) {
-      const offset = this.camera.position.clone().sub(this.controls.target);
-      const sph = new THREE.Spherical().setFromVector3(offset);
-      sph.radius = r;
-      this.camera.position.copy(this.controls.target).add(new THREE.Vector3().setFromSpherical(sph));
-    } else {
-      const phi = this.activePreset === 'top' ? PHI_TOP : this.activePreset === 'iso' ? PHI_ISO : PHI_SEAT;
-      const sph = new THREE.Spherical(r, phi, 0);
-      this.camera.position.copy(this.controls.target).add(new THREE.Vector3().setFromSpherical(sph));
-    }
-    const target = this.getTargetViewOffset(this.activePreset);
-    this.applyViewOffset(target.x, target.y);
+    await this.cameraRig.setCameraPreset(preset, seat, this.seatCount, duration);
   }
 
   private onResize(): void {
     const w = this.container.clientWidth;
     const h = this.container.clientHeight;
-    this.updateCameraProjection();
+    this.cameraRig.onResize();
     this.renderer.setSize(w, h);
-    this.controls.maxDistance = Math.max(50, this.idealDistance(this.activePreset) * 1.45);
-    this.fitCamera(true);
   }
 
   // ---------------------------------------------------------------------------
@@ -952,27 +670,10 @@ export class BoardScene {
     }
 
     // Particles
-    const dt = 1 / 60;
-    this.particles = this.particles.filter((p) => {
-      const age = t - p.born;
-      const pos = p.points.geometry.attributes.position as THREE.BufferAttribute;
-      for (let i = 0; i < pos.count; i++) {
-        p.vel[i * 3 + 1] -= 9.0 * dt;
-        pos.setXYZ(i, pos.getX(i) + p.vel[i * 3] * dt, Math.max(0.13, pos.getY(i) + p.vel[i * 3 + 1] * dt), pos.getZ(i) + p.vel[i * 3 + 2] * dt);
-      }
-      pos.needsUpdate = true;
-      (p.points.material as THREE.PointsMaterial).opacity = Math.max(0, 1 - age / p.life);
-      if (age > p.life) {
-        p.points.removeFromParent();
-        p.points.geometry.dispose();
-        (p.points.material as THREE.Material).dispose();
-        return false;
-      }
-      return true;
-    });
+    this.particles.tick(t);
 
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
+    this.cameraRig.updateControls();
+    this.renderer.render(this.scene, this.cameraRig.camera);
   }
 }
 
