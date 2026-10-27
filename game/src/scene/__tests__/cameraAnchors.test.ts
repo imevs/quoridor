@@ -313,4 +313,81 @@ describe('BoardCameraRig Anchoring Logic', () => {
     rig.camera.position.setFromSpherical(new THREE.Spherical(r, PHI_SEAT, THREE.MathUtils.degToRad(100)));
     expect(rig.getNearestAnchor().id).toBe('seat-1-left');
   });
+
+  it('suppresses board rotation on mobile until drag exceeds increased threshold (28px)', () => {
+    const elementListeners: Record<string, Function> = {};
+    const windowListeners: Record<string, Function> = {};
+    vi.stubGlobal('window', {
+      addEventListener: vi.fn((event: string, handler: Function) => {
+        windowListeners[event] = handler;
+      }),
+      removeEventListener: vi.fn(),
+      devicePixelRatio: 1,
+    });
+
+    const docMock = {
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    const mockElement = {
+      addEventListener: vi.fn((event: string, handler: Function) => {
+        elementListeners[event] = handler;
+      }),
+      removeEventListener: vi.fn(),
+      ownerDocument: docMock,
+      getRootNode: vi.fn(() => docMock),
+      clientWidth: 390,
+      clientHeight: 844,
+      style: {},
+    } as unknown as HTMLElement;
+
+    const mobileRig = new BoardCameraRig(mockElement, mockElement);
+
+    // Initial state: rotation is enabled
+    expect(mobileRig.controls.enableRotate).toBe(true);
+
+    // Touch down on mobile
+    elementListeners['pointerdown']({
+      pointerType: 'touch',
+      pointerId: 1,
+      clientX: 100,
+      clientY: 100,
+    });
+
+    // Rotation is suppressed during touch down on mobile
+    expect(mobileRig.controls.enableRotate).toBe(false);
+
+    // Move below threshold (20px < 28px)
+    windowListeners['pointermove']({
+      pointerType: 'touch',
+      pointerId: 1,
+      clientX: 120,
+      clientY: 100,
+    });
+
+    // Rotation remains suppressed
+    expect(mobileRig.controls.enableRotate).toBe(false);
+
+    // Move beyond threshold (30px >= 28px)
+    windowListeners['pointermove']({
+      pointerType: 'touch',
+      pointerId: 1,
+      clientX: 130,
+      clientY: 100,
+    });
+
+    // Rotation is engaged
+    expect(mobileRig.controls.enableRotate).toBe(true);
+
+    // Touch up restores rotation
+    windowListeners['pointerup']({
+      pointerType: 'touch',
+      pointerId: 1,
+      clientX: 130,
+      clientY: 100,
+    });
+
+    expect(mobileRig.controls.enableRotate).toBe(true);
+    mobileRig.dispose();
+  });
 });

@@ -10,7 +10,7 @@ export const SNAP_FLING_LOOKAHEAD = 0.12;
 /** Upper bound on the angular release velocity (rad/s) carried into the snap. */
 export const SNAP_MAX_VELOCITY = 6;
 export const DRAG_THRESHOLD_MOUSE = 8;
-export const DRAG_THRESHOLD_TOUCH = 14;
+export const DRAG_THRESHOLD_TOUCH = 28;
 
 /**
  * Critically damped spring step (Game Programming Gems 4, "SmoothDamp").

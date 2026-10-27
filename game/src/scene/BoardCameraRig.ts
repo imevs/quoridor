@@ -435,6 +435,10 @@ export class BoardCameraRig {
     this.hasDragged = false;
     this.pointerDownPos = { x: e.clientX, y: e.clientY };
 
+    if (e.pointerType === 'touch' || this.isMobileView()) {
+      if (this.controls) this.controls.enableRotate = false;
+    }
+
     // Stop any active camera tweens immediately so user drag has zero latency/jitter
     this.cancelSnap();
   }
@@ -444,10 +448,12 @@ export class BoardCameraRig {
     if (this.activePointerId !== null && e.pointerId !== this.activePointerId) return;
 
     if (!this.hasDragged) {
-      const threshold = e.pointerType === 'touch' ? DRAG_THRESHOLD_TOUCH : DRAG_THRESHOLD_MOUSE;
+      const isMobile = e.pointerType === 'touch' || this.isMobileView();
+      const threshold = isMobile ? DRAG_THRESHOLD_TOUCH : DRAG_THRESHOLD_MOUSE;
       const dist = Math.hypot(e.clientX - this.pointerDownPos.x, e.clientY - this.pointerDownPos.y);
       if (dist >= threshold) {
         this.hasDragged = true;
+        if (this.controls) this.controls.enableRotate = true;
       }
     }
   }
@@ -460,6 +466,7 @@ export class BoardCameraRig {
     this.isPointerDown = false;
     this.hasDragged = false;
     this.activePointerId = null;
+    if (this.controls) this.controls.enableRotate = true;
 
     if (hadDragged) {
       void this.snapToNearestAnchor();
@@ -467,6 +474,7 @@ export class BoardCameraRig {
   }
 
   private onPointerCancel(e: PointerEvent): void {
+    if (this.controls) this.controls.enableRotate = true;
     this.onPointerUp(e);
   }
 }

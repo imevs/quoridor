@@ -58,7 +58,7 @@ export function RulesDialog() {
           </ul>
         </div>
         <p class={styles.keys}>
-          <kbd>I</kbd> hint · <kbd>Z</kbd> undo · <kbd>C</kbd> camera · <kbd>Esc</kbd> menu · drag to orbit
+          <kbd>I</kbd> hint · <kbd>Z</kbd> undo · <kbd>C</kbd> camera · swipe animal to move · drag to orbit
         </p>
         <button class="primary-btn" type="submit" onClick={close}>
           Close
