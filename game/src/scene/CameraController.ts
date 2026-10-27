@@ -29,7 +29,7 @@ export class CameraController {
   }
 
   get preset(): CameraPreset {
-    return this.currentPreset;
+    return this.scene.cameraPreset ?? this.currentPreset;
   }
 
   setPreset(preset: CameraPreset, duration = 0.7): void {
@@ -39,7 +39,8 @@ export class CameraController {
   }
 
   cycle(): void {
-    this.currentPreset = NEXT_PRESET[this.currentPreset];
+    const next = NEXT_PRESET[this.preset];
+    this.currentPreset = next;
     const seat = this.getViewSeat();
     void this.scene.setCameraPreset(this.currentPreset, seat, 0.7);
     this.hud.toast(`Camera: ${PRESET_LABELS[this.currentPreset]}`);

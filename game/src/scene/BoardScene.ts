@@ -7,7 +7,7 @@ import { Tweener, ease } from './tween';
 import { sounds } from './sounds';
 
 import { wallToWorld, wallKey } from './BoardGeometry';
-import { BoardCameraRig, type CameraPreset } from './BoardCameraRig';
+import { BoardCameraRig, type CameraPreset, type CameraAnchor, type AnchorAngleKind } from './BoardCameraRig';
 import { BoardLighting } from './BoardLighting';
 import { BoardPicker, type Pick } from './BoardPicker';
 import { ParticleSystem } from './ParticleSystem';
@@ -16,7 +16,7 @@ import { BoardOverlays } from './BoardOverlays';
 import { BoardPawns } from './BoardPawns';
 
 export { cellToWorld } from './BoardGeometry';
-export type { CameraPreset, Pick };
+export type { CameraPreset, Pick, CameraAnchor, AnchorAngleKind };
 
 /**
  * Top-level coordinator for the Quoridor 3D board scene.
@@ -40,6 +40,14 @@ export class BoardScene {
 
   get controls(): OrbitControls {
     return this.cameraRig.controls;
+  }
+
+  get cameraPreset(): CameraPreset {
+    return this.cameraRig.preset;
+  }
+
+  get currentAnchor(): CameraAnchor | null {
+    return this.cameraRig.currentAnchor;
   }
 
   private hedgeTemplate!: THREE.Object3D;
@@ -82,6 +90,7 @@ export class BoardScene {
   // ---------------------------------------------------------------------------
   setupPlayers(animals: AnimalId[]): void {
     this.pawns.setupPlayers(animals);
+    this.cameraRig.setSeatCount(animals.length === 4 ? 4 : 2);
   }
 
   /** Instantly mirrors a full game state (used on start / undo). */
@@ -185,6 +194,19 @@ export class BoardScene {
   /** Set spectator camera preset (seat POV, direct top-down, or isometric angle). */
   async setCameraPreset(preset: CameraPreset, seat = 0, duration = 0.8): Promise<void> {
     await this.cameraRig.setCameraPreset(preset, seat, this.pawns.seats, duration);
+  }
+
+  /** Snap camera to the nearest allowed anchor point (~0.4s ease-out). */
+  async snapToNearestAnchor(duration = 0.4): Promise<CameraAnchor | null> {
+    return await this.cameraRig.snapToNearestAnchor(duration);
+  }
+
+  getAnchors(): CameraAnchor[] {
+    return this.cameraRig.getAnchors();
+  }
+
+  getNearestAnchor(): CameraAnchor {
+    return this.cameraRig.getNearestAnchor();
   }
 
   private onResize(): void {
