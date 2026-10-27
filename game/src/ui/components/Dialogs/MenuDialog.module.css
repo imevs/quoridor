@@ -163,7 +163,7 @@
 }
 
 /* Landscape Responsive */
-@media (max-height: 550px) and (orientation: landscape) {
+:global([data-mobile-landscape]) {
   .fieldLegend {
     font-size: 10.5px;
     margin-bottom: 2px;

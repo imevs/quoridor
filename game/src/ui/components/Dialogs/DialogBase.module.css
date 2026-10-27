@@ -95,7 +95,7 @@
 }
 
 /* Landscape Responsive */
-@media (max-height: 550px) and (orientation: landscape) {
+:global([data-mobile-landscape]) {
   .form {
     padding: 12px 18px;
     gap: 8px;

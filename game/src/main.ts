@@ -1,8 +1,11 @@
 import './style.css';
+import { syncMobileLandscapeAttribute } from './scene/CameraFraming';
 import { BoardScene } from './scene/BoardScene';
 import { CameraController } from './scene/CameraController';
 import { BoardInteractionManager } from './scene/BoardInteraction';
 import { bindKeyboardShortcuts } from './ui/shortcuts';
+
+syncMobileLandscapeAttribute();
 import { Hud, type GameConfig, type Seat } from './ui/Hud';
 import { ANIMALS } from './game/animals';
 import {

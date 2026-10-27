@@ -26,9 +26,39 @@ export const MOBILE_LANDSCAPE_OFFSET_X_MAX = 36;
 export const DESKTOP_OFFSET_Y_RATIO = 0.04;
 export const DESKTOP_OFFSET_Y_MAX = 32;
 
-/** Whether the given viewport dimensions correspond to mobile landscape (compact vertical height). */
+export const MOBILE_LANDSCAPE_MIN_ASPECT = 1.25;
+
+export const MOBILE_LANDSCAPE_MEDIA_QUERY = `(max-height: ${MOBILE_LANDSCAPE_MAX_HEIGHT}px) and (orientation: landscape) and (min-aspect-ratio: 5/4)`;
+
+/**
+ * Synchronizes the `data-mobile-landscape` attribute on the target element
+ * (defaulting to document.documentElement) with the mobile landscape media query.
+ * Returns an unsubscribe cleanup function.
+ */
+export function syncMobileLandscapeAttribute(
+  target: HTMLElement | null = typeof document !== 'undefined' ? document.documentElement : null,
+): () => void {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function' || !target) {
+    return () => {};
+  }
+  const mql = window.matchMedia(MOBILE_LANDSCAPE_MEDIA_QUERY);
+  const update = () => {
+    if (mql.matches) {
+      target.setAttribute('data-mobile-landscape', '');
+    } else {
+      target.removeAttribute('data-mobile-landscape');
+    }
+  };
+  update();
+  mql.addEventListener('change', update);
+  return () => {
+    mql.removeEventListener('change', update);
+  };
+}
+
+/** Whether the given viewport dimensions correspond to mobile landscape (compact vertical height with widescreen aspect ratio). */
 export function isMobileLandscape(width: number, height: number): boolean {
-  return height <= MOBILE_LANDSCAPE_MAX_HEIGHT && width > height;
+  return height <= MOBILE_LANDSCAPE_MAX_HEIGHT && width / height >= MOBILE_LANDSCAPE_MIN_ASPECT;
 }
 
 /** Whether the given viewport dimensions correspond to a mobile screen (portrait or landscape). */
@@ -42,6 +72,7 @@ export function getTargetViewOffset(
   height: number,
   preset: CameraPreset,
 ): { x: number; y: number } {
+  const aspect = width / height;
   if (isMobileLandscape(width, height)) {
     if (preset === 'seat') {
       const offsetY = Math.round(height * MOBILE_LANDSCAPE_OFFSET_Y_RATIO);
@@ -49,6 +80,12 @@ export function getTargetViewOffset(
         Math.min(MOBILE_LANDSCAPE_OFFSET_X_MAX, Math.max(MOBILE_LANDSCAPE_OFFSET_X_MIN, width * MOBILE_LANDSCAPE_OFFSET_X_RATIO)),
       );
       return { x: offsetX, y: offsetY };
+    }
+  } else if (aspect >= 0.8 && aspect <= 1.35) {
+    // On square or near-square screens, offset view upward so board clears bottom player cards
+    if (preset === 'seat') {
+      const offsetY = Math.round(Math.min(42, Math.max(20, height * 0.06)));
+      return { x: 0, y: offsetY };
     }
   } else if (width > DESKTOP_MIN_WIDTH && height > DESKTOP_MIN_HEIGHT) {
     if (preset === 'seat') {
@@ -83,20 +120,33 @@ export function calculateIdealDistance(
 ): number {
   const vFov = THREE.MathUtils.degToRad(CAMERA_FOV);
   if (isMobileLandscapeView) {
-    if (preset === 'seat') {
-      return MOBILE_LANDSCAPE_SEAT_DISTANCE;
+    const baseDist =
+      preset === 'seat'
+        ? MOBILE_LANDSCAPE_SEAT_DISTANCE
+        : preset === 'top'
+          ? (TOP_VIEW_BOARD_SPAN / 2) / Math.tan(vFov / 2)
+          : MOBILE_LANDSCAPE_ISO_DISTANCE;
+
+    // On narrow landscape / near-square mobile view (aspect < 1.45), widen distance so board clears side UI
+    if (aspect < 1.45) {
+      const boost = 1 + (1.45 - aspect) * 0.45;
+      return baseDist * boost;
     }
-    if (preset === 'top') {
-      return (TOP_VIEW_BOARD_SPAN / 2) / Math.tan(vFov / 2);
-    }
-    if (preset === 'iso') {
-      return MOBILE_LANDSCAPE_ISO_DISTANCE;
-    }
+    return baseDist;
   }
   const boardSpan = DEFAULT_BOARD_SPAN;
   const distV = boardSpan / 2 / Math.tan(vFov / 2);
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
   const distH = boardSpan / 2 / Math.tan(hFov / 2);
-  const scale = aspect >= 1.0 ? 1.05 : 0.94;
+
+  // For square or near-square aspect ratios (e.g. 0.8 to 1.35),
+  // UI overlays at top and bottom occupy both axes simultaneously.
+  // Add safe-area clearance so the board fits cleanly inside the unoccluded center.
+  let scale = aspect >= 1.0 ? 1.05 : 0.94;
+  if (aspect >= 0.8 && aspect <= 1.35) {
+    const squareFactor = Math.max(0, 1 - Math.abs(aspect - 1.0) / 0.35);
+    scale = 1.05 + 0.28 * squareFactor;
+  }
+
   return Math.max(distV * scale, distH * scale, 15);
 }

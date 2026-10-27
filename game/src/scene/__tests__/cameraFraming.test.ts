@@ -10,19 +10,22 @@ import {
   MOBILE_LANDSCAPE_ISO_DISTANCE,
   TOP_VIEW_BOARD_SPAN,
   CAMERA_FOV,
+  MOBILE_LANDSCAPE_MEDIA_QUERY,
+  syncMobileLandscapeAttribute,
 } from '../CameraFraming';
 
 describe('CameraFraming', () => {
   describe('isMobileLandscape', () => {
-    it('returns true when height <= 550 and width > height', () => {
+    it('returns true when height <= 550 and width / height >= 1.25', () => {
       expect(isMobileLandscape(800, 400)).toBe(true);
-      expect(isMobileLandscape(600, MOBILE_LANDSCAPE_MAX_HEIGHT)).toBe(true);
+      expect(isMobileLandscape(700, 500)).toBe(true);
     });
 
-    it('returns false for portrait orientations or tall heights', () => {
+    it('returns false for square, portrait, or tall viewports', () => {
       expect(isMobileLandscape(400, 800)).toBe(false);
       expect(isMobileLandscape(1000, 600)).toBe(false);
       expect(isMobileLandscape(500, 500)).toBe(false);
+      expect(isMobileLandscape(600, MOBILE_LANDSCAPE_MAX_HEIGHT)).toBe(false); // 600/550 = 1.09 < 1.25
     });
   });
 
@@ -35,6 +38,12 @@ describe('CameraFraming', () => {
 
     it('returns zero x offset and slight y offset for seat preset on desktop', () => {
       const offset = getTargetViewOffset(1200, 800, 'seat');
+      expect(offset.x).toBe(0);
+      expect(offset.y).toBeGreaterThan(0);
+    });
+
+    it('returns zero x offset and upward y offset for seat preset on square screens', () => {
+      const offset = getTargetViewOffset(600, 600, 'seat');
       expect(offset.x).toBe(0);
       expect(offset.y).toBeGreaterThan(0);
     });
@@ -80,6 +89,76 @@ describe('CameraFraming', () => {
       const distTall = calculateIdealDistance(0.8, false, 'seat');
       expect(distWide).toBeGreaterThanOrEqual(15);
       expect(distTall).toBeGreaterThanOrEqual(15);
+    });
+
+    it('increases camera distance on square screens to prevent UI overlap', () => {
+      const distWide = calculateIdealDistance(1.6, false, 'seat');
+      const distSquare = calculateIdealDistance(1.0, false, 'seat');
+      expect(distSquare).toBeGreaterThan(distWide);
+    });
+
+    it('adds extra distance boost on narrow mobile landscape (aspect < 1.45)', () => {
+      const distWideMobile = calculateIdealDistance(2.0, true, 'seat');
+      const distNarrowMobile = calculateIdealDistance(1.15, true, 'seat');
+      expect(distNarrowMobile).toBeGreaterThan(distWideMobile);
+    });
+  });
+
+  describe('syncMobileLandscapeAttribute', () => {
+    it('defines the correct media query matching the framing threshold', () => {
+      expect(MOBILE_LANDSCAPE_MEDIA_QUERY).toBe(
+        '(max-height: 550px) and (orientation: landscape) and (min-aspect-ratio: 5/4)',
+      );
+    });
+
+    it('sets attribute when media query matches and removes it on change', () => {
+      let listener: ((e: { matches: boolean }) => void) | null = null;
+      let matchesState = true;
+
+      const mockMql = {
+        get matches() {
+          return matchesState;
+        },
+        addEventListener: (_event: string, cb: (e: { matches: boolean }) => void) => {
+          listener = cb;
+        },
+        removeEventListener: () => {
+          listener = null;
+        },
+      };
+
+      const globalObj = globalThis as unknown as { window?: { matchMedia?: unknown } };
+      const originalWindow = globalObj.window;
+      globalObj.window = {
+        matchMedia: () => mockMql as unknown as MediaQueryList,
+      };
+
+      class MockElement {
+        attrs = new Set<string>();
+        setAttribute(name: string) {
+          this.attrs.add(name);
+        }
+        removeAttribute(name: string) {
+          this.attrs.delete(name);
+        }
+        hasAttribute(name: string) {
+          return this.attrs.has(name);
+        }
+      }
+
+      const dummyEl = new MockElement();
+      const cleanup = syncMobileLandscapeAttribute(dummyEl as unknown as HTMLElement);
+      expect(dummyEl.hasAttribute('data-mobile-landscape')).toBe(true);
+
+      // Trigger change to false
+      matchesState = false;
+      if (listener) {
+        (listener as (e: { matches: boolean }) => void)({ matches: false });
+      }
+      expect(dummyEl.hasAttribute('data-mobile-landscape')).toBe(false);
+
+      cleanup();
+      globalObj.window = originalWindow;
     });
   });
 });

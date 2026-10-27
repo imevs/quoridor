@@ -62,7 +62,7 @@
 }
 
 /* Landscape Responsive */
-@media (max-height: 550px) and (orientation: landscape) {
+:global([data-mobile-landscape]) {
   .winEmoji {
     font-size: 44px;
   }

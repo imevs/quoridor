@@ -47,7 +47,7 @@
 }
 
 /* Landscape Responsive */
-@media (max-height: 550px) and (orientation: landscape) {
+:global([data-mobile-landscape]) {
   .panel {
     max-height: calc(100dvh - 14px);
     width: min(480px, calc(100vw - 40px));

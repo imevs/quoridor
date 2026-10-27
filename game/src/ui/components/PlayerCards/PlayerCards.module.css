@@ -258,7 +258,7 @@
 }
 
 /* Landscape Responsive */
-@media (max-height: 550px) and (orientation: landscape) {
+:global([data-mobile-landscape]) {
   .players {
     position: fixed;
     left: max(8px, env(safe-area-inset-left));

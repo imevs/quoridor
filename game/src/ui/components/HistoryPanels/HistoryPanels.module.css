@@ -193,7 +193,7 @@
   }
 }
 
-@media (max-height: 550px) and (orientation: landscape) {
+:global([data-mobile-landscape]) {
   .movesList,
   .historyList {
     max-height: calc(100dvh - 120px);

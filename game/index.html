@@ -16,6 +16,13 @@
       href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      try {
+        if (window.matchMedia('(max-height: 550px) and (orientation: landscape) and (min-aspect-ratio: 5/4)').matches) {
+          document.documentElement.setAttribute('data-mobile-landscape', '');
+        }
+      } catch (_) {}
+    </script>
   </head>
   <body>
     <main id="stage" aria-label="3D game board"></main>
