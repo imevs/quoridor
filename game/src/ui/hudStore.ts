@@ -23,6 +23,7 @@ export interface HudCallbacks {
   onOpenMenu?: () => void;
   onCloseMenu?: () => void;
   onCycleCamera?: () => void;
+  onToggleFullscreen?: () => void;
   onToggleSound?: () => void;
   onToggleBotMatch?: () => void;
   onUndo?: () => void;
@@ -74,6 +75,7 @@ export class HudStore {
 
   // Action Buttons & Controls
   readonly soundEnabled = signal(true);
+  readonly fullscreenActive = signal(false);
   readonly canUndo = signal(false);
   readonly canHint = signal(false);
   readonly botMatchActive = signal(false);

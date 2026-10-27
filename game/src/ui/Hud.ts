@@ -89,6 +89,10 @@ export class Hud {
     return getEl<HTMLButtonElement>('btn-sound');
   }
 
+  get fullscreenBtn(): HTMLButtonElement {
+    return getEl<HTMLButtonElement>('btn-fullscreen');
+  }
+
   get historyBtn(): HTMLButtonElement {
     return getEl<HTMLButtonElement>('btn-history');
   }

@@ -244,6 +244,10 @@
   border-color: transparent;
 }
 
+.mobileOnly {
+  display: none !important;
+}
+
 .stopBtn {
   display: inline-flex;
   align-items: center;
@@ -335,6 +339,16 @@
 (max-width: 840px) {
   .desktopOnly {
     display: none !important;
+  }
+
+  .mobileOnly {
+    display: grid !important;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 1024px) {
+  .mobileOnly {
+    display: grid !important;
   }
 }
 
@@ -642,6 +656,10 @@
 
   .desktopOnly {
     display: none !important;
+  }
+
+  .mobileOnly {
+    display: grid !important;
   }
 
   .stopBtn {

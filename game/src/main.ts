@@ -1,5 +1,6 @@
 import './style.css';
 import { syncMobileLandscapeAttribute } from './scene/CameraFraming';
+import { toggleFullscreen, listenFullscreenChange, isIOS, isStandalone } from './ui/fullscreen';
 import { BoardScene } from './scene/BoardScene';
 import { CameraController } from './scene/CameraController';
 import { BoardInteractionManager } from './scene/BoardInteraction';
@@ -50,6 +51,9 @@ class Game {
   }
 
   async init(): Promise<void> {
+    listenFullscreenChange((active) => {
+      hudStore.fullscreenActive.value = active;
+    });
     await this.scene.load((p) => this.hud.setLoading(p));
     this.bindUi();
     this.hud.updateSoundUi(sounds.isEnabled);
@@ -215,12 +219,18 @@ class Game {
       if (this.hud.menu.open) this.hud.menu.close();
     };
     hudStore.callbacks.onCycleCamera = () => this.camera.cycle();
+    hudStore.callbacks.onToggleFullscreen = () => {
+      void this.toggleFullscreen();
+    };
     hudStore.callbacks.onToggleSound = () => this.toggleSound();
     hudStore.callbacks.onToggleBotMatch = () => this.toggleBotMatch();
     hudStore.callbacks.onUndo = () => this.undo();
     hudStore.callbacks.onRequestHint = () => this.hints.requestHint();
 
     this.hud.cameraBtn.addEventListener('click', () => this.camera.cycle());
+    this.hud.fullscreenBtn.addEventListener('click', () => {
+      void this.toggleFullscreen();
+    });
     this.hud.soundBtn.addEventListener('click', () => this.toggleSound());
     this.hud.stopBotsBtn.addEventListener('click', () => this.toggleBotMatch());
     this.hud.menuStopBtn.addEventListener('click', () => this.toggleBotMatch());
@@ -240,6 +250,9 @@ class Game {
       onUndo: () => this.undo(),
       onHint: () => this.hints.requestHint(),
       onCamera: () => this.camera.cycle(),
+      onFullscreen: () => {
+        void this.toggleFullscreen();
+      },
       onSound: () => this.toggleSound(),
       onHistory: () => this.dialogs.showHistory(),
       onMoves: () => this.dialogs.showMovesDialog(),
@@ -626,6 +639,23 @@ class Game {
     this.hud.updateSoundUi(enabled);
     if (enabled) sounds.playTick();
     this.hud.toast(enabled ? 'Sound On' : 'Sound Muted');
+  }
+
+  private async toggleFullscreen(): Promise<void> {
+    const result = await toggleFullscreen();
+    if (result === 'entered') {
+      this.hud.toast('Full Screen');
+    } else if (result === 'exited') {
+      this.hud.toast('Exit Full Screen');
+    } else if (result === 'unsupported') {
+      if (isStandalone()) {
+        this.hud.toast('Already running in full screen mode');
+      } else if (isIOS()) {
+        this.hud.toast('On iPhone, tap Share ➔ "Add to Home Screen" for full screen');
+      } else {
+        this.hud.toast('Full screen is not supported on this browser');
+      }
+    }
   }
 
   private submitAction(action: Action): void {

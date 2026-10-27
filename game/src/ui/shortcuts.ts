@@ -14,6 +14,7 @@ export interface ShortcutActions {
   onUndo: () => void;
   onHint: () => void;
   onCamera: () => void;
+  onFullscreen?: () => void;
   onSound: () => void;
   onHistory: () => void;
   onMoves: () => void;
@@ -51,6 +52,8 @@ export function bindKeyboardShortcuts(actions: ShortcutActions, signal?: AbortSi
           actions.onMoves();
         } else if (e.key === 'c' || e.key === 'C') {
           actions.onCamera();
+        } else if (e.key === 'f' || e.key === 'F') {
+          actions.onFullscreen?.();
         } else if (e.key === 'm' || e.key === 'M') {
           actions.onSound();
         } else if (e.key === 'Escape') {
@@ -65,6 +68,8 @@ export function bindKeyboardShortcuts(actions: ShortcutActions, signal?: AbortSi
         actions.onHint();
       } else if (e.key === 'c' || e.key === 'C') {
         actions.onCamera();
+      } else if (e.key === 'f' || e.key === 'F') {
+        actions.onFullscreen?.();
       } else if (e.key === 'm' || e.key === 'M') {
         actions.onSound();
       } else if (e.key === 'h' || e.key === 'H') {
