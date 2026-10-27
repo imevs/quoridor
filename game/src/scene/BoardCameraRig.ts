@@ -23,6 +23,7 @@ import {
   CONTROLS_MIN_POLAR_ANGLE,
   CONTROLS_MAX_POLAR_ANGLE,
   isMobileLandscape,
+  isMobileView,
   getTargetViewOffset,
   applyViewOffset,
   calculateIdealDistance,
@@ -116,6 +117,11 @@ export class BoardCameraRig {
     return isMobileLandscape(this.container.clientWidth, this.container.clientHeight);
   }
 
+  /** Whether the current viewport is mobile (compact portrait or landscape). */
+  isMobileView(): boolean {
+    return isMobileView(this.container.clientWidth, this.container.clientHeight);
+  }
+
   /**
    * Generates discrete anchoring points for each player view:
    * 3 angles per seat (Left 45°, Center / Straight-on, Right 45°) plus Top-Down.
@@ -135,10 +141,9 @@ export class BoardCameraRig {
    * Snaps the camera to the nearest allowed board anchor using a critically damped spring seeded
    * with the drag's release velocity, so motion stays continuous (no stop-and-restart). The anchor
    * is picked from a short velocity lookahead so a flick carries over to the next anchor.
+   * On mobile view, adjusts distance so the board automatically rescales to the ideal fit for the screen.
    */
   async snapToNearestAnchor(duration = SNAP_DURATION): Promise<CameraAnchor | null> {
-    if (this.activePreset === 'iso') return null;
-
     this.snapSpring.discardControlsInertia(this.camera, this.controls);
 
     const sph = this.currentSpherical();
@@ -152,11 +157,13 @@ export class BoardCameraRig {
     const anchor = this.getNearestAnchor(projected);
     this.activePreset = anchor.preset;
 
+    const toRadius = this.isMobileView() ? this.idealDistance(anchor.preset) : sph.radius;
     const dTheta = wrapAngle(anchor.theta - sph.theta);
     const dPhi = anchor.phi - sph.phi;
+    const dRadius = toRadius - sph.radius;
 
     // Negligible difference; skip animation and record active anchor
-    if (Math.abs(dTheta) < 0.005 && Math.abs(dPhi) < 0.005) {
+    if (Math.abs(dTheta) < 0.005 && Math.abs(dPhi) < 0.005 && Math.abs(dRadius) < 0.05) {
       this.activeAnchor = anchor;
       this.onAnchorSnapped?.(anchor);
       return anchor;
@@ -165,7 +172,7 @@ export class BoardCameraRig {
     this.activeAnchor = null;
     let completed: boolean;
     if (duration <= 0) {
-      completed = await this.animateCameraSpherical(anchor.theta, anchor.phi, sph.radius, 0);
+      completed = await this.animateCameraSpherical(anchor.theta, anchor.phi, toRadius, 0);
     } else {
       // Supersede any running tween/snap, then hand control to the per-frame spring.
       this.animGen++;
@@ -181,6 +188,7 @@ export class BoardCameraRig {
         startSph: sph,
         dTheta,
         toPhi: anchor.phi,
+        toRadius,
         startOffset,
         toOffset,
         duration,
@@ -247,10 +255,14 @@ export class BoardCameraRig {
         }
         break;
       }
-      case 'iso':
+      case 'iso': {
         this.activeAnchor = null;
-        await this.animateCameraSpherical(Math.PI / 4, PHI_ISO, this.idealDistance('iso'), duration);
+        const completed = await this.animateCameraSpherical(Math.PI / 4, PHI_ISO, this.idealDistance('iso'), duration);
+        if (completed) {
+          this.activeAnchor = this.getNearestAnchor(new THREE.Spherical(this.idealDistance('iso'), PHI_ISO, Math.PI / 4));
+        }
         break;
+      }
       case 'seat':
       default:
         await this.focusSeat(seat, seatCount, duration);

@@ -34,17 +34,19 @@ export function smoothDamp(
 export interface SnapMotion {
   theta: number;
   phi: number;
+  radius: number;
   offX: number;
   offY: number;
   vTheta: number;
   vPhi: number;
+  vRadius: number;
   vOffX: number;
   vOffY: number;
   toTheta: number;
   toPhi: number;
+  toRadius: number;
   toOffX: number;
   toOffY: number;
-  radius: number;
   smoothTime: number;
   elapsed: number;
   resolve: (completed: boolean) => void;
@@ -54,6 +56,7 @@ export interface StartSnapParams {
   startSph: THREE.Spherical;
   dTheta: number;
   toPhi: number;
+  toRadius?: number;
   startOffset: { x: number; y: number };
   toOffset: { x: number; y: number };
   duration: number;
@@ -119,17 +122,19 @@ export class CameraSnapSpring {
       this.motion = {
         theta: params.startSph.theta,
         phi: params.startSph.phi,
+        radius: params.startSph.radius,
         offX: params.startOffset.x,
         offY: params.startOffset.y,
         vTheta,
         vPhi,
+        vRadius: 0,
         vOffX: 0,
         vOffY: 0,
         toTheta: params.startSph.theta + params.dTheta,
         toPhi: params.toPhi,
+        toRadius: params.toRadius ?? params.startSph.radius,
         toOffX: params.toOffset.x,
         toOffY: params.toOffset.y,
-        radius: params.startSph.radius,
         // A critically damped spring is ~98% settled after ~3 smooth-times.
         smoothTime: params.duration / 3,
         elapsed: 0,
@@ -150,14 +155,17 @@ export class CameraSnapSpring {
     m.elapsed += dt;
     [m.theta, m.vTheta] = smoothDamp(m.theta, m.toTheta, m.vTheta, m.smoothTime, dt);
     [m.phi, m.vPhi] = smoothDamp(m.phi, m.toPhi, m.vPhi, m.smoothTime, dt);
+    [m.radius, m.vRadius] = smoothDamp(m.radius, m.toRadius, m.vRadius, m.smoothTime, dt);
     [m.offX, m.vOffX] = smoothDamp(m.offX, m.toOffX, m.vOffX, m.smoothTime, dt);
     [m.offY, m.vOffY] = smoothDamp(m.offY, m.toOffY, m.vOffY, m.smoothTime, dt);
 
     const settled =
       (Math.abs(m.theta - m.toTheta) < 1e-4 &&
         Math.abs(m.phi - m.toPhi) < 1e-4 &&
+        Math.abs(m.radius - m.toRadius) < 1e-3 &&
         Math.abs(m.vTheta) < 1e-3 &&
         Math.abs(m.vPhi) < 1e-3 &&
+        Math.abs(m.vRadius) < 1e-3 &&
         Math.abs(m.offX - m.toOffX) < 0.05 &&
         Math.abs(m.offY - m.toOffY) < 0.05) ||
       m.elapsed > m.smoothTime * 10;
@@ -165,6 +173,7 @@ export class CameraSnapSpring {
     if (settled) {
       m.theta = m.toTheta;
       m.phi = m.toPhi;
+      m.radius = m.toRadius;
       m.offX = m.toOffX;
       m.offY = m.toOffY;
     }

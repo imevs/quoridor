@@ -256,7 +256,7 @@ describe('BoardCameraRig Anchoring Logic', () => {
     expect(rig.currentAnchor?.id).toBe('seat-1-center');
   });
 
-  it('preserves the user zoom distance when snapping', async () => {
+  it('preserves the user zoom distance when snapping on desktop', async () => {
     rig.setSeatCount(2);
     const zoomedR = rig.idealDistance('seat') * 0.7;
     rig.camera.position.setFromSpherical(new THREE.Spherical(zoomedR, PHI_SEAT, 0.6));
@@ -268,14 +268,39 @@ describe('BoardCameraRig Anchoring Logic', () => {
     expect(sph.theta).toBeCloseTo(ANCHOR_ANGLE_OFFSET, 3);
   });
 
-  it('skips snapping while in the free-orbit iso preset', async () => {
+  it('automatically rescales the board to ideal screen fit when snapping on mobile view', async () => {
+    const docMock = { addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    const mockDomElement = {
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      ownerDocument: docMock,
+      getRootNode: vi.fn(() => docMock),
+      style: {},
+    } as unknown as HTMLElement;
+
+    const mobileRig = new BoardCameraRig(
+      { clientWidth: 390, clientHeight: 844 } as unknown as HTMLElement,
+      mockDomElement,
+    );
+    mobileRig.setSeatCount(2);
+    const offScaleR = mobileRig.idealDistance('seat') * 1.5;
+    mobileRig.camera.position.setFromSpherical(new THREE.Spherical(offScaleR, PHI_SEAT, 0.6));
+
+    await mobileRig.snapToNearestAnchor(0);
+
+    const sph = new THREE.Spherical().setFromVector3(mobileRig.camera.position.clone().sub(mobileRig.controls.target));
+    expect(sph.radius).toBeCloseTo(mobileRig.idealDistance('seat'), 2);
+    mobileRig.dispose();
+  });
+
+  it('supports snapping to nearest anchor after switching to isometric view', async () => {
     rig.setSeatCount(2);
     await rig.setCameraPreset('iso', 0, 2, 0);
-    const before = rig.camera.position.clone();
 
-    expect(await rig.snapToNearestAnchor(0)).toBeNull();
-    expect(rig.preset).toBe('iso');
-    expect(rig.camera.position.distanceTo(before)).toBeCloseTo(0, 5);
+    const anchor = await rig.snapToNearestAnchor(0);
+    expect(anchor).not.toBeNull();
+    expect(anchor?.id).toBe('seat-0-right');
+    expect(rig.currentAnchor).toEqual(anchor);
   });
 
   it('resolves the 90° gap between seats in 2-player mode to the closer side', () => {

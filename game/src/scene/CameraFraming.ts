@@ -31,6 +31,11 @@ export function isMobileLandscape(width: number, height: number): boolean {
   return height <= MOBILE_LANDSCAPE_MAX_HEIGHT && width > height;
 }
 
+/** Whether the given viewport dimensions correspond to a mobile screen (portrait or landscape). */
+export function isMobileView(width: number, height: number): boolean {
+  return width <= 768 || height <= MOBILE_LANDSCAPE_MAX_HEIGHT;
+}
+
 /** Calculates the desired 2D camera viewport offset (px) for the active perspective preset and screen size. */
 export function getTargetViewOffset(
   width: number,
