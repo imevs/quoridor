@@ -48,6 +48,7 @@ export interface HudCallbacks {
   onLobbyStart?: () => void;
   onLobbyLeave?: () => void;
   onLobbyCopy?: (link: string) => void;
+  onDismissGestureHint?: () => void;
 }
 
 export class HudStore {
@@ -124,6 +125,15 @@ export class HudStore {
     visible: false,
     action: null,
     text: '',
+  });
+
+  // First Move Gesture Hint
+  readonly gestureHint = signal<{
+    visible: boolean;
+    x?: number;
+    y?: number;
+  }>({
+    visible: false,
   });
 
   // Replay

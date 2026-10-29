@@ -12,6 +12,7 @@ export interface InteractionCallbacks {
   onHoverPawn: (seat: number | null) => void;
   onToast: (message: string) => void;
   onStageAction?: (action: Action | null, text: string) => void;
+  onDismissGestureHint?: () => void;
 }
 
 export type AnimalGestureDirection = 'forward' | 'backward' | 'left' | 'right';
@@ -428,6 +429,7 @@ export class BoardInteractionManager {
   private onPointerDown(e: PointerEvent): void {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     this.downAt = { x: e.clientX, y: e.clientY };
+    this.callbacks.onDismissGestureHint?.();
 
     const state = this.callbacks.getState();
     const isMobile = isMobileOrTouch(e);

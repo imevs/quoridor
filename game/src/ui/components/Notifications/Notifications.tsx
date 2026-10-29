@@ -8,6 +8,7 @@ export function Notifications() {
   const dest = hudStore.destinationState.value;
   const undo = hudStore.undoBanner.value;
   const confirm = hudStore.confirmBanner.value;
+  const gestureHint = hudStore.gestureHint.value;
   const cb = hudStore.callbacks;
 
   const destAnimal = dest ? ANIMALS[dest.seat.animal] : null;
@@ -104,6 +105,43 @@ export function Notifications() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* First Move Animated Gesture Hint */}
+      {gestureHint.visible && (
+        <aside
+          id="gesture-hint"
+          class={styles.gestureHint}
+          style={
+            gestureHint.x !== undefined && gestureHint.y !== undefined
+              ? {
+                  left: `${gestureHint.x}px`,
+                  top: `${gestureHint.y}px`,
+                }
+              : undefined
+          }
+          onClick={() => {
+            hudStore.gestureHint.value = { visible: false };
+            cb.onDismissGestureHint?.();
+          }}
+          role="note"
+          aria-label="Gesture hint: Swipe animal to move"
+        >
+          <div class={styles.gestureVisual}>
+            <div class={styles.gestureTrack}>
+              <span class={styles.gestureArrow}>▲</span>
+            </div>
+            <div class={styles.gestureHandWrapper}>
+              <span class={styles.gestureHand} aria-hidden="true">
+                👆
+              </span>
+            </div>
+          </div>
+          <div class={styles.gestureText}>
+            <span class={styles.gestureTitle}>Swipe animal to move</span>
+            <span class={styles.gestureSubtitle}>Drag forward to advance</span>
+          </div>
+        </aside>
       )}
     </>
   );

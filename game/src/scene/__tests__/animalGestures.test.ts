@@ -224,6 +224,7 @@ describe('Animal Gestures on Mobile', () => {
       const onAction = vi.fn();
       const onToast = vi.fn();
       const onStageAction = vi.fn();
+      const onDismissGestureHint = vi.fn();
 
       const manager = new BoardInteractionManager(mockCanvas, mockScene as any, {
         getState: () => gameState,
@@ -232,6 +233,7 @@ describe('Animal Gestures on Mobile', () => {
         onHoverPawn: vi.fn(),
         onToast,
         onStageAction,
+        onDismissGestureHint,
       });
 
       return {
@@ -243,6 +245,7 @@ describe('Animal Gestures on Mobile', () => {
         onAction,
         onToast,
         onStageAction,
+        onDismissGestureHint,
       };
     }
 
@@ -512,6 +515,18 @@ describe('Animal Gestures on Mobile', () => {
         expect.any(Number),
         false,
       );
+    });
+
+    it('dismisses gesture hint on pointerdown', () => {
+      const { listeners, onDismissGestureHint } = setupManager();
+      listeners['pointerdown']({
+        clientX: 180,
+        clientY: 320,
+        pointerType: 'touch',
+        pointerId: 1,
+        stopImmediatePropagation: vi.fn(),
+      });
+      expect(onDismissGestureHint).toHaveBeenCalledTimes(1);
     });
   });
 

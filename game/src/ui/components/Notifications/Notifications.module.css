@@ -369,3 +369,164 @@
     z-index: 14;
   }
 }
+
+/* ==========================================================================
+   First Move Gesture Animated Hint
+   ========================================================================== */
+
+.gestureHint {
+  position: fixed;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px 8px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #1a1208 84%, var(--glass));
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 204, 102, 0.45);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.45),
+    0 0 20px rgba(245, 159, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+  pointer-events: auto;
+  transform: translate(-50%, -125%);
+  animation: gestureHintFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+  transition: transform 0.15s ease-out, opacity 0.25s ease-out;
+}
+
+.gestureHint:hover {
+  transform: translate(-50%, -128%) scale(1.02);
+  border-color: rgba(255, 215, 128, 0.65);
+}
+
+.gestureHint:active {
+  transform: translate(-50%, -122%) scale(0.98);
+}
+
+/* Fallback if left/top style not provided */
+.gestureHint:not([style*="left"]) {
+  left: 50%;
+  bottom: calc(max(20px, env(safe-area-inset-bottom)) + 74px);
+  transform: translate(-50%, 0);
+}
+
+@keyframes gestureHintFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -105%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -125%) scale(1);
+  }
+}
+
+.gestureVisual {
+  position: relative;
+  width: 28px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gestureTrack {
+  position: absolute;
+  top: 4px;
+  bottom: 6px;
+  width: 4px;
+  border-radius: 99px;
+  background: linear-gradient(to top, rgba(245, 159, 0, 0.2), rgba(245, 159, 0, 0.9));
+  display: flex;
+  justify-content: center;
+}
+
+.gestureArrow {
+  position: absolute;
+  top: -8px;
+  font-size: 8px;
+  line-height: 1;
+  color: #ffd43b;
+  opacity: 0.95;
+  animation: arrowPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes arrowPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.gestureHandWrapper {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: handSwipe 1.6s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+}
+
+.gestureHand {
+  font-size: 19px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
+}
+
+@keyframes handSwipe {
+  0% {
+    transform: translateY(12px) scale(0.88);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(8px) scale(1);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(-10px) scale(1.05);
+    opacity: 1;
+  }
+  85% {
+    transform: translateY(-16px) scale(0.92);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-16px) scale(0.92);
+    opacity: 0;
+  }
+}
+
+.gestureText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.gestureTitle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff9db;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.gestureSubtitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+}
+

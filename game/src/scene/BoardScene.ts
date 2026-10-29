@@ -53,6 +53,7 @@ export class BoardScene {
   private hedgeTemplate!: THREE.Object3D;
   private walls = new Map<string, THREE.Object3D>();
   private container: HTMLElement;
+  onFrame?: () => void;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -202,6 +203,23 @@ export class BoardScene {
     return this.picker.isOnBoard(clientX, clientY);
   }
 
+  /** Gets 2D viewport coordinates for the animal figurine at the given seat. */
+  getPawnScreenPosition(seat: number): { x: number; y: number } | null {
+    const pawn = this.pawns.pawnList[seat];
+    if (!pawn || !this.cameraRig?.camera) return null;
+    const canvas = this.renderer.domElement;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    const worldPos = pawn.group.position.clone();
+    worldPos.y = 0.55;
+    const proj = worldPos.project(this.cameraRig.camera);
+    if (proj.z > 1) return null;
+    return {
+      x: rect.left + ((proj.x + 1) / 2) * rect.width,
+      y: rect.top + ((-proj.y + 1) / 2) * rect.height,
+    };
+  }
+
   /** Smoothly orbit the camera behind a seat. */
   async focusSeat(seat: number, duration = 1.0): Promise<void> {
     await this.cameraRig.focusSeat(seat, this.pawns.seats, duration);
@@ -245,5 +263,7 @@ export class BoardScene {
 
     this.cameraRig.updateControls();
     this.renderer.render(this.scene, this.cameraRig.camera);
+
+    this.onFrame?.();
   }
 }

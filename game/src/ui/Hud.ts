@@ -243,6 +243,22 @@ export class Hud {
     };
   }
 
+  showGestureHint(x?: number, y?: number): void {
+    hudStore.gestureHint.value = { visible: true, x, y };
+  }
+
+  hideGestureHint(): void {
+    if (hudStore.gestureHint.value.visible) {
+      hudStore.gestureHint.value = { visible: false };
+    }
+  }
+
+  updateGestureHintPosition(x: number, y: number): void {
+    if (hudStore.gestureHint.value.visible) {
+      hudStore.gestureHint.value = { visible: true, x, y };
+    }
+  }
+
   bindPlayerHover(onHover: (seat: number | null) => void): void {
     hudStore.callbacks.onHoverSeat = onHover;
     hudStore.callbacks.onTapSeat = (seat) => {

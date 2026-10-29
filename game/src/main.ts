@@ -3,7 +3,7 @@ import { syncMobileLandscapeAttribute } from './scene/CameraFraming';
 import { toggleFullscreen, listenFullscreenChange, isIOS, isStandalone } from './ui/fullscreen';
 import { BoardScene } from './scene/BoardScene';
 import { CameraController } from './scene/CameraController';
-import { BoardInteractionManager } from './scene/BoardInteraction';
+import { BoardInteractionManager, isMobileOrTouch } from './scene/BoardInteraction';
 import { bindKeyboardShortcuts } from './ui/shortcuts';
 
 syncMobileLandscapeAttribute();
@@ -45,6 +45,7 @@ class Game {
   private processing = false;
   private movesCount = 0;
   private matchActions: Action[] = [];
+  private firstMoveGestureHintDismissed = false;
 
   constructor() {
     this.scene = new BoardScene(document.getElementById('stage')!);
@@ -135,6 +136,10 @@ class Game {
           else this.destinations.clear();
         },
         onToast: (msg) => this.hud.toast(msg),
+        onDismissGestureHint: () => {
+          this.firstMoveGestureHintDismissed = true;
+          this.hud.hideGestureHint();
+        },
         onStageAction: (action, text) => {
           if (action) {
             this.hud.showConfirmBanner(
@@ -226,6 +231,10 @@ class Game {
     hudStore.callbacks.onToggleBotMatch = () => this.toggleBotMatch();
     hudStore.callbacks.onUndo = () => this.undo();
     hudStore.callbacks.onRequestHint = () => this.hints.requestHint();
+    hudStore.callbacks.onDismissGestureHint = () => {
+      this.firstMoveGestureHintDismissed = true;
+      this.hud.hideGestureHint();
+    };
 
     this.hud.cameraBtn.addEventListener('click', () => this.camera.cycle());
     this.hud.fullscreenBtn.addEventListener('click', () => {
@@ -266,9 +275,19 @@ class Game {
         last: () => this.dialogs.replayLast(),
       },
     });
+
+    this.scene.onFrame = () => {
+      if (hudStore.gestureHint.value.visible && this.state) {
+        const pos = this.scene.getPawnScreenPosition(this.state.turn);
+        if (pos) {
+          this.hud.updateGestureHintPosition(pos.x, pos.y);
+        }
+      }
+    };
   }
 
   private openMenu(): void {
+    this.hud.hideGestureHint();
     this.hud.setReplayBarVisible(false);
     if (this.controller?.kind === 'bot_vs_bot' && this.controller instanceof LocalController) {
       this.hud.updateBotMatchPaused(this.controller.paused);
@@ -361,6 +380,7 @@ class Game {
   private async applyUpdate(u: Update): Promise<void> {
     switch (u.type) {
       case 'reset': {
+        this.firstMoveGestureHintDismissed = false;
         this.seats = u.seats;
         this.state = u.state;
         this.matchActions = u.actions ? [...u.actions] : [];
@@ -398,6 +418,8 @@ class Game {
         break;
       }
       case 'action': {
+        this.firstMoveGestureHintDismissed = true;
+        this.hud.hideGestureHint();
         this.clock.stop();
         this.interaction.clearPreview();
         this.scene.showMoveMarkers([]);
@@ -490,7 +512,19 @@ class Game {
       if (this.controller?.kind === 'local' && this.camera.preset === 'seat') {
         void this.scene.focusSeat(s.turn, 0.9);
       }
+
+      if (isMobileOrTouch() && this.matchActions.length === 0 && !this.firstMoveGestureHintDismissed) {
+        const pos = this.scene.getPawnScreenPosition(s.turn);
+        if (pos) {
+          this.hud.showGestureHint(pos.x, pos.y);
+        } else {
+          this.hud.showGestureHint();
+        }
+      } else {
+        this.hud.hideGestureHint();
+      }
     } else {
+      this.hud.hideGestureHint();
       const isPaused = this.controller instanceof LocalController && this.controller.paused;
       const label = isPaused
         ? `${a.name} (Paused)`
@@ -590,6 +624,7 @@ class Game {
   }
 
   private startReplay(record: HistoryRecord): void {
+    this.hud.hideGestureHint();
     this.clock.stop();
     this.hud.hideTurnTimer();
     LocalController.clearSaved();
