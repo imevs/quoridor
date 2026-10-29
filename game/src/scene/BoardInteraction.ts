@@ -332,6 +332,12 @@ export class BoardInteractionManager {
     if (this.activeGesture && this.scene.controls) {
       this.scene.controls.enabled = true;
     }
+    const state = this.callbacks.getState();
+    if (state && this.activeGesture) {
+      const currentSeat = state.turn;
+      const p = state.players[currentSeat];
+      if (p) this.scene.resetPawnGesture?.(currentSeat, { r: p.r, c: p.c });
+    }
     this.activeGesture = null;
     this.abort.abort();
     this.clearStagedAction();
@@ -461,33 +467,67 @@ export class BoardInteractionManager {
       const dy = e.clientY - this.activeGesture.startY;
       const dist = Math.hypot(dx, dy);
 
-      if (dist >= 14) {
-        this.activeGesture.hasMovedPastThreshold = true;
-        const state = this.callbacks.getState();
-        if (state) {
-          const projectToScreen = this.scene.camera
-            ? (pos: THREE.Vector3) => {
-                const rect = this.canvas.getBoundingClientRect();
-                const proj = pos.clone().project(this.scene.camera);
-                return {
-                  x: rect.left + ((proj.x + 1) / 2) * rect.width,
-                  y: rect.top + ((-proj.y + 1) / 2) * rect.height,
-                };
-              }
-            : undefined;
+      const state = this.callbacks.getState();
+      if (!state) return;
 
-          const res = resolveAnimalGesture(dx, dy, state, state.turn, projectToScreen);
-          this.activeGesture.resolved = res;
+      const currentSeat = state.turn;
+      const p = state.players[currentSeat];
+      const fromCell = { r: p.r, c: p.c };
 
-          if (res.action) {
-            this.scene.showGhost(null);
-            this.scene.hoverMarker(res.action);
-          } else {
-            this.scene.hoverMarker(null);
-          }
+      const isOnBoard = this.scene.isOnBoard ? this.scene.isOnBoard(e.clientX, e.clientY) : true;
+      if (!isOnBoard) {
+        this.activeGesture.resolved = null;
+        this.scene.resetPawnGesture?.(currentSeat, fromCell);
+        this.clearPreview();
+        return;
+      }
+
+      if (dist >= 6) {
+        this.activeGesture.hasMovedPastThreshold = dist >= 14;
+
+        const projectToScreen = this.scene.camera
+          ? (pos: THREE.Vector3) => {
+              const rect = this.canvas.getBoundingClientRect();
+              const proj = pos.clone().project(this.scene.camera);
+              return {
+                x: rect.left + ((proj.x + 1) / 2) * rect.width,
+                y: rect.top + ((-proj.y + 1) / 2) * rect.height,
+              };
+            }
+          : undefined;
+
+        const res = resolveAnimalGesture(dx, dy, state, currentSeat, projectToScreen);
+        this.activeGesture.resolved = res;
+
+        let toCell: { r: number; c: number };
+        if (res.action) {
+          toCell = { r: res.action.r, c: res.action.c };
+        } else {
+          const deltas: Record<AnimalGestureDirection, { dr: number; dc: number }> = {
+            forward: currentSeat === 0 ? { dr: -1, dc: 0 } : { dr: 1, dc: 0 },
+            backward: currentSeat === 0 ? { dr: 1, dc: 0 } : { dr: -1, dc: 0 },
+            left: currentSeat === 0 ? { dr: 0, dc: -1 } : { dr: 0, dc: 1 },
+            right: currentSeat === 0 ? { dr: 0, dc: 1 } : { dr: 0, dc: -1 },
+          };
+          const d = deltas[res.direction];
+          toCell = { r: p.r + d.dr, c: p.c + d.dc };
+        }
+
+        // Shorter gesture moves lesser, up to half way towards destination
+        const progress = Math.max(0, Math.min(1, (dist - 6) / 36));
+        const isBlocked = !res.action;
+
+        this.scene.setPawnGestureDrag?.(currentSeat, fromCell, toCell, progress, isBlocked);
+
+        if (res.action) {
+          this.scene.showGhost(null);
+          this.scene.hoverMarker(res.action);
+        } else {
+          this.scene.hoverMarker(null);
         }
       } else {
         this.activeGesture.resolved = null;
+        this.scene.resetPawnGesture?.(currentSeat, fromCell);
         this.clearPreview();
       }
       return;
@@ -563,20 +603,44 @@ export class BoardInteractionManager {
       const dist = Math.hypot(dx, dy);
       this.downAt = null;
 
+      const state = this.callbacks.getState();
+      const currentSeat = state ? state.turn : 0;
+      const fromCell = state ? { r: state.players[currentSeat].r, c: state.players[currentSeat].c } : { r: 0, c: 0 };
+
+      const isOnBoard = this.scene.isOnBoard ? this.scene.isOnBoard(e.clientX, e.clientY) : true;
+      if (!isOnBoard) {
+        this.scene.resetPawnGesture?.(currentSeat, fromCell);
+        this.clearPreview();
+        return;
+      }
+
       if (gesture.hasMovedPastThreshold && dist >= 22) {
         if (gesture.resolved?.action) {
           const action = gesture.resolved.action;
+          if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+            try {
+              navigator.vibrate?.(20);
+            } catch {}
+          }
           this.clearStagedAction();
           this.clearPreview();
           this.callbacks.onAction(action);
           return;
         } else if (gesture.resolved) {
+          this.scene.resetPawnGesture?.(currentSeat, fromCell);
+          if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+            try {
+              navigator.vibrate?.(40);
+            } catch {}
+          }
           this.clearPreview();
           const msg = gesture.resolved.reason === 'off_board' ? 'Cannot move off board' : 'Move blocked by hedge';
           this.callbacks.onToast(msg);
           return;
         }
       }
+
+      this.scene.resetPawnGesture?.(currentSeat, fromCell);
 
       const threshold = e.pointerType === 'touch' ? 14 : 7;
       if (dist < threshold) {
@@ -603,6 +667,12 @@ export class BoardInteractionManager {
       }
       if (this.scene.controls) {
         this.scene.controls.enabled = true;
+      }
+      const state = this.callbacks.getState();
+      if (state) {
+        const currentSeat = state.turn;
+        const p = state.players[currentSeat];
+        if (p) this.scene.resetPawnGesture?.(currentSeat, { r: p.r, c: p.c });
       }
       this.activeGesture = null;
       this.clearPreview();

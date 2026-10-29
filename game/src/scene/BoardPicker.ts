@@ -80,4 +80,27 @@ export class BoardPicker {
     }
     return null;
   }
+
+  /** Checks if the screen coordinates fall within the board platform area or canvas. */
+  isOnBoard(clientX: number, clientY: number): boolean {
+    const rect = this.domElement.getBoundingClientRect();
+    if (
+      rect.width > 0 &&
+      rect.height > 0 &&
+      (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom)
+    ) {
+      return false;
+    }
+    const ndc = new THREE.Vector2(
+      rect.width > 0 ? ((clientX - rect.left) / rect.width) * 2 - 1 : 0,
+      rect.height > 0 ? -((clientY - rect.top) / rect.height) * 2 + 1 : 0,
+    );
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const hit = new THREE.Vector3();
+    if (!this.raycaster.ray.intersectPlane(this.pickPlane, hit)) return false;
+
+    const fc = (hit.x + HALF) / PITCH;
+    const fr = (hit.z + HALF) / PITCH;
+    return fr >= -1.0 && fr <= N && fc >= -1.0 && fc <= N;
+  }
 }

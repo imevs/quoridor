@@ -5,6 +5,10 @@ import {
   resolveAnimalGesture,
   BoardInteractionManager,
 } from '../BoardInteraction';
+import { BoardPicker } from '../BoardPicker';
+import { BoardPawns } from '../BoardPawns';
+import { Tweener } from '../tween';
+import { cellToWorld } from '../BoardGeometry';
 import { createGame, applyAction } from '../../game/rules';
 
 describe('Animal Gestures on Mobile', () => {
@@ -209,8 +213,11 @@ describe('Animal Gestures on Mobile', () => {
         controls: mockControls,
         showGhost: vi.fn(),
         hoverMarker: vi.fn(),
+        setPawnGestureDrag: vi.fn(),
+        resetPawnGesture: vi.fn(),
         pickPawn: vi.fn(() => null),
         pick: vi.fn(() => ({ kind: 'cell' as const, r: 8, c: 4 })),
+        isOnBoard: vi.fn(() => true),
       };
 
       const gameState = createGame(2);
@@ -259,7 +266,7 @@ describe('Animal Gestures on Mobile', () => {
       expect(manager.getActiveGesture()).not.toBeNull();
     });
 
-    it('updates hoverMarker during drag and executes move on release', () => {
+    it('moves animal proportionally towards target and executes move on release', () => {
       const { listeners, mockScene, mockControls, onAction } = setupManager();
       vi.stubGlobal('window', {
         matchMedia: () => ({ matches: false }),
@@ -275,20 +282,43 @@ describe('Animal Gestures on Mobile', () => {
         stopImmediatePropagation: vi.fn(),
       });
 
-      // Drag up by 40px (forward gesture)
+      // Short drag up by 15px
       listeners['pointermove']({
         clientX: 180,
-        clientY: 280,
+        clientY: 305,
         pointerType: 'touch',
         pointerId: 1,
       });
+
+      expect(mockScene.setPawnGestureDrag).toHaveBeenCalled();
+      const firstCall = mockScene.setPawnGestureDrag.mock.calls[0];
+      expect(firstCall[0]).toBe(0); // seat 0
+      expect(firstCall[1]).toEqual({ r: 8, c: 4 }); // from
+      expect(firstCall[2]).toEqual({ r: 7, c: 4 }); // to
+      const shortProgress = firstCall[3];
+      expect(shortProgress).toBeGreaterThan(0);
+      expect(shortProgress).toBeLessThan(0.4);
+
+      // Longer drag up by 45px
+      listeners['pointermove']({
+        clientX: 180,
+        clientY: 275,
+        pointerType: 'touch',
+        pointerId: 1,
+      });
+
+      const secondCall = mockScene.setPawnGestureDrag.mock.calls[1];
+      const longProgress = secondCall[3];
+      // Longer gesture moves the animal more
+      expect(longProgress).toBeGreaterThan(shortProgress);
+      expect(longProgress).toBeCloseTo(1.0, 1);
 
       expect(mockScene.hoverMarker).toHaveBeenCalledWith({ type: 'move', r: 7, c: 4 });
 
       // Release swipe
       listeners['pointerup']({
         clientX: 180,
-        clientY: 280,
+        clientY: 275,
         pointerType: 'touch',
         pointerId: 1,
       });
@@ -300,8 +330,8 @@ describe('Animal Gestures on Mobile', () => {
       expect(onAction).toHaveBeenCalledWith({ type: 'move', r: 7, c: 4 });
     });
 
-    it('toasts blocked by hedge when swiping into a wall', () => {
-      const { listeners, gameState, mockControls, onAction, onToast } = setupManager();
+    it('toasts and springs animal back when swiping into a wall', () => {
+      const { listeners, gameState, mockScene, mockControls, onAction, onToast } = setupManager();
       vi.stubGlobal('window', {
         matchMedia: () => ({ matches: false }),
         innerWidth: 390,
@@ -326,6 +356,14 @@ describe('Animal Gestures on Mobile', () => {
         pointerId: 1,
       });
 
+      expect(mockScene.setPawnGestureDrag).toHaveBeenCalledWith(
+        0,
+        { r: 8, c: 4 },
+        { r: 7, c: 4 },
+        expect.any(Number),
+        true, // blocked
+      );
+
       listeners['pointerup']({
         clientX: 180,
         clientY: 270,
@@ -334,12 +372,13 @@ describe('Animal Gestures on Mobile', () => {
       });
 
       expect(mockControls.enabled).toBe(true);
+      expect(mockScene.resetPawnGesture).toHaveBeenCalledWith(0, { r: 8, c: 4 });
       expect(onAction).not.toHaveBeenCalled();
       expect(onToast).toHaveBeenCalledWith('Move blocked by hedge');
     });
 
-    it('cleans up gesture and restores camera controls on pointercancel', () => {
-      const { listeners, mockControls, manager } = setupManager();
+    it('cleans up gesture, springs animal back and restores camera controls on pointercancel', () => {
+      const { listeners, mockScene, mockControls, manager } = setupManager();
       vi.stubGlobal('window', {
         matchMedia: () => ({ matches: false }),
         innerWidth: 390,
@@ -361,6 +400,7 @@ describe('Animal Gestures on Mobile', () => {
       });
 
       expect(mockControls.enabled).toBe(true);
+      expect(mockScene.resetPawnGesture).toHaveBeenCalledWith(0, { r: 8, c: 4 });
       expect(manager.getActiveGesture()).toBeNull();
     });
 
@@ -385,6 +425,242 @@ describe('Animal Gestures on Mobile', () => {
       // Controls should remain enabled for normal camera orbit
       expect(mockControls.enabled).toBe(true);
       expect(manager.getActiveGesture()).toBeNull();
+    });
+
+    it('returns animal back and does not execute action when released outside the board', () => {
+      const { listeners, mockScene, mockControls, onAction, onToast } = setupManager();
+      vi.stubGlobal('window', {
+        matchMedia: () => ({ matches: false }),
+        innerWidth: 390,
+      });
+
+      listeners['pointerdown']({
+        clientX: 180,
+        clientY: 320,
+        pointerType: 'touch',
+        pointerId: 1,
+        stopImmediatePropagation: vi.fn(),
+      });
+
+      // Swipe forward over 22px
+      listeners['pointermove']({
+        clientX: 180,
+        clientY: 270,
+        pointerType: 'touch',
+        pointerId: 1,
+      });
+
+      expect(mockScene.setPawnGestureDrag).toHaveBeenCalled();
+
+      // Release outside the board
+      mockScene.isOnBoard.mockReturnValue(false);
+
+      listeners['pointerup']({
+        clientX: 180,
+        clientY: 10,
+        pointerType: 'touch',
+        pointerId: 1,
+      });
+
+      expect(mockControls.enabled).toBe(true);
+      expect(mockScene.resetPawnGesture).toHaveBeenCalledWith(0, { r: 8, c: 4 });
+      expect(onAction).not.toHaveBeenCalled();
+      expect(onToast).not.toHaveBeenCalled();
+    });
+
+    it('springs animal back during drag if pointer moves outside the board and resumes if moved back', () => {
+      const { listeners, mockScene } = setupManager();
+      vi.stubGlobal('window', {
+        matchMedia: () => ({ matches: false }),
+        innerWidth: 390,
+      });
+
+      listeners['pointerdown']({
+        clientX: 180,
+        clientY: 320,
+        pointerType: 'touch',
+        pointerId: 1,
+        stopImmediatePropagation: vi.fn(),
+      });
+
+      // Pointer moves outside the board while dragging
+      mockScene.isOnBoard.mockReturnValue(false);
+      listeners['pointermove']({
+        clientX: 10,
+        clientY: 10,
+        pointerType: 'touch',
+        pointerId: 1,
+      });
+
+      expect(mockScene.resetPawnGesture).toHaveBeenCalledWith(0, { r: 8, c: 4 });
+      expect(mockScene.hoverMarker).toHaveBeenCalledWith(null);
+      expect(mockScene.showGhost).toHaveBeenCalledWith(null);
+
+      // Pointer moves back onto the board
+      mockScene.isOnBoard.mockReturnValue(true);
+      listeners['pointermove']({
+        clientX: 180,
+        clientY: 280,
+        pointerType: 'touch',
+        pointerId: 1,
+      });
+
+      expect(mockScene.setPawnGestureDrag).toHaveBeenCalledWith(
+        0,
+        { r: 8, c: 4 },
+        { r: 7, c: 4 },
+        expect.any(Number),
+        false,
+      );
+    });
+  });
+
+  describe('BoardPicker.isOnBoard', () => {
+    it('returns true on board tiles and false when pointing outside', () => {
+      const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+      camera.position.set(0, 15, 10);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld();
+
+      const canvas = {
+        getBoundingClientRect: () => ({ left: 0, top: 0, width: 400, height: 400 }),
+      } as HTMLElement;
+
+      const picker = new BoardPicker(camera, canvas);
+
+      // Center of canvas points near board center (0, 0, 0)
+      expect(picker.isOnBoard(200, 200)).toBe(true);
+
+      // Screen coordinate completely outside canvas bounds
+      expect(picker.isOnBoard(-50, 200)).toBe(false);
+      expect(picker.isOnBoard(500, 200)).toBe(false);
+      expect(picker.isOnBoard(200, -100)).toBe(false);
+      expect(picker.isOnBoard(200, 500)).toBe(false);
+    });
+  });
+
+
+  describe('BoardPawns Physical Gesture Motion', () => {
+    function setupPawns() {
+      const scene = new THREE.Scene();
+      const tween = new Tweener();
+      const pawns = new BoardPawns(scene, tween);
+      pawns.setupPlayers(['fox', 'bear']);
+      pawns.syncPositions([
+        { r: 8, c: 4 },
+        { r: 0, c: 4 },
+      ]);
+      pawns.setActiveSeat(0);
+      return { scene, tween, pawns };
+    }
+
+    it('moves animal half way to aimed destination at full gesture progress', () => {
+      const { pawns } = setupPawns();
+      const pawn0 = pawns.pawnList[0];
+      const from = { r: 8, c: 4 };
+      const to = { r: 7, c: 4 };
+
+      const fromPos = cellToWorld(from.r, from.c);
+      const toPos = cellToWorld(to.r, to.c);
+      const totalDist = fromPos.distanceTo(toPos);
+
+      pawns.setPawnGestureDrag(0, from, to, 1.0, false);
+      for (let i = 1; i <= 25; i++) pawns.tick(i * 0.016, null);
+
+      const currentDist = fromPos.distanceTo(pawn0.group.position);
+      // Half way towards target (0.50 of total tile distance)
+      expect(currentDist / totalDist).toBeCloseTo(0.5, 2);
+    });
+
+    it('moves animal lesser on shorter gesture', () => {
+      const { pawns } = setupPawns();
+      const pawn0 = pawns.pawnList[0];
+      const from = { r: 8, c: 4 };
+      const to = { r: 7, c: 4 };
+      const fromPos = cellToWorld(from.r, from.c);
+      const toPos = cellToWorld(to.r, to.c);
+      const totalDist = fromPos.distanceTo(toPos);
+
+      // Short gesture: progress 0.3
+      pawns.setPawnGestureDrag(0, from, to, 0.3, false);
+      for (let i = 1; i <= 25; i++) pawns.tick(i * 0.016, null);
+      const shortDist = fromPos.distanceTo(pawn0.group.position);
+      expect(shortDist / totalDist).toBeCloseTo(0.15, 2);
+
+      // Medium gesture: progress 0.6
+      pawns.setPawnGestureDrag(0, from, to, 0.6, false);
+      for (let i = 26; i <= 50; i++) pawns.tick(i * 0.016, null);
+      const medDist = fromPos.distanceTo(pawn0.group.position);
+      expect(medDist / totalDist).toBeCloseTo(0.3, 2);
+      expect(medDist).toBeGreaterThan(shortDist);
+    });
+
+    it('restricts displacement when movement direction is blocked', () => {
+      const { pawns } = setupPawns();
+      const pawn0 = pawns.pawnList[0];
+      const from = { r: 8, c: 4 };
+      const to = { r: 7, c: 4 };
+      const fromPos = cellToWorld(from.r, from.c);
+      const toPos = cellToWorld(to.r, to.c);
+      const totalDist = fromPos.distanceTo(toPos);
+
+      // Blocked drag at full progress
+      pawns.setPawnGestureDrag(0, from, to, 1.0, true);
+      for (let i = 1; i <= 25; i++) pawns.tick(i * 0.016, null);
+      const blockedDist = fromPos.distanceTo(pawn0.group.position);
+      // Limited displacement against resistance (max 0.14)
+      expect(blockedDist / totalDist).toBeCloseTo(0.14, 2);
+    });
+
+    it('smoothly animates when gesture direction changes from upper to right without instant teleport', () => {
+      const { pawns } = setupPawns();
+      const pawn0 = pawns.pawnList[0];
+      const from = { r: 8, c: 4 };
+      const upperTo = { r: 7, c: 4 };
+      const rightTo = { r: 8, c: 5 };
+
+      const fromPos = cellToWorld(from.r, from.c);
+      const upperTarget = fromPos.clone().lerp(cellToWorld(upperTo.r, upperTo.c), 0.5);
+      const rightTarget = fromPos.clone().lerp(cellToWorld(rightTo.r, rightTo.c), 0.5);
+
+      // Drag upwards
+      pawns.setPawnGestureDrag(0, from, upperTo, 1.0, false);
+      for (let i = 1; i <= 25; i++) pawns.tick(i * 0.016, null);
+      expect(pawn0.group.position.distanceTo(upperTarget)).toBeCloseTo(0, 2);
+
+      // Switch gesture direction to right
+      pawns.setPawnGestureDrag(0, from, rightTo, 1.0, false);
+
+      // On next frame (16ms), the pawn does NOT instantly jump to rightTarget
+      pawns.tick(26 * 0.016, null);
+      expect(pawn0.group.position.distanceTo(rightTarget)).toBeGreaterThan(0.2);
+      expect(pawn0.group.position.distanceTo(upperTarget)).toBeGreaterThan(0.05);
+
+      // Over subsequent frames, it smoothly animates all the way to rightTarget
+      for (let i = 27; i <= 55; i++) pawns.tick(i * 0.016, null);
+      expect(pawn0.group.position.distanceTo(rightTarget)).toBeCloseTo(0, 2);
+    });
+
+    it('springs animal back to home square on resetPawnGesture', () => {
+      const { pawns, tween } = setupPawns();
+      const pawn0 = pawns.pawnList[0];
+      const from = { r: 8, c: 4 };
+      const to = { r: 7, c: 4 };
+      const fromPos = cellToWorld(from.r, from.c);
+
+      pawns.setPawnGestureDrag(0, from, to, 1.0, false);
+      for (let i = 1; i <= 25; i++) pawns.tick(i * 0.016, null);
+      expect(pawn0.group.position.distanceTo(fromPos)).toBeGreaterThan(0.2);
+
+      let mockNow = 1000;
+      vi.spyOn(performance, 'now').mockImplementation(() => mockNow);
+
+      pawns.resetPawnGesture(0, from);
+      // Advance time beyond 0.18s
+      mockNow += 300;
+      tween.tick();
+
+      expect(pawn0.group.position.distanceTo(fromPos)).toBeCloseTo(0, 2);
     });
   });
 });

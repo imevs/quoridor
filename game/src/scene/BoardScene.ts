@@ -173,6 +173,14 @@ export class BoardScene {
     this.overlays.showDestination(goal, colorHex);
   }
 
+  setPawnGestureDrag(seat: number, from: Cell, to: Cell, progress: number, blocked = false): void {
+    this.pawns.setPawnGestureDrag(seat, from, to, progress, blocked);
+  }
+
+  resetPawnGesture(seat: number, from: Cell): void {
+    this.pawns.resetPawnGesture(seat, from);
+  }
+
   // ---------------------------------------------------------------------------
   // Picking & Camera
   // ---------------------------------------------------------------------------
@@ -184,6 +192,14 @@ export class BoardScene {
   /** Raycasts directly against animal figurine models to detect hovered pawn. */
   pickPawn(clientX: number, clientY: number): number | null {
     return this.picker.pickPawn(clientX, clientY, this.pawns.pawnList, this.pawns.pawnGroupList);
+  }
+
+  /** Checks if the screen coordinates fall within the board platform area or canvas. */
+  isOnBoard(clientX: number, clientY: number): boolean {
+    if (this.picker.pickPawn(clientX, clientY, this.pawns.pawnList, this.pawns.pawnGroupList) !== null) {
+      return true;
+    }
+    return this.picker.isOnBoard(clientX, clientY);
   }
 
   /** Smoothly orbit the camera behind a seat. */
