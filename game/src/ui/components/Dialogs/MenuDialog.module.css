@@ -1,3 +1,305 @@
+/* ==========================================================================
+   MenuDialog (Game Variations Lobby) Styles
+   ========================================================================== */
+
+.lobbyModal {
+  width: min(780px, calc(100vw - 28px)) !important;
+  max-width: 780px;
+}
+
+.lobbyDesc {
+  max-width: 100% !important;
+}
+
+.lobbySection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Variations Grid */
+.variationsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.variationCard {
+  appearance: none;
+  border: 1px solid var(--glass-border);
+  background: rgb(255 255 255 / 0.68);
+  border-radius: 18px;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px -4px rgb(30 60 25 / 0.08);
+  transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1),
+              box-shadow 0.22s,
+              background 0.2s,
+              border-color 0.2s;
+}
+
+.variationCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--leaf), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.variationCard:hover {
+  transform: translateY(-2px);
+  background: rgb(255 255 255 / 0.95);
+  border-color: color-mix(in srgb, var(--leaf) 45%, white);
+  box-shadow: 0 12px 28px -10px rgb(30 60 25 / 0.22);
+}
+
+.variationCard:hover::before {
+  opacity: 1;
+}
+
+.variationCard:hover .playAction {
+  background: var(--leaf);
+  color: white;
+  transform: translateX(2px);
+}
+
+.variationCard:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px -4px rgb(30 60 25 / 0.16);
+}
+
+.variationCard:focus-visible {
+  outline: 2px solid var(--leaf);
+  outline-offset: 2px;
+}
+
+/* Card Internal Regions */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardIconTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cardIcon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.badge_popular {
+  background: rgb(242 169 59 / 0.18);
+  color: var(--honey-deep);
+  border: 1px solid rgb(242 169 59 / 0.32);
+}
+
+.badge_expert {
+  background: rgb(220 53 69 / 0.14);
+  color: #c0392b;
+  border: 1px solid rgb(220 53 69 / 0.28);
+}
+
+.badge_speed {
+  background: rgb(41 128 185 / 0.14);
+  color: #2980b9;
+  border: 1px solid rgb(41 128 185 / 0.28);
+}
+
+.badge_party {
+  background: rgb(142 68 173 / 0.14);
+  color: #8e44ad;
+  border: 1px solid rgb(142 68 173 / 0.28);
+}
+
+.badge_online {
+  background: rgb(22 160 133 / 0.14);
+  color: #16a085;
+  border: 1px solid rgb(22 160 133 / 0.28);
+}
+
+.badge_local {
+  background: rgb(79 154 53 / 0.14);
+  color: var(--leaf-deep);
+  border: 1px solid rgb(79 154 53 / 0.28);
+}
+
+.cardDesc {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.4;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cardTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2.5px 7px;
+  border-radius: 8px;
+  background: rgb(29 51 25 / 0.06);
+  color: var(--ink-soft);
+}
+
+.playAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--leaf-deep);
+  background: rgb(79 154 53 / 0.12);
+  padding: 4px 10px;
+  border-radius: 12px;
+  transition: background 0.18s, color 0.18s, transform 0.18s;
+  flex-shrink: 0;
+}
+
+/* Custom Match Section */
+.customSection {
+  border: 1px solid rgb(29 51 25 / 0.12);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.45);
+  overflow: hidden;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.customSection[open] {
+  background: rgb(255 255 255 / 0.72);
+  border-color: color-mix(in srgb, var(--leaf) 35%, transparent);
+}
+
+.customSummary {
+  cursor: pointer;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.customSummary::-webkit-details-marker {
+  display: none;
+}
+
+.customSummary:hover {
+  background: rgb(29 51 25 / 0.04);
+}
+
+.customSummaryLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.customSummaryIcon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.customSummaryText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customSummaryTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.customSummaryDesc {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.customChevron {
+  font-size: 16px;
+  color: var(--ink-soft);
+  transition: transform 0.25s ease;
+}
+
+.customSection[open] .customChevron {
+  transform: rotate(180deg);
+}
+
+.customBody {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid rgb(29 51 25 / 0.08);
+  background: rgb(255 255 255 / 0.35);
+}
+
+.customActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.customActions button {
+  min-width: 190px;
+}
+
+/* Configurator Form Controls */
 .fieldLegend {
   font-size: 12px;
   font-weight: 700;
@@ -59,6 +361,7 @@
   box-shadow: 0 4px 14px -6px rgb(30 60 25 / 0.4);
 }
 
+/* Animal Picker (Pawn) */
 .animalPicker {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -82,13 +385,13 @@
 }
 
 .pickerEmoji {
-  font-size: 28px;
+  font-size: 26px;
   line-height: 1.1;
   font-style: normal;
 }
 
 .pickerSpan:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
 .animalPicker input:checked + .pickerSpan {
@@ -97,6 +400,7 @@
   box-shadow: 0 8px 20px -10px var(--pc);
 }
 
+/* Bottom Actions */
 .menuSecondaryActions {
   display: flex;
   gap: 10px;
@@ -124,6 +428,19 @@
 
 /* Portrait Responsive */
 @media (max-width: 760px) {
+  .lobbyModal {
+    width: min(520px, calc(100vw - 20px)) !important;
+  }
+
+  .variationsGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .variationCard {
+    padding: 12px 14px;
+  }
+
   .segmented {
     padding: 4px;
     gap: 4px;
@@ -164,6 +481,38 @@
 
 /* Landscape Responsive */
 :global([data-mobile-landscape]) {
+  .lobbyModal {
+    width: min(740px, calc(100vw - 24px)) !important;
+    max-height: calc(100dvh - 12px) !important;
+  }
+
+  .variationsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .variationCard {
+    padding: 10px 12px;
+    gap: 4px;
+  }
+
+  .cardTitle {
+    font-size: 15px;
+  }
+
+  .cardDesc {
+    font-size: 11.5px;
+  }
+
+  .customSummary {
+    padding: 8px 12px;
+  }
+
+  .customBody {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
   .fieldLegend {
     font-size: 10.5px;
     margin-bottom: 2px;

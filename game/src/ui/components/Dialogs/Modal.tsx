@@ -27,18 +27,28 @@ export interface DialogHeaderProps {
   desc?: string;
   titleId?: string;
   descId?: string;
+  className?: string;
+  descClassName?: string;
   children?: ComponentChildren;
 }
 
-export function DialogHeader({ title, desc, titleId, descId, children }: DialogHeaderProps) {
+export function DialogHeader({
+  title,
+  desc,
+  titleId,
+  descId,
+  className = '',
+  descClassName = '',
+  children,
+}: DialogHeaderProps) {
   return (
-    <div class={baseStyles.panelHero}>
+    <div class={`${baseStyles.panelHero} ${className}`}>
       {children}
       <h2 id={titleId} class={baseStyles.heroTitle}>
         {title}
       </h2>
       {desc && (
-        <p id={descId} class={baseStyles.heroDesc}>
+        <p id={descId} class={`${baseStyles.heroDesc} ${descClassName}`}>
           {desc}
         </p>
       )}

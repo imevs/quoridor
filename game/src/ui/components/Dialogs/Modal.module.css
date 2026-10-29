@@ -1,7 +1,9 @@
 .panel {
   width: min(520px, calc(100vw - 28px));
   max-height: calc(100dvh - 28px);
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   padding: 0;
   border: 1px solid var(--glass-border);
   border-radius: 28px;
@@ -14,6 +16,44 @@
   inset: 0;
   margin: auto;
   pointer-events: auto !important;
+
+  /* Modern standard scrollbar properties */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(79 154 53 / 0.38) transparent;
+}
+
+.panel:hover {
+  scrollbar-color: rgb(79 154 53 / 0.65) transparent;
+}
+
+.panel::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.panel::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 16px 0;
+}
+
+.panel::-webkit-scrollbar-thumb {
+  background: rgb(79 154 53 / 0.35);
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s ease;
+}
+
+.panel::-webkit-scrollbar-thumb:hover {
+  background: rgb(79 154 53 / 0.7);
+  border: 1.5px solid transparent;
+  background-clip: content-box;
+}
+
+.panel::-webkit-scrollbar-thumb:active {
+  background: var(--leaf-deep);
+  border: 1.5px solid transparent;
+  background-clip: content-box;
 }
 
 .panel[open] {
